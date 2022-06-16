@@ -777,54 +777,54 @@ parameters = [
     },
 
 #'''
-#   2013-xx-yy: maximum changed to <0,133> because of cosmo-de boundary effects when coupled with IFS ..
-#   glameps: warning: tigge_lam.20160814_00+006.mem026.grib2, field 6 [total_precipitation_sfc.lam]: total_precipitation_sfc.lam maximum value 361.151 is not in [0,350]
+#    2013-xx-yy: maximum changed to <0,133> because of cosmo-de boundary effects when coupled with IFS ..
+#    glameps: warning: tigge_lam.20160814_00+006.mem026.grib2, field 6 [total_precipitation_sfc.lam]: total_precipitation_sfc.lam maximum value 361.151 is not in [0,350]
 #'''
 
-{
-    'name': "total_precipitation_sfc.lam",
-    'min1': -0.05,
-    'min2': 0.1,
-    'max1': 0.,
-    'max2': 400.,
-    'pairs':[
-        {'key':"model", 'key_type':str, 'value_long':0, 'value_string':"lam"},
+    {
+        'name': "total_precipitation_sfc.lam",
+        'min1': -0.05,
+        'min2': 0.1,
+        'max1': 0.,
+        'max2': 400.,
+        'pairs':[
+            {'key':"model", 'key_type':str, 'value_long':0, 'value_string':"lam"},
 
-        {'key':"paramId", 'key_type':int, 'value_long':228228, 'value_string':''},
+            {'key':"paramId", 'key_type':int, 'value_long':228228, 'value_string':''},
 
-        {'key':"discipline", 'key_type':int, 'value_long':0, 'value_string':''},
-        {'key':"parameterCategory", 'key_type':int, 'value_long':1, 'value_string':''},
-        {'key':"parameterNumber", 'key_type':int, 'value_long':52, 'value_string':''},
+            {'key':"discipline", 'key_type':int, 'value_long':0, 'value_string':''},
+            {'key':"parameterCategory", 'key_type':int, 'value_long':1, 'value_string':''},
+            {'key':"parameterNumber", 'key_type':int, 'value_long':52, 'value_string':''},
 
-        {'key':"typeOfStatisticalProcessing", 'key_type':int, 'value_long':1, 'value_string':''},
+            {'key':"typeOfStatisticalProcessing", 'key_type':int, 'value_long':1, 'value_string':''},
 
-        {'key':"typeOfFirstFixedSurface", 'key_type':int, 'value_long':1, 'value_string':''},
-    ],
-    'checks': ['from_start', 'predefined_level'],
-},
+            {'key':"typeOfFirstFixedSurface", 'key_type':int, 'value_long':1, 'value_string':''},
+        ],
+        'checks': ['from_start', 'predefined_level'],
+    },
 
 #hourly extreems for cumulated parameters! 
-{
-    'name': "large_scale_precipitation_sfc.glob",
-    'min1': -0.05,
-    'min2': 0.1,
-    'max1': 0.0,
-    'max2': 100.,
-    'pairs':[
-        {'key':"model", 'key_type':str, 'value_long':0, 'value_string':"glob"},
+    {
+        'name': "large_scale_precipitation_sfc.glob",
+        'min1': -0.05,
+        'min2': 0.1,
+        'max1': 0.0,
+        'max2': 100.,
+        'pairs':[
+            {'key':"model", 'key_type':str, 'value_long':0, 'value_string':"glob"},
 
-        {'key':"discipline", 'key_type':int, 'value_long':0, 'value_string':''},
-        {'key':"parameterCategory", 'key_type':int, 'value_long':1, 'value_string':''},
-        {'key':"parameterNumber", 'key_type':int, 'value_long':54, 'value_string':''},
+            {'key':"discipline", 'key_type':int, 'value_long':0, 'value_string':''},
+            {'key':"parameterCategory", 'key_type':int, 'value_long':1, 'value_string':''},
+            {'key':"parameterNumber", 'key_type':int, 'value_long':54, 'value_string':''},
 
-        {'key':"typeOfStatisticalProcessing", 'key_type':int, 'value_long':1, 'value_string':''},
+            {'key':"typeOfStatisticalProcessing", 'key_type':int, 'value_long':1, 'value_string':''},
 
-        {'key':"typeOfFirstFixedSurface", 'key_type':int, 'value_long':1, 'value_string':''},
+            {'key':"typeOfFirstFixedSurface", 'key_type':int, 'value_long':1, 'value_string':''},
 
-        {'key':"typeOfSecondFixedSurface", 'key_type':int, 'value_long':255, 'value_string':''},
-    ],
-    'checks': ['from_start', 'predefined_level'],
-},
+            {'key':"typeOfSecondFixedSurface", 'key_type':int, 'value_long':255, 'value_string':''},
+        ],
+        'checks': ['from_start', 'predefined_level'],
+    },
 
 #'''
 #   glameps-hirlamcons-eu: warning: tigge_lam.20160814_00+009.mem026.grib2, field 7 [large_scale_precipitation_sfc.lam]: large_scale_precipitation_sfc.lam maximum value 370.829 is not in [0,350]
