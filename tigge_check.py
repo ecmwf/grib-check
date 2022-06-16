@@ -7,6 +7,7 @@ import math
 import os
 import argparse
 from tigge_check_parameters import parameters
+import numpy as np
 
 # static
 last_n = 0
@@ -46,7 +47,7 @@ def scan(name):
 def CHECK(name, a):
     check(name, a)
 
-def check(name, a: int):
+def check(name, a):
     global cfg
     if not a:
         print("%s, field %d [%s]: %s failed" % (cfg.filename, cfg.field, cfg.param, name))
@@ -62,7 +63,7 @@ def check(name, a: int):
 #}
 #*/
 
-def save(h, name:str, f):
+def save(h, name, f):
     if f == None:
         return
     try:
@@ -76,7 +77,7 @@ def save(h, name:str, f):
         print(str(e))
         sys.exit(1)
 
-def get(h, what: str) -> int:
+def get(h, what) -> int:
     try:
         val = codes_get_long(h, what)
     except Exception as e:
@@ -85,7 +86,7 @@ def get(h, what: str) -> int:
         val = -1;
     return val;
 
-def dget(h, what: str) -> float:
+def dget(h, what) -> float:
     try:
         val = codes_get_double(h, what)
     except Exception as e:
@@ -94,48 +95,45 @@ def dget(h, what: str) -> float:
         val = -1;
     return val;
 
-def missing(h, what: str) -> int:
-    return codes_is_missing(h, what);
+def missing(h, what) -> int:
+    return codes_is_missing(h, what)
 
-def eq(h, what: str, value: int) -> int:
-    return get(h, what) == value;
+def eq(h, what, value) -> int:
+    return get(h, what) == value
 
-def ne(h, what: str, value: int) -> int:
-    return get(h,what) != value;
+def ne(h, what, value) -> int:
+    return get(h,what) != value
 
-def ge(h, what: str, value: int) -> int:
-    return get(h, what) >= value;
+def ge(h, what, value) -> int:
+    return get(h, what) >= value
 
-def le(h, what: str, value: int) -> int:
-    return get(h, what) <= value;
+def le(h, what, value) -> int:
+    return get(h, what) <= value
 
-def DBL_EQUAL(d1: float, d2: float, tolerance: float) -> int:
-    return math.fabs(d1 - d2) <= tolerance;
-
-
-def static_vars(**kwargs):
-    def decorate(func):
-        for k in kwargs:
-            setattr(func, k, kwargs[k])
-        return func
-    return decorate
-
+def DBL_EQUAL(d1, d2, tolerance) -> int:
+    return math.fabs(d1 - d2) <= tolerance
 
 def gaussian_grid(h):
     global last_n
     global values
 
-    tolerance: float = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
-    n: int = get(h,"numberOfParallelsBetweenAPoleAndTheEquator"); # This is the key N
+    tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
+    n = get(h,"numberOfParallelsBetweenAPoleAndTheEquator"); # This is the key N
 
-    north: float = dget(h,"latitudeOfFirstGridPointInDegrees");
-    south: float = dget(h,"latitudeOfLastGridPointInDegrees");
+    north = dget(h,"latitudeOfFirstGridPointInDegrees")
+    south = dget(h,"latitudeOfLastGridPointInDegrees")
 
-    west: float = dget(h,"longitudeOfFirstGridPointInDegrees");
-    east: float = dget(h,"longitudeOfLastGridPointInDegrees");
+    west = dget(h,"longitudeOfFirstGridPointInDegrees")
+    east = dget(h,"longitudeOfLastGridPointInDegrees")
 
     if n != last_n:
-        values = codes_get_gaussian_latitudes(n, values)
+        try:
+            values = codes_get_gaussian_latitudes(n)
+        except:
+            print("%s, field %d [%s]: cannot get gaussian latitudes for N%ld: %s" % (cfg.filename, cfg.field, cfg.param,n, str(e)))
+            cfg.error += 1
+            last_n = 0
+            return
         last_n = n;
 
     # TODO
@@ -144,7 +142,7 @@ def gaussian_grid(h):
         return
 
     if values != None:
-        values[0] = int(values[0] * 1e6) / 1e6;
+        values[0] = np.rint(values[0] * 1e6) / 1e6;
 
     if not DBL_EQUAL(north, values[0], tolerance) or not DBL_EQUAL(south, -values[0], tolerance):
         print("N=%ld north=%f south=%f v(=gauss_lat[0])=%f north-v=%0.30f south-v=%0.30f" % (n, north, south, values[0], north-values[0], south+values[0]))
@@ -154,21 +152,21 @@ def gaussian_grid(h):
 
     if(missing(h,"numberOfPointsAlongAParallel")): # same as key Ni 
         # If missing, this is a REDUCED gaussian grid 
-        MAXIMUM_RESOLUTION: int = 640;
+        MAXIMUM_RESOLUTION = 640;
         CHECK('get(h,"PLPresent")', get(h,"PLPresent"))
         CHECK('DBL_EQUAL(west, 0.0, tolerance)', DBL_EQUAL(west, 0.0, tolerance))
         if n > MAXIMUM_RESOLUTION:
-            print("Gaussian number N (=%ld) cannot exceed %ld", n, MAXIMUM_RESOLUTION)
+            print("Gaussian number N (=%ld) cannot exceed %ld" % (n, MAXIMUM_RESOLUTION))
             CHECK('n <= MAXIMUM_RESOLUTION', n <= MAXIMUM_RESOLUTION)
     else:
         # REGULAR gaussian grid 
-        l_west: int = get(h,"longitudeOfFirstGridPoint")
-        l_east: int = get(h,"longitudeOfLastGridPoint")
-        parallel: int = get(h,"numberOfPointsAlongAParallel")
-        we: int = get(h,"iDirectionIncrement")
-        dwest: float  = dget(h,"longitudeOfFirstGridPointInDegrees")
-        deast: float  = dget(h,"longitudeOfLastGridPointInDegrees")
-        dwe: float = dget(h,"iDirectionIncrementInDegrees")
+        l_west = get(h,"longitudeOfFirstGridPoint")
+        l_east = get(h,"longitudeOfLastGridPoint")
+        parallel = get(h,"numberOfPointsAlongAParallel")
+        we = get(h,"iDirectionIncrement")
+        dwest = dget(h,"longitudeOfFirstGridPointInDegrees")
+        deast = dget(h,"longitudeOfLastGridPointInDegrees")
+        dwe = dget(h,"iDirectionIncrementInDegrees")
         # printf("parallel=%ld east=%ld west=%ld we=%ld",parallel,east,west,we)
 
         CHECK('parallel == (l_east-l_west)/we + 1', parallel == (l_east-l_west)/we + 1)
@@ -179,13 +177,13 @@ def gaussian_grid(h):
 
     get(h,"PLPresent")
 
-    i: int = 0
-    count: int = codes_get_size(h,"pl")
-    expected_lon2: float = 0
-    total: int = 0
-    max_pl: int = 0
-    numberOfValues: int = get(h,"numberOfValues")
-    numberOfDataPoints: int = get(h,"numberOfDataPoints")
+    i = 0
+    count = codes_get_size(h,"pl")
+    expected_lon2 = 0
+    total = 0
+    max_pl = 0
+    numberOfValues = get(h,"numberOfValues")
+    numberOfDataPoints = get(h,"numberOfDataPoints")
 
 
     pl = codes_get_double_array(h,"pl")
@@ -258,9 +256,9 @@ def check_validity_datetime(h):
             print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (cfg.filename, cfg.field, cfg.param, validityDate, validityTime))
             cfg.warning += 1
 
-def check_range(h, p, min_value: float, max_value: float):
+def check_range(h, p, min_value, max_value):
     global cfg
-    missing: float = 0;
+    missing = 0;
     if cfg.valueflg != 0:
         return
 
@@ -279,7 +277,7 @@ def check_range(h, p, min_value: float, max_value: float):
             cfg.warning += 1
 
 
-def point_in_time(h, p, min_value: float, max_value: float):
+def point_in_time(h, p, min_value, max_value):
     global cfg
     topd = get(h,"typeOfProcessedData")
 
@@ -353,9 +351,9 @@ def point_in_time(h, p, min_value: float, max_value: float):
 
     check_range(h, p, min_value, max_value)
 
-def height_level(h, p, min_value: float, max_value:float):
+def height_level(h, p, min_value, max_value):
     global cfg
-    level: int = get(h, "level");
+    level = get(h, "level");
     levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
     if cfg.is_uerra:
         if level in levels:
@@ -364,9 +362,9 @@ def height_level(h, p, min_value: float, max_value:float):
             print("%s, field %d [%s]: invalid height level %ld" % (cfg.filename, cfg.field, cfg.param, level))
             cfg.error += 1
 
-def pressure_level(h, p, min_value: float, max_value: float):
+def pressure_level(h, p, min_value, max_value):
     global cfg
-    level: int = get(h,"level");
+    level = get(h,"level");
 
     if cfg.is_uerra and not cfg.is_crra:
         if level in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10]:
@@ -393,25 +391,25 @@ def pressure_level(h, p, min_value: float, max_value: float):
             print("%s, field %d [%s]: invalid pressure level %ld" % (cfg.filename, cfg.field, cfg.param, level))
             cfg.error += 1
 
-def potential_vorticity_level(h, p, min_value: float, max_value: float):
+def potential_vorticity_level(h, p, min_value, max_value):
     global cfg
-    level: int = get(h, "level")
+    level = get(h, "level")
     if level == 2:
         pass
     else:
         print("%s, field %d [%s]: invalid potential vorticity level %ld" % (cfg.filename, cfg.field, cfg.param, level))
         cfg.error += 1
 
-def potential_temperature_level(h, p, min_value: float, max_value: float):
+def potential_temperature_level(h, p, min_value, max_value):
     global cfg
-    level: int = get(h, "level")
+    level = get(h, "level")
     if level == 320:
         pass
     else:
         print("%s, field %d [%s]: invalid potential temperature level %ld" % (cfg.filename, cfg.field, cfg.param, level))
         cfg.error += 1
 
-def statistical_process(h, p, min_value: float, max_value: float):
+def statistical_process(h, p, min_value, max_value):
     global cfg
     topd = get(h, "typeOfProcessedData")
 
@@ -490,27 +488,27 @@ def statistical_process(h, p, min_value: float, max_value: float):
         CHECK('eq(h,"indicatorOfUnitForTimeRange",1)', eq(h,"indicatorOfUnitForTimeRange",1)) # Hours
         CHECK('get(h,"lengthOfTimeRange") + get(h,"startStep") == get(h,"endStep")', get(h,"lengthOfTimeRange") + get(h,"startStep") == get(h,"endStep"))
 
-def has_bitmap(h, p, min_value: float, max_value: float):
+def has_bitmap(h, p, min_value, max_value):
     # printf("bitMapIndicator %ld",get(h,"bitMapIndicator"))
     CHECK('eq(h,"bitMapIndicator",0)', eq(h,"bitMapIndicator",0))
 
-def has_soil_level(h, p, min_value: float, max_value: float):
+def has_soil_level(h, p, min_value, max_value):
     CHECK('get(h,"topLevel") == get(h,"bottomLevel")', get(h,"topLevel") == get(h,"bottomLevel"))
     CHECK('le(h,"level",14)', le(h,"level",14)); # max in UERRA
 
-def has_soil_layer(h, p, min_value: float, max_value: float):
+def has_soil_layer(h, p, min_value, max_value):
     CHECK('get(h,"topLevel") == get(h,"bottomLevel") - 1', get(h,"topLevel") == get(h,"bottomLevel") - 1)
     CHECK('le(h,"level",14)', le(h,"level",14)); # max in UERRA
 
-def resolution_s2s(h, p, min_value: float, max_value: float):
+def resolution_s2s(h, p, min_value, max_value):
     CHECK('eq(h,"iDirectionIncrement",1500000)', eq(h,"iDirectionIncrement",1500000))
     CHECK('eq(h,"jDirectionIncrement",1500000)', eq(h,"jDirectionIncrement",1500000))
 
-def resolution_s2s_ocean(h, p, min_value: float, max_value: float):
+def resolution_s2s_ocean(h, p, min_value, max_value):
     CHECK('eq(h,"iDirectionIncrement",1000000)', eq(h,"iDirectionIncrement",1000000))
     CHECK('eq(h,"jDirectionIncrement",1000000)', eq(h,"jDirectionIncrement",1000000))
 
-def six_hourly(h, p, min_value: float, max_value: float):
+def six_hourly(h, p, min_value, max_value):
     statistical_process(h,p,min_value,max_value);
 
     if get(h,"indicatorOfUnitForTimeRange") == 11:
@@ -521,13 +519,13 @@ def six_hourly(h, p, min_value: float, max_value: float):
     CHECK('get(h,"endStep") == get(h,"startStep") + 6', get(h,"endStep") == get(h,"startStep") + 6)
     check_range(h,p,min_value,max_value)
 
-def since_prev_pp(h, p, min_value: float, max_value: float):
+def since_prev_pp(h, p, min_value, max_value):
     statistical_process(h,p,min_value,max_value)
     CHECK('eq(h,"indicatorOfUnitForTimeRange",1)', eq(h,"indicatorOfUnitForTimeRange",1))
     CHECK('get(h,"endStep") == get(h,"startStep") + get(h,"lengthOfTimeRange")', get(h,"endStep") == get(h,"startStep") + get(h,"lengthOfTimeRange"))
     check_range(h,p,min_value,max_value)
 
-def three_hourly(h, p, min_value: float, max_value: float):
+def three_hourly(h, p, min_value, max_value):
     statistical_process(h,p,min_value,max_value)
 
     if get(h,"indicatorOfUnitForTimeRange") == 11:
@@ -538,9 +536,9 @@ def three_hourly(h, p, min_value: float, max_value: float):
     CHECK('get(h,"endStep") == get(h,"startStep") + 3', get(h,"endStep") == get(h,"startStep") + 3)
     check_range(h,p,min_value,max_value)
 
-def from_start(h, p, min_value: float, max_value: float):
+def from_start(h, p, min_value, max_value):
     global cfg
-    step: int = get(h,"endStep")
+    step = get(h,"endStep")
     statistical_process(h,p,min_value,max_value)
     CHECK('eq(h,"startStep",0)', eq(h,"startStep",0))
 
@@ -550,8 +548,8 @@ def from_start(h, p, min_value: float, max_value: float):
     else:
         check_range(h,p,min_value/step,max_value/step)
 
-def daily_average(h, p, min_value: float, max_value: float):
-    step: int = get(h,"endStep")
+def daily_average(h, p, min_value, max_value):
+    step = get(h,"endStep")
     CHECK('get(h,"startStep") == get(h,"endStep") - 24', get(h,"startStep") == get(h,"endStep") - 24)
     statistical_process(h,p,min_value,max_value)
 
@@ -560,7 +558,7 @@ def daily_average(h, p, min_value: float, max_value: float):
     else:
         check_range(h,p,min_value,max_value)
 
-def given_level(h, p, min_value: float, max_value: float):
+def given_level(h, p, min_value, max_value):
     CHECK('ne(h,"typeOfFirstFixedSurface",255)', ne(h,"typeOfFirstFixedSurface",255))
     CHECK('not missing(h,"scaleFactorOfFirstFixedSurface")', not missing(h,"scaleFactorOfFirstFixedSurface"))
     CHECK('not missing(h,"scaledValueOfFirstFixedSurface")', not missing(h,"scaledValueOfFirstFixedSurface"))
@@ -569,7 +567,7 @@ def given_level(h, p, min_value: float, max_value: float):
     CHECK('missing(h,"scaleFactorOfSecondFixedSurface")', missing(h,"scaleFactorOfSecondFixedSurface"))
     CHECK('missing(h,"scaledValueOfSecondFixedSurface")', missing(h,"scaledValueOfSecondFixedSurface"))
 
-def predefined_level(h, p, min_value: float, max_value: float):
+def predefined_level(h, p, min_value, max_value):
     CHECK('ne(h,"typeOfFirstFixedSurface",255)', ne(h,"typeOfFirstFixedSurface",255))
     CHECK('missing(h,"scaleFactorOfFirstFixedSurface")', missing(h,"scaleFactorOfFirstFixedSurface"))
     CHECK('missing(h,"scaledValueOfFirstFixedSurface")', missing(h,"scaledValueOfFirstFixedSurface"))
@@ -578,7 +576,7 @@ def predefined_level(h, p, min_value: float, max_value: float):
     CHECK('missing(h,"scaleFactorOfSecondFixedSurface")', missing(h,"scaleFactorOfSecondFixedSurface"))
     CHECK('missing(h,"scaledValueOfSecondFixedSurface")', missing(h,"scaledValueOfSecondFixedSurface"))
 
-def predefined_thickness(h, p, min_value: float, max_value: float):
+def predefined_thickness(h, p, min_value, max_value):
     CHECK('ne(h,"typeOfFirstFixedSurface",255)', ne(h,"typeOfFirstFixedSurface",255))
     CHECK('missing(h,"scaleFactorOfFirstFixedSurface")', missing(h,"scaleFactorOfFirstFixedSurface"))
     CHECK('missing(h,"scaledValueOfFirstFixedSurface")', missing(h,"scaledValueOfFirstFixedSurface"))
@@ -587,7 +585,7 @@ def predefined_thickness(h, p, min_value: float, max_value: float):
     CHECK('missing(h,"scaleFactorOfSecondFixedSurface")', missing(h,"scaleFactorOfSecondFixedSurface"))
     CHECK('missing(h,"scaledValueOfSecondFixedSurface")', missing(h,"scaledValueOfSecondFixedSurface"))
 
-def given_thickness(h, p, min_value: float, max_value: float):
+def given_thickness(h, p, min_value, max_value):
     CHECK('ne(h,"typeOfFirstFixedSurface",255)', ne(h,"typeOfFirstFixedSurface",255))
     CHECK('not missing(h,"scaleFactorOfFirstFixedSurface")', not missing(h,"scaleFactorOfFirstFixedSurface"))
     CHECK('not missing(h,"scaledValueOfFirstFixedSurface")', not missing(h,"scaledValueOfFirstFixedSurface"))
@@ -598,26 +596,26 @@ def given_thickness(h, p, min_value: float, max_value: float):
 
 def latlon_grid(h):
     global cfg
-    tolerance: float = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
-    data_points: int = get(h,"numberOfDataPoints")
-    meridian: int    = get(h,"numberOfPointsAlongAMeridian")
-    parallel: int    = get(h,"numberOfPointsAlongAParallel")
+    tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
+    data_points = get(h,"numberOfDataPoints")
+    meridian = get(h,"numberOfPointsAlongAMeridian")
+    parallel = get(h,"numberOfPointsAlongAParallel")
 
-    north: int = get(h,"latitudeOfFirstGridPoint")
-    south: int = get(h,"latitudeOfLastGridPoint")
-    west: int  = get(h,"longitudeOfFirstGridPoint")
-    east: int  = get(h,"longitudeOfLastGridPoint")
+    north = get(h,"latitudeOfFirstGridPoint")
+    south = get(h,"latitudeOfLastGridPoint")
+    west = get(h,"longitudeOfFirstGridPoint")
+    east = get(h,"longitudeOfLastGridPoint")
 
-    ns: int = get(h,"jDirectionIncrement")
-    we: int = get(h,"iDirectionIncrement")
+    ns= get(h,"jDirectionIncrement")
+    we= get(h,"iDirectionIncrement")
 
-    dnorth: float = dget(h,"latitudeOfFirstGridPointInDegrees")
-    dsouth: float = dget(h,"latitudeOfLastGridPointInDegrees")
-    dwest: float  = dget(h,"longitudeOfFirstGridPointInDegrees")
-    deast: float  = dget(h,"longitudeOfLastGridPointInDegrees")
+    dnorth = dget(h,"latitudeOfFirstGridPointInDegrees")
+    dsouth = dget(h,"latitudeOfLastGridPointInDegrees")
+    dwest = dget(h,"longitudeOfFirstGridPointInDegrees")
+    deast = dget(h,"longitudeOfLastGridPointInDegrees")
 
-    dns: float = dget(h,"jDirectionIncrementInDegrees")
-    dwe: float = dget(h,"iDirectionIncrementInDegrees")
+    dns = dget(h,"jDirectionIncrementInDegrees")
+    dwe = dget(h,"iDirectionIncrementInDegrees")
 
     if eq(h,"basicAngleOfTheInitialProductionDomain",0):
         CHECK('missing(h,"subdivisionsOfBasicAngle")', missing(h,"subdivisionsOfBasicAngle"))
@@ -645,8 +643,8 @@ def latlon_grid(h):
     CHECK('eq(h,"interpretationOfNumberOfPoints",0)', eq(h,"interpretationOfNumberOfPoints",0))
 
     if get(h,"iScansNegatively") != 0:
-        tmp: int    = east
-        dtmp: float = deast
+        tmp = east
+        dtmp = deast
 
         east = west
         west = tmp
@@ -655,8 +653,8 @@ def latlon_grid(h):
         dwest = dtmp
 
     if get(h,"jScansPositively") != 0:
-        tmp: int  = north
-        dtmp: float = dnorth
+        tmp = north
+        dtmp = dnorth
 
         north = south
         south = tmp
@@ -677,8 +675,8 @@ def latlon_grid(h):
         CHECK('math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 ', math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 )
 
         # Check that the field is global */
-        area: float  = (dnorth-dsouth) * (deast-dwest)
-        globe: float = 360.0*180.0
+        area = (dnorth-dsouth) * (deast-dwest)
+        globe = 360.0*180.0
         CHECK('area <= globe', area <= globe)
         CHECK('area >= globe*0.95', area >= globe*0.95)
 
@@ -704,12 +702,12 @@ def check_parameter(h, min_value, max_value):
 
     #for (i = 0; i < NUMBER(parameters); i++):
     for parameter in parameters:
-        j: int = 0;
-        matches: int = 0;
+        j = 0;
+        matches = 0;
 
         #while(parameter.pairs[j].key != NULL)
         for pair in parameter['pairs']:
-            val: int = -1;
+            val = -1;
             ktype = pair['key_type']
             if ktype == int:
                 try:
@@ -724,7 +722,7 @@ def check_parameter(h, min_value, max_value):
                     matches += 1 # xxx hack to pretend that model key was matched.
                 else:
                     if pair['value_string'].lower() == "MISSING".lower():
-                        is_miss: int = codes_is_missing(h, pair['key'])
+                        is_miss = codes_is_missing(h, pair['key'])
                         if is_miss != 0:
                             matches += 1
                     # elif codes_get_string(h, pair['key']):
@@ -786,7 +784,7 @@ def check_parameter(h, min_value, max_value):
 def check_packing(h):
     global cfg
     # ECC-1009: Warn if not using simple packing
-    expected_packingType: str = "grid_simple";
+    expected_packingType = "grid_simple";
     packingType = codes_get_string(h, "packingType")
 
     if packingType != expected_packingType:
@@ -812,7 +810,7 @@ def verify(h):
             cfg.error += 1
             return;
 
-        bitmap: int = not eq(h,"bitMapIndicator",255);
+        bitmap = not eq(h,"bitMapIndicator",255);
 
         CHECK('eq(h,"numberOfDataPoints",count)', eq(h,"numberOfDataPoints", count));
 
@@ -931,9 +929,7 @@ def verify(h):
         # CHECK('eq(h,"scanningMode",64)', eq(h,"scanningMode",64));*/ /* M-F data used to have it wrong.. but it might depends on other projection set up as well!
         pass
     elif dtn == 40: # gaussian grid (regular or reduced)
-        # TODO
-        # gaussian_grid(h)
-        print('Warning: gaussian_grid() is not implemented')
+        gaussian_grid(h)
     else:
         print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
                 (cfg.filename, cfg.field, cfg.param, get(h,"gridDefinitionTemplateNumber")))
