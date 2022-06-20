@@ -1035,14 +1035,14 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--crra', help='check crra fields (-u must be also used in this case)', action='store_true')
     args = parser.parse_args()
 
-    cfg.warnflg=args.warnflg
-    cfg.zeroflg=args.zeroflg
-    cfg.valueflg=args.valueflg
-    cfg.is_lam=args.lam
-    cfg.is_s2s=args.s2s
-    cfg.is_s2s_refcst=args.s2s_refcst
-    cfg.is_uerra=args.uerra
-    cfg.is_crra=args.crra
+    cfg.warnflg = args.warnflg
+    cfg.zeroflg = args.zeroflg
+    cfg.valueflg = args.valueflg
+    cfg.is_lam = args.lam
+    cfg.is_s2s = args.s2s
+    cfg.is_s2s_refcst = args.s2s_refcst
+    cfg.is_uerra = args.uerra
+    cfg.is_crra = args.crra
 
     if args.good:
         good = args.good
