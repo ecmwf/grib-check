@@ -65,7 +65,7 @@ def save(h, name, f):
     try:
         buffer = codes_get_message(h)
     except Exception as e:
-        print("%s, field %d [%s]: cannot get message: %s\n" % (ctx.filename, ctx.field, ctx.param, str(e)))
+        print("%s, field %d [%s]: cannot get message: %s" % (ctx.filename, ctx.field, ctx.param, str(e)))
         sys.exit(1)
     try:
         f.write(bytearray(buffer))
