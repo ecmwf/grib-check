@@ -92,11 +92,11 @@ def dget(h, what) -> float:
         val = -1;
     return val;
 
-def missing(h, what) -> int:
+def missing(h, what) -> bool:
     try:
-        return codes_is_missing(h, what)
+        return False if codes_is_missing(h, what) == 0 else True
     except KeyValueNotFoundError as e:
-        return 1
+        return True
 
 def eq(h, what, value) -> int:
     return get(h, what) == value
@@ -150,7 +150,7 @@ def gaussian_grid(h):
     CHECK('DBL_EQUAL(north, values[0], tolerance)', DBL_EQUAL(north, values[0], tolerance))
     CHECK('DBL_EQUAL(south, -values[0], tolerance)', DBL_EQUAL(south, -values[0], tolerance))
 
-    if(missing(h,"numberOfPointsAlongAParallel")): # same as key Ni 
+    if missing(h,"numberOfPointsAlongAParallel"): # same as key Ni 
         # If missing, this is a REDUCED gaussian grid 
         MAXIMUM_RESOLUTION = 640;
         CHECK('get(h,"PLPresent")', get(h,"PLPresent"))
