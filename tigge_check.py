@@ -110,7 +110,7 @@ def ge(h, what, value) -> int:
 def le(h, what, value) -> int:
     return get(h, what) <= value
 
-def DBL_EQUAL(d1, d2, tolerance) -> int:
+def DBL_EQUAL(d1, d2, tolerance) -> bool:
     return math.fabs(d1 - d2) <= tolerance
 
 def gaussian_grid(h):
