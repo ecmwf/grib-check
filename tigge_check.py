@@ -1026,7 +1026,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--valueflg', help='check value ranges', action='store_true')
     parser.add_argument('-g', '--good', help='write good gribs', default=None)
     parser.add_argument('-b', '--bad', help='write bad gribs', default=None)
-    parser.add_argument('file', nargs='+', help='Grib files', type=str)
+    parser.add_argument('path', nargs='+', help='path to a GRIB file or directory', type=str)
     parser.add_argument('-l', '--lam', help='check local area model fields', action='store_true')
     parser.add_argument('-s', '--s2s', help='check s2s fields', action='store_true')
     parser.add_argument('-r', '--s2s_refcst', help='check s2s reforecast fields', action='store_true')
@@ -1059,8 +1059,8 @@ if __name__ == "__main__":
             sys.exit(1)
 
     err = 0
-    for file in args.file:
-        scan(file, validate)
+    for path in args.path:
+        scan(path, validate)
         if ctx.error != 0:
             err = 1
         if ctx.warning and ctx.warnflg:
