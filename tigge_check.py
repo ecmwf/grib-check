@@ -15,7 +15,7 @@ last_n = 0
 values = None
 
 # global
-class Config:
+class Context:
     def __init__(self):
         self.filename = ''
         self.error = 0
@@ -35,7 +35,6 @@ class Config:
         self.fgood = None
         self.fbad = None
 
-cfg = Config()
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -45,10 +44,10 @@ def CHECK(name, a):
     check(name, a)
 
 def check(name, a):
-    global cfg
+    global ctx
     if not a:
-        print("%s, field %d [%s]: %s failed" % (cfg.filename, cfg.field, cfg.param, name))
-        cfg.error += 1
+        print("%s, field %d [%s]: %s failed" % (ctx.filename, ctx.field, ctx.param, name))
+        ctx.error += 1
 
 #/*
 #def warn(const char* name,int a)
@@ -66,7 +65,7 @@ def save(h, name, f):
     try:
         buffer = codes_get_message(h)
     except Exception as e:
-        print("%s, field %d [%s]: cannot get message: %s\n" % (cfg.filename, cfg.field, cfg.param, str(e)))
+        print("%s, field %d [%s]: cannot get message: %s\n" % (ctx.filename, ctx.field, ctx.param, str(e)))
         sys.exit(1)
     try:
         f.write(bytearray(buffer))
@@ -78,8 +77,8 @@ def get(h, what) -> int:
     try:
         val = codes_get_long(h, what)
     except Exception as e:
-        print("%s, field %d [%s]: cannot get %s: %s" % (cfg.filename, cfg.field, cfg.param, what, str(e)))
-        cfg.error += 1;
+        print("%s, field %d [%s]: cannot get %s: %s" % (ctx.filename, ctx.field, ctx.param, what, str(e)))
+        ctx.error += 1;
         val = -1;
     return val;
 
@@ -87,8 +86,8 @@ def dget(h, what) -> float:
     try:
         val = codes_get_double(h, what)
     except Exception as e:
-        print("%s, field %d [%s]: cannot get %s: %s" % (cfg.filename, cfg.field, cfg.param, what, str(e)))
-        cfg.error += 1;
+        print("%s, field %d [%s]: cannot get %s: %s" % (ctx.filename, ctx.field, ctx.param, what, str(e)))
+        ctx.error += 1;
         val = -1;
     return val;
 
@@ -130,8 +129,8 @@ def gaussian_grid(h):
         try:
             values = codes_get_gaussian_latitudes(n)
         except:
-            print("%s, field %d [%s]: cannot get gaussian latitudes for N%ld: %s" % (cfg.filename, cfg.field, cfg.param,n, str(e)))
-            cfg.error += 1
+            print("%s, field %d [%s]: cannot get gaussian latitudes for N%ld: %s" % (ctx.filename, ctx.field, ctx.param,n, str(e)))
+            ctx.error += 1
             last_n = 0
             return
         last_n = n;
@@ -232,7 +231,7 @@ def gaussian_grid(h):
     CHECK('eq(h,"resolutionAndComponentFlags8",0)', eq(h,"resolutionAndComponentFlags8",0))
 
 def check_validity_datetime(h):
-    global cfg
+    global ctx
     # If we just set the stepRange (for non-instantaneous fields) to its
     # current value, then this causes the validity date and validity time
     # keys to be correctly computed.
@@ -253,13 +252,13 @@ def check_validity_datetime(h):
         validityDate = get(h, "validityDate");
         validityTime = get(h, "validityTime");
         if validityDate!=saved_validityDate or validityTime!=saved_validityTime:
-            print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (cfg.filename, cfg.field, cfg.param, validityDate, validityTime))
-            cfg.warning += 1
+            print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (ctx.filename, ctx.field, ctx.param, validityDate, validityTime))
+            ctx.warning += 1
 
 def check_range(h, p, min_value, max_value):
-    global cfg
+    global ctx
     missing = 0;
-    if cfg.valueflg != 0:
+    if ctx.valueflg != 0:
         return
 
     missing = dget(h,"missingValue")
@@ -267,29 +266,29 @@ def check_range(h, p, min_value, max_value):
     # See ECC-437
     if not get(h,"bitMapIndicator") == 0 and min_value == missing and max_value == missing:
         if min_value < p['min1'] or min_value > p['min2']: 
-            print("warning: %s, field %d [%s]: %s minimum value %g is not in [%g,%g]" % (cfg.filename, cfg.field, cfg.param, p['name'], min_value, p['min1'], p['min2']))
+            print("warning: %s, field %d [%s]: %s minimum value %g is not in [%g,%g]" % (ctx.filename, ctx.field, ctx.param, p['name'], min_value, p['min1'], p['min2']))
             print("  => [%g,%g]" % (min_value if min_value < p['min1'] else p['min1'], min_value if min_value > p['min2'] else p['min2']))
-            cfg.warning += 1
+            ctx.warning += 1
 
         if max_value < p['max1'] or max_value > p['max2']:
-            print("warning: %s, field %d [%s]: %s maximum value %g is not in [%g,%g]" % (cfg.filename, cfg.field, cfg.param, p['name'], max_value, p['max1'], p['max2']))
+            print("warning: %s, field %d [%s]: %s maximum value %g is not in [%g,%g]" % (ctx.filename, ctx.field, ctx.param, p['name'], max_value, p['max1'], p['max2']))
             print("  => [%g,%g]" % (max_value if max_value < p['max1'] else p['max1'], max_value if max_value > p['max2'] else p['max2']))
-            cfg.warning += 1
+            ctx.warning += 1
 
 
 def point_in_time(h, p, min_value, max_value):
-    global cfg
+    global ctx
     topd = get(h,"typeOfProcessedData")
 
     if topd == 0: # Analysis
-        if cfg.is_uerra:
+        if ctx.is_uerra:
             CHECK('eq(h,"productDefinitionTemplateNumber",0) or eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",0) or eq(h,"productDefinitionTemplateNumber",1))
         if get(h,"productDefinitionTemplateNumber") == 1:
             CHECK('ne(h,"numberOfForecastsInEnsemble",0)', ne(h,"numberOfForecastsInEnsemble",0))
             CHECK('le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble"))', le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")))
 
     elif topd == 1: # Forecast
-        if cfg.is_uerra:
+        if ctx.is_uerra:
             CHECK('eq(h,"productDefinitionTemplateNumber",0) or eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",0) or eq(h,"productDefinitionTemplateNumber",1))
         if get(h,"productDefinitionTemplateNumber") == 1:
             CHECK('ne(h,"numberOfForecastsInEnsemble",0)', ne(h,"numberOfForecastsInEnsemble",0))
@@ -301,9 +300,9 @@ def point_in_time(h, p, min_value, max_value):
     elif topd == 3: # Control forecast products 
         CHECK('eq(h,"perturbationNumber",0)', eq(h,"perturbationNumber",0))
         CHECK('ne(h,"numberOfForecastsInEnsemble",0)', ne(h,"numberOfForecastsInEnsemble",0))
-        if cfg.is_s2s_refcst:
+        if ctx.is_s2s_refcst:
             CHECK('eq(h,"productDefinitionTemplateNumber",60)', eq(h,"productDefinitionTemplateNumber",60))
-        elif cfg.is_s2s:
+        elif ctx.is_s2s:
             # CHECK('eq(h,"productDefinitionTemplateNumber",60) or eq(h,"productDefinitionTemplateNumber",11) or eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",60) or eq(h,"productDefinitionTemplateNumber",11) or eq(h,"productDefinitionTemplateNumber",1))
             CHECK('eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",1))
         else:
@@ -312,14 +311,14 @@ def point_in_time(h, p, min_value, max_value):
     elif topd == 4: # Perturbed forecast products
         CHECK('ne(h,"perturbationNumber",0)', ne(h,"perturbationNumber",0))
         CHECK('ne(h,"numberOfForecastsInEnsemble",0)', ne(h,"numberOfForecastsInEnsemble",0))
-        if cfg.is_s2s_refcst:
+        if ctx.is_s2s_refcst:
             CHECK('eq(h,"productDefinitionTemplateNumber",60)', eq(h,"productDefinitionTemplateNumber",60))
-        elif cfg.is_s2s:
+        elif ctx.is_s2s:
             # CHECK('eq(h,"productDefinitionTemplateNumber",60) or eq(h,"productDefinitionTemplateNumber",11) or eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",60) or eq(h,"productDefinitionTemplateNumber",11) or eq(h,"productDefinitionTemplateNumber",1))
             CHECK('eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",1))
         else:
             CHECK('eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",1));
-        if cfg.is_lam:
+        if ctx.is_lam:
             CHECK('le(h,"perturbationNumber", get(h,"numberOfForecastsInEnsemble"))', le(h,"perturbationNumber", get(h,"numberOfForecastsInEnsemble")))
         else:
             # Is there always cf in tigge global datasets??
@@ -329,14 +328,14 @@ def point_in_time(h, p, min_value, max_value):
         print("Unsupported typeOfProcessedData %ld" % get(h,"typeOfProcessedData"))
         CHECK('0', 0)
 
-    if cfg.is_lam:
+    if ctx.is_lam:
         if get(h,"indicatorOfUnitOfTimeRange") == 10: # three hours
             # Three hourly is OK 
             pass
         else:
             CHECK('eq(h,"indicatorOfUnitOfTimeRange",1)', eq(h,"indicatorOfUnitOfTimeRange",1)) # Hours
             CHECK('(get(h,"forecastTime) % 3) == 0"', (get(h,"forecastTime") % 3) == 0) # Every three hours
-    elif cfg.is_uerra:
+    elif ctx.is_uerra:
         if(get(h,"indicatorOfUnitOfTimeRange") == 1): #hourly
             CHECK(
                 '(eq(h,"forecastTime",1) or eq(h,"forecastTime",2) or eq(h,"forecastTime",4) or eq(h,"forecastTime",5)) or (get(h,"forecastTime") % 3) == 0',
@@ -352,98 +351,98 @@ def point_in_time(h, p, min_value, max_value):
     check_range(h, p, min_value, max_value)
 
 def height_level(h, p, min_value, max_value):
-    global cfg
+    global ctx
     level = get(h, "level");
     levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
-    if cfg.is_uerra:
+    if ctx.is_uerra:
         if level in levels:
             pass
         else:
-            print("%s, field %d [%s]: invalid height level %ld" % (cfg.filename, cfg.field, cfg.param, level))
-            cfg.error += 1
+            print("%s, field %d [%s]: invalid height level %ld" % (ctx.filename, ctx.field, ctx.param, level))
+            ctx.error += 1
 
 def pressure_level(h, p, min_value, max_value):
-    global cfg
+    global ctx
     level = get(h,"level");
 
-    if cfg.is_uerra and not cfg.is_crra:
+    if ctx.is_uerra and not ctx.is_crra:
         if level in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10]:
             pass
         else:
-            print("%s, field %d [%s]: invalid pressure level %ld" % (cfg.filename, cfg.field, cfg.param, level))
-            cfg.error += 1
-    elif cfg.is_uerra and cfg.is_crra:
+            print("%s, field %d [%s]: invalid pressure level %ld" % (ctx.filename, ctx.field, ctx.param, level))
+            ctx.error += 1
+    elif ctx.is_uerra and ctx.is_crra:
         if level in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10, 7, 5, 3, 2, 1]:
             pass
         else:
-            print("%s, field %d [%s]: invalid pressure level %ld" % (cfg.filename, cfg.field, cfg.param, level))
-            cfg.error += 1
-    elif cfg.is_s2s:
+            print("%s, field %d [%s]: invalid pressure level %ld" % (ctx.filename, ctx.field, ctx.param, level))
+            ctx.error += 1
+    elif ctx.is_s2s:
         if level in [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]:
             pass
         else:
-            print("%s, field %d [%s]: invalid pressure level %ld" % (cfg.filename, cfg.field, cfg.param, level))
-            cfg.error += 1
+            print("%s, field %d [%s]: invalid pressure level %ld" % (ctx.filename, ctx.field, ctx.param, level))
+            ctx.error += 1
     else:
         if level in [1000, 200, 250, 300, 500, 700, 850, 925, 50]:
             pass
         else:
-            print("%s, field %d [%s]: invalid pressure level %ld" % (cfg.filename, cfg.field, cfg.param, level))
-            cfg.error += 1
+            print("%s, field %d [%s]: invalid pressure level %ld" % (ctx.filename, ctx.field, ctx.param, level))
+            ctx.error += 1
 
 def potential_vorticity_level(h, p, min_value, max_value):
-    global cfg
+    global ctx
     level = get(h, "level")
     if level == 2:
         pass
     else:
-        print("%s, field %d [%s]: invalid potential vorticity level %ld" % (cfg.filename, cfg.field, cfg.param, level))
-        cfg.error += 1
+        print("%s, field %d [%s]: invalid potential vorticity level %ld" % (ctx.filename, ctx.field, ctx.param, level))
+        ctx.error += 1
 
 def potential_temperature_level(h, p, min_value, max_value):
-    global cfg
+    global ctx
     level = get(h, "level")
     if level == 320:
         pass
     else:
-        print("%s, field %d [%s]: invalid potential temperature level %ld" % (cfg.filename, cfg.field, cfg.param, level))
-        cfg.error += 1
+        print("%s, field %d [%s]: invalid potential temperature level %ld" % (ctx.filename, ctx.field, ctx.param, level))
+        ctx.error += 1
 
 def statistical_process(h, p, min_value, max_value):
-    global cfg
+    global ctx
     topd = get(h, "typeOfProcessedData")
 
     if topd ==  0: # Analysis
-        if cfg.is_uerra:
+        if ctx.is_uerra:
             CHECK('eq(h,"productDefinitionTemplateNumber",8) or eq(h,"productDefinitionTemplateNumber",11)', eq(h,"productDefinitionTemplateNumber",8) or eq(h,"productDefinitionTemplateNumber",11))
     elif topd == 1: # Forecast
-        if cfg.is_uerra:
+        if ctx.is_uerra:
             CHECK('eq(h,"productDefinitionTemplateNumber",8) or eq(h,"productDefinitionTemplateNumber",11)', eq(h,"productDefinitionTemplateNumber",8) or eq(h,"productDefinitionTemplateNumber",11))
     elif topd == 2: # Analysis and forecast products
         CHECK('eq(h,"productDefinitionTemplateNumber",8)', eq(h,"productDefinitionTemplateNumber",8))
     elif topd == 3: # Control forecast products
-        if not cfg.is_s2s_refcst:
+        if not ctx.is_s2s_refcst:
             CHECK('eq(h,"productDefinitionTemplateNumber",11)', eq(h,"productDefinitionTemplateNumber",11))
         else:
             CHECK('eq(h,"productDefinitionTemplateNumber",61)', eq(h,"productDefinitionTemplateNumber",61))
     elif topd == 4: # Perturbed forecast products
-        if not cfg.is_s2s_refcst:
+        if not ctx.is_s2s_refcst:
             CHECK('eq(h,"productDefinitionTemplateNumber",11)', eq(h,"productDefinitionTemplateNumber",11))
         else:
             CHECK('eq(h,"productDefinitionTemplateNumber",61)', eq(h,"productDefinitionTemplateNumber",61))
     else:
         print("Unsupported typeOfProcessedData %ld" % (get(h,"typeOfProcessedData")))
-        cfg.error += 1
+        ctx.error += 1
         return;
 
-    if cfg.is_lam:
+    if ctx.is_lam:
         if get(h,"indicatorOfUnitOfTimeRange") == 10: # three hours
             # Three hourly is OK
             pass
         else:
             CHECK('eq(h,"indicatorOfUnitOfTimeRange",1)', eq(h,"indicatorOfUnitOfTimeRange",1)) # Hours
             CHECK('(get(h,"forecastTime"', (get(h,"forecastTime") % 3) == 0); # Every three hours
-    elif cfg.is_uerra:
+    elif ctx.is_uerra:
 #  forecastTime for uerra might be all steps decreased by 1 i.e 0,1,2,3,4,5,8,11...29 too many... */
         if get(h,"indicatorOfUnitOfTimeRange") == 1:
             CHECK('le(h,"forecastTime",30)', le(h,"forecastTime",30))
@@ -460,7 +459,7 @@ def statistical_process(h, p, min_value, max_value):
     CHECK('eq(h,"typeOfTimeIncrement",2)', eq(h,"typeOfTimeIncrement",2))
     # CHECK('eq(h,"indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed",255)', eq(h,"indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed",255))
 
-    if cfg.is_s2s:
+    if ctx.is_s2s:
         if get(h,"typeOfStatisticalProcessing") == 0:
             CHECK('eq(h,"timeIncrementBetweenSuccessiveFields",1) or eq(h,"timeIncrementBetweenSuccessiveFields",4)', eq(h,"timeIncrementBetweenSuccessiveFields",1) or eq(h,"timeIncrementBetweenSuccessiveFields",4))
         else:
@@ -471,9 +470,9 @@ def statistical_process(h, p, min_value, max_value):
     CHECK('eq(h,"minuteOfEndOfOverallTimeInterval",0)', eq(h,"minuteOfEndOfOverallTimeInterval",0))
     CHECK('eq(h,"secondOfEndOfOverallTimeInterval",0)', eq(h,"secondOfEndOfOverallTimeInterval",0))
 
-    if cfg.is_uerra:
+    if ctx.is_uerra:
         CHECK('(eq(h,"endStep",1) or eq(h,"endStep",2) or eq(h,"endStep",4) or eq(h,"endStep",5)) or (get(h,"endStep"', (eq(h,"endStep",1) or eq(h,"endStep",2) or eq(h,"endStep",4) or eq(h,"endStep",5)) or (get(h,"endStep") % 3) == 0)
-    elif cfg.is_lam:
+    elif ctx.is_lam:
         CHECK('(get(h,"endStep"', (get(h,"endStep") % 3) == 0);  # Every three hours
     else:
         CHECK('(get(h,"endStep"', (get(h,"endStep") % 6) == 0); # Every six hours
@@ -537,13 +536,13 @@ def three_hourly(h, p, min_value, max_value):
     check_range(h,p,min_value,max_value)
 
 def from_start(h, p, min_value, max_value):
-    global cfg
+    global ctx
     step = get(h,"endStep")
     statistical_process(h,p,min_value,max_value)
     CHECK('eq(h,"startStep",0)', eq(h,"startStep",0))
 
     if step == 0:
-        if not cfg.is_uerra:
+        if not ctx.is_uerra:
             CHECK('min_value == 0 and max_value == 0', min_value == 0 and max_value == 0); # ??? xxx
     else:
         check_range(h,p,min_value/step,max_value/step)
@@ -595,7 +594,7 @@ def given_thickness(h, p, min_value, max_value):
     CHECK('not missing(h,"scaledValueOfSecondFixedSurface")', not missing(h,"scaledValueOfSecondFixedSurface"))
 
 def latlon_grid(h):
-    global cfg
+    global ctx
     tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
     data_points = get(h,"numberOfDataPoints")
     meridian = get(h,"numberOfPointsAlongAMeridian")
@@ -662,7 +661,7 @@ def latlon_grid(h):
         dnorth = dsouth
         dsouth = dtmp
 
-    if not (cfg.is_lam or cfg.is_uerra):
+    if not (ctx.is_lam or ctx.is_uerra):
         CHECK('north > south', north > south)
         CHECK('east > west', east> west)
 
@@ -694,7 +693,7 @@ def X(h, name):
     print("%s=%ld " % (name, get(h, name)), end='')
 
 def check_parameter(h, min_value, max_value):
-    global cfg
+    global ctx
 
     best = -1;
     match = -1;
@@ -717,7 +716,7 @@ def check_parameter(h, min_value, max_value):
                 except:
                     pass
             elif ktype == str:
-                if cfg.is_uerra and pair['key'].lower() == "model":
+                if ctx.is_uerra and pair['key'].lower() == "model":
                     # print("Skipping model keyword for UERRA class")
                     matches += 1 # xxx hack to pretend that model key was matched.
                 else:
@@ -753,7 +752,7 @@ def check_parameter(h, min_value, max_value):
 
     if match >= 0:
         # int j = 0;
-        cfg.param = parameters[match]['name']
+        ctx.param = parameters[match]['name']
         i = 0
         for check_func in parameters[match]['checks']:
             check_map[check_func](h, parameters[match], min_value, max_value)
@@ -767,7 +766,7 @@ def check_parameter(h, min_value, max_value):
                 #}
                 #printf("matched parameter: %s", param);
     else:
-        print("%s, field %d [%s]: cannot match parameter" % (cfg.filename, cfg.field, cfg.param))
+        print("%s, field %d [%s]: cannot match parameter" % (ctx.filename, ctx.field, ctx.param))
         X(h, 'origin')
         X(h, "discipline")
         X(h, "parameterCategory")
@@ -779,20 +778,20 @@ def check_parameter(h, min_value, max_value):
         X(h, "scaleFactorOfSecondFixedSurface")
         X(h, "scaledValueOfSecondFixedSurface")
         print("")
-        cfg.error += 1
+        ctx.error += 1
 
 def check_packing(h):
-    global cfg
+    global ctx
     # ECC-1009: Warn if not using simple packing
     expected_packingType = "grid_simple";
     packingType = codes_get_string(h, "packingType")
 
     if packingType != expected_packingType:
-        print("warning: %s, field %d [%s]: invalid packingType %s (Should be %s)" %(cfg.filename, cfg.field, cfg.param, packingType, expected_packingType))
-        cfg.warning += 1
+        print("warning: %s, field %d [%s]: invalid packingType %s (Should be %s)" %(ctx.filename, ctx.field, ctx.param, packingType, expected_packingType))
+        ctx.warning += 1
 
 def verify(h):
-    global cfg
+    global ctx
 
     min_value = 0
     max_value = 0
@@ -801,13 +800,13 @@ def verify(h):
     # CHECK('missing(h,"reserved") or eq(h,"reserved",0)', missing(h,"reserved") or eq(h,"reserved",0))
 
 
-    if cfg.valueflg:
+    if ctx.valueflg:
         count = 0
         try:
             count = codes_get_size(h,"values")
         except Exception as e:
-            print("%s, field %d [%s]: cannot get number of values: %s" % (cfg.filename, cfg.field, cfg.param, str(e)))
-            cfg.error += 1
+            print("%s, field %d [%s]: cannot get number of values: %s" % (ctx.filename, ctx.field, ctx.param, str(e)))
+            ctx.error += 1
             return;
 
         bitmap = not eq(h,"bitMapIndicator",255);
@@ -819,13 +818,13 @@ def verify(h):
         try:
             values = codes_get_double_array(h, "values")
         except Exception as e:
-            print("%s, field %d [%s]: cannot get values: %s" % (cfg.filename, cfg.field, cfg.param, str(e)))
-            cfg.error += 1
+            print("%s, field %d [%s]: cannot get values: %s" % (ctx.filename, ctx.field, ctx.param, str(e)))
+            ctx.error += 1
             return
 
         if n != count:
-            print("%s, field %d [%s]: value count changed %ld -> %ld" % (cfg.filename, cfg.field, cfg.param, count, n))
-            cfg.error += 1
+            print("%s, field %d [%s]: value count changed %ld -> %ld" % (ctx.filename, ctx.field, ctx.param, count, n))
+            ctx.error += 1
             return
 
         if bitmap:
@@ -854,7 +853,7 @@ def verify(h):
 
     CHECK('eq(h,"significanceOfReferenceTime",1)', eq(h,"significanceOfReferenceTime",1)); # Start of forecast
 
-    if not cfg.is_s2s:
+    if not ctx.is_s2s:
         # todo check for how many years back the reforecast is done? Is it coded in the grib???
         # Check if the date is OK
         date = get(h,"date");
@@ -863,9 +862,9 @@ def verify(h):
         CHECK('((date % 10000) / 100) == get(h,"month")', int((date % 10000) / 100) == get(h,"month"))
         CHECK('((date % 100)) == get(h,"day")', (int(date % 100)) == get(h,"day"))
 
-    if cfg.is_uerra:
+    if ctx.is_uerra:
         CHECK('le(h,"hour",24)', le(h,"hour",24))
-    elif cfg.is_lam:
+    elif ctx.is_lam:
         CHECK(
             'eq(h,"hour",0) or eq(h,"hour",3) or eq(h,"hour",6) or eq(h,"hour",9) or eq(h,"hour",12) or eq(h,"hour",15) or eq(h,"hour",18) or eq(h,"hour",21))',
              eq(h,"hour",0) or eq(h,"hour",3) or eq(h,"hour",6) or eq(h,"hour",9) or eq(h,"hour",12) or eq(h,"hour",15) or eq(h,"hour",18) or eq(h,"hour",21))
@@ -877,24 +876,24 @@ def verify(h):
     CHECK('eq(h,"second",0)', eq(h,"second",0))
     CHECK('ge(h,"startStep",0)', ge(h,"startStep",0))
 
-    if cfg.is_s2s:
+    if ctx.is_s2s:
         CHECK('eq(h,"productionStatusOfProcessedData",6) or eq(h,"productionStatusOfProcessedData",7)', eq(h,"productionStatusOfProcessedData",6) or eq(h,"productionStatusOfProcessedData",7)) #S2S prod or test
         CHECK('le(h,"endStep",100*24)', le(h,"endStep",100*24))
-    elif not cfg.is_uerra:
+    elif not ctx.is_uerra:
         CHECK('eq(h,"productionStatusOfProcessedData",4) or eq(h,"productionStatusOfProcessedData",5)', eq(h,"productionStatusOfProcessedData",4) or eq(h,"productionStatusOfProcessedData",5)) # TIGGE prod or test
         CHECK('le(h,"endStep",30*24)', le(h,"endStep",30*24))
 
-    if cfg.is_uerra:
+    if ctx.is_uerra:
         CHECK(
             '(eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)',
              (eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)
-    elif cfg.is_lam:
+    elif ctx.is_lam:
         CHECK('(get(h,"step") % 3) == 0', (get(h,"step") % 3) == 0)
     else:
         CHECK('(get(h,"step") % 6) == 0', (get(h,"step") % 6) == 0)
 
-    if cfg.is_uerra:
-        if cfg.is_crra:
+    if ctx.is_uerra:
+        if ctx.is_crra:
             CHECK('eq(h,"productionStatusOfProcessedData",10) or eq(h,"productionStatusOfProcessedData",11)', eq(h,"productionStatusOfProcessedData",10) or eq(h,"productionStatusOfProcessedData",11)) # CRRA prodortest
         else:
             CHECK('eq(h,"productionStatusOfProcessedData",8) or eq(h,"productionStatusOfProcessedData",9)', eq(h,"productionStatusOfProcessedData",8) or eq(h,"productionStatusOfProcessedData",9)); #  UERRA prodortest
@@ -932,8 +931,8 @@ def verify(h):
         gaussian_grid(h)
     else:
         print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
-                (cfg.filename, cfg.field, cfg.param, get(h,"gridDefinitionTemplateNumber")))
-        cfg.error += 1
+                (ctx.filename, ctx.field, ctx.param, get(h,"gridDefinitionTemplateNumber")))
+        ctx.error += 1
         return;
 
     # If there is no bitmap, this should be true
@@ -955,17 +954,17 @@ def verify(h):
     #      CHECK('ne(h,"stepRange",0)', ne(h,"stepRange",0))
 
 def validate(path):
-    global cfg
+    global ctx
 
     count = 0;
-    cfg.filename = path;
-    cfg.field = 0;
+    ctx.filename = path;
+    ctx.field = 0;
 
     try:
         f = open(path, 'rb')
     except Exception as e:
         print("%s: %s" % (path, str(e)));
-        cfg.error += 1;
+        ctx.error += 1;
         return;
 
     while 1:
@@ -973,30 +972,30 @@ def validate(path):
             handle = codes_grib_new_from_file(f)
         except Exception as e:
             print("%s: grib_handle_new_from_file: %s" %(path, str(e)))
-            cfg.error += 1
+            ctx.error += 1
             return
 
         if handle == None:
             break
 
-        last_error   = cfg.error;
-        last_warning = cfg.warning;
+        last_error   = ctx.error;
+        last_warning = ctx.warning;
 
-        cfg.field += 1
+        ctx.field += 1
         verify(handle);
 
-        if (last_error != cfg.error) or ((cfg.warnflg != 0) and (last_warning != cfg.warning)):
-            save(handle, cfg.bad, cfg.fbad)
+        if (last_error != ctx.error) or ((ctx.warnflg != 0) and (last_warning != ctx.warning)):
+            save(handle, ctx.bad, ctx.fbad)
         else:
-            save(handle, cfg.good, cfg.fgood)
+            save(handle, ctx.good, ctx.fgood)
 
         codes_release(handle)
         count = count + 1
-        cfg.param = "unknown"
+        ctx.param = "unknown"
 
     if count == 0:
         print("%s does not contain any GRIBs" % path)
-        cfg.error += 1
+        ctx.error += 1
         return
 
 if __name__ == "__main__":
@@ -1035,14 +1034,15 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--crra', help='check crra fields (-u must be also used in this case)', action='store_true')
     args = parser.parse_args()
 
-    cfg.warnflg = args.warnflg
-    cfg.zeroflg = args.zeroflg
-    cfg.valueflg = args.valueflg
-    cfg.is_lam = args.lam
-    cfg.is_s2s = args.s2s
-    cfg.is_s2s_refcst = args.s2s_refcst
-    cfg.is_uerra = args.uerra
-    cfg.is_crra = args.crra
+    ctx = Context()
+    ctx.warnflg = args.warnflg
+    ctx.zeroflg = args.zeroflg
+    ctx.valueflg = args.valueflg
+    ctx.is_lam = args.lam
+    ctx.is_s2s = args.s2s
+    ctx.is_s2s_refcst = args.s2s_refcst
+    ctx.is_uerra = args.uerra
+    ctx.is_crra = args.crra
 
     if args.good:
         good = args.good
@@ -1061,14 +1061,14 @@ if __name__ == "__main__":
     err = 0
     for file in args.file:
         scan(file, validate)
-        if cfg.error != 0:
+        if ctx.error != 0:
             err = 1
-        if cfg.warning and cfg.warnflg:
+        if ctx.warning and ctx.warnflg:
             err = 1
 
-    if cfg.fgood != None and not cfg.fgood.closed:
-        cfg.fgood.close()
-    if cfg.fbad != None and not cfg.fbad.closed:
-        cfg.fbad.close()
+    if ctx.fgood != None and not ctx.fgood.closed:
+        ctx.fgood.close()
+    if ctx.fbad != None and not ctx.fbad.closed:
+        ctx.fbad.close()
 
-    sys.exit(0 if cfg.zeroflg else err)
+    sys.exit(0 if ctx.zeroflg else err)
