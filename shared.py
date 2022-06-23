@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import os
+import glob
 
 def scan(name, validate):
     if os.path.isdir(name):
-        for path in Path(os.path.dirname(name)).rglob('/*'):
+        for path in glob.glob(name + '/*'):
             scan(path, validate)
     else:
         validate(name);
