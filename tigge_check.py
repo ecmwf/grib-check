@@ -2,7 +2,6 @@
 
 from eccodes import *
 import sys
-from pathlib import Path
 import math
 import os
 import argparse
@@ -18,9 +17,9 @@ values = None
 class Context:
     def __init__(self):
         self.filename = ''
-        self.error = 0
-        self.warning = 0
-        self.field = 0
+        self.error = 0 # Count errors
+        self.warning = 0 # Count warning
+        self.field = 0 # Count fields
         self.param = "unknown"
         self.valueflg = False
         self.warnflg = False
