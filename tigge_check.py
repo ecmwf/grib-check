@@ -8,6 +8,7 @@ import os
 import argparse
 from tigge_check_parameters import parameters
 import numpy as np
+from shared import *
 
 # static
 last_n = 0
@@ -39,10 +40,6 @@ cfg = Config()
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-def scan(name):
-    # for path in Path(os.path.dirname(name)).rglob('*'):
-    for path in Path(os.path.dirname(name)).rglob('*'):
-        validate(str(path));
 
 def CHECK(name, a):
     check(name, a)
@@ -96,7 +93,10 @@ def dget(h, what) -> float:
     return val;
 
 def missing(h, what) -> int:
-    return codes_is_missing(h, what)
+    try:
+        return codes_is_missing(h, what)
+    except KeyValueNotFoundError as e:
+        return 1
 
 def eq(h, what, value) -> int:
     return get(h, what) == value
@@ -1060,7 +1060,7 @@ if __name__ == "__main__":
 
     err = 0
     for file in args.file:
-        scan(file)
+        scan(file, validate)
         if cfg.error != 0:
             err = 1
         if cfg.warning and cfg.warnflg:
