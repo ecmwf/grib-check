@@ -117,16 +117,16 @@ def validate(path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--list-mode', help='Enable list mode', action='store_true')
-    parser.add_argument('-c', '--compare-mode', help='Enable compare mode', action='store_true')
-    parser.add_argument('file', nargs='+', help='Grib files', type=str)
+    parser.add_argument('-l', '--list-mode', help='enable list mode', action='store_true')
+    parser.add_argument('-c', '--compare-mode', help='enable compare mode', action='store_true')
+    parser.add_argument('path', nargs='+', help='path to a GRIB file or directory', type=str)
     args = parser.parse_args()
 
     ctx = Context()
     ctx.list_mode = args.list_mode
     ctx.compare_mode = args.compare_mode
 
-    for file in args.file:
-        scan(file, validate)
+    for path in args.path:
+        scan(path, validate)
 
     sys.exit(0 if ctx.error == 0 else 1)
