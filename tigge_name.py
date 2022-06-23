@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from eccodes import *
-from pathlib import Path
 import math
 import argparse
 from shared import *
