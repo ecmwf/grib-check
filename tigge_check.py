@@ -933,7 +933,7 @@ def verify(h):
             gaussian_grid(h)
         else:
             # raise(Exception('Require eccodes-python 1.5.0 or higher'))
-            print('WARNING: Require eccodes-python 1.5.0 or higher for checking gaussian grids'))
+            print('WARNING: Require eccodes-python 1.5.0 or higher for checking gaussian grids')
     else:
         print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
                 (ctx.filename, ctx.field, ctx.param, get(h,"gridDefinitionTemplateNumber")))
