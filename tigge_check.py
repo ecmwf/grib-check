@@ -927,7 +927,13 @@ def verify(h):
         # CHECK('eq(h,"scanningMode",64)', eq(h,"scanningMode",64));*/ /* M-F data used to have it wrong.. but it might depends on other projection set up as well!
         pass
     elif dtn == 40: # gaussian grid (regular or reduced)
-        gaussian_grid(h)
+        version_string = codes_get_version_info()
+        version = [int(v) for v in version_string['bindings'].split('.')]
+        if version[0] >= 1 and version[1] > 5:
+            gaussian_grid(h)
+        else:
+            # raise(Exception('Require eccodes-python 1.5.0 or higher'))
+            print('WARNING: Require eccodes-python 1.5.0 or higher for checking gaussian grids'))
     else:
         print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
                 (ctx.filename, ctx.field, ctx.param, get(h,"gridDefinitionTemplateNumber")))
