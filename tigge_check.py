@@ -929,7 +929,7 @@ def verify(h):
     elif dtn == 40: # gaussian grid (regular or reduced)
         version_string = codes_get_version_info()
         version = [int(v) for v in version_string['bindings'].split('.')]
-        if version[0] >= 1 and version[1] > 5:
+        if version[0] >= 1 and version[1] >= 5:
             gaussian_grid(h)
         else:
             # raise(Exception('Require eccodes-python 1.5.0 or higher'))
