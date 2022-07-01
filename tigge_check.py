@@ -49,13 +49,10 @@ def check(name, a):
         ctx.error += 1
 
 #/*
-#def warn(const char* name,int a)
-#{
-    #if(!a) {
-        #printf("%s, field %d [%s]: %s failed",filename,field,param,name);
-        #warning++;
-    #}
-#}
+#def warn(const char* name,int a):
+    #if not a: 
+        #print('%s, field %d [%s]: %s failed' (filename, field, param, name));
+        #warning += 1;
 #*/
 
 def save(h, name, f):
@@ -165,7 +162,7 @@ def gaussian_grid(h):
         dwest = dget(h,"longitudeOfFirstGridPointInDegrees")
         deast = dget(h,"longitudeOfLastGridPointInDegrees")
         dwe = dget(h,"iDirectionIncrementInDegrees")
-        # printf("parallel=%ld east=%ld west=%ld we=%ld",parallel,east,west,we)
+        # print('parallel=%ld east=%ld west=%ld we=%ld' % (parallel, east, west, we))
 
         CHECK('parallel == (l_east-l_west)/we + 1', parallel == (l_east-l_west)/we + 1)
         CHECK('abs((deast-dwest)/dwe + 1 - parallel) < 1e-10', abs((deast-dwest)/dwe + 1 - parallel) < 1e-10)
@@ -487,7 +484,7 @@ def statistical_process(h, p, min_value, max_value):
         CHECK('get(h,"lengthOfTimeRange") + get(h,"startStep") == get(h,"endStep")', get(h,"lengthOfTimeRange") + get(h,"startStep") == get(h,"endStep"))
 
 def has_bitmap(h, p, min_value, max_value):
-    # printf("bitMapIndicator %ld",get(h,"bitMapIndicator"))
+    # print('bitMapIndicator %ld' % get(h,"bitMapIndicator"))
     CHECK('eq(h,"bitMapIndicator",0)', eq(h,"bitMapIndicator",0))
 
 def has_soil_level(h, p, min_value, max_value):
@@ -682,12 +679,11 @@ def latlon_grid(h):
     CHECK('east >= 0', east >= 0)
     CHECK('west >= 0', west >= 0)
 
-      #printf("meridian=%ld north=%ld south=%ld ns=%ld ",meridian,north,south,ns)
-      #printf("meridian=%ld north=%f south=%f ns=%f ",meridian,dnorth,dsouth,dns)
-      #printf("parallel=%ld east=%ld west=%ld we=%ld ",parallel,east,west,we)
-      #printf("parallel=%ld east=%f west=%f we=%f ",parallel,deast,dwest,dwe)
+    #print('meridian=%ld north=%ld south=%ld ns=%ld ', (meridian, north, south, ns))
+    #print('meridian=%ld north=%f south=%f ns=%f ', (meridian, dnorth, dsouth, dns))
+    #print('parallel=%ld east=%ld west=%ld we=%ld ', (parallel, east, west, we))
+    #print('parallel=%ld east=%f west=%f we=%f ', (parallel, deast, dwest, dwe))
 
-#define X(x) printf("%s=%ld ",#x,get(h,#x))
 def X(h, name):
     print("%s=%ld " % (name, get(h, name)), end='')
 
@@ -756,14 +752,12 @@ def check_parameter(h, min_value, max_value):
         for check_func in parameters[match]['checks']:
             check_map[check_func](h, parameters[match], min_value, max_value)
             i += 1
-                #printf("=========================");
-                #printf("%s -> %d %d",param, match, best);
-                #while(parameters[match].pairs[j].key != NULL)
-                #{
-                #     printf("%s val -> %ld %d",parameters[match].pairs[j].key,parameters[match].pairs[j].value,j);
-                #     j++;
-                #}
-                #printf("matched parameter: %s", param);
+                #print('=========================')
+                #print('%s -> %d %d' , (param, match, best))
+                #while(parameters[match].pairs[j].key != NULL):
+                #     print('%s val -> %ld %d' % (parameters[match].pairs[j].key, parameters[match].pairs[j].value,j));
+                #     j += 1
+                #print('matched parameter: %s % param);
     else:
         print("%s, field %d [%s]: cannot match parameter" % (ctx.filename, ctx.field, ctx.param))
         X(h, 'origin')
