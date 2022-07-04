@@ -7,1018 +7,1153 @@ import os
 import argparse
 from tigge_check_parameters import parameters
 import numpy as np
+import json
 from shared import *
-
-# static
-last_n = 0
-values = None
-
-# global
-class Context:
-    def __init__(self):
-        self.filename = ''
-        self.error = 0 # Count errors
-        self.warning = 0 # Count warning
-        self.field = 0 # Count fields
-        self.param = "unknown"
-        self.valueflg = False
-        self.warnflg = False
-        self.zeroflg = False
-        self.is_lam = False
-        self.is_s2s = False
-        self.is_s2s_refcst= False
-        self.is_uerra = False
-        self.is_crra = False
-        self.good = ''
-        self.bad = ''
-        self.fgood = None
-        self.fbad = None
-
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+class TiggeChecker:
+    def __init__(self, valueflg=False, warnflg=False, lam=False, s2s=False, s2s_refcst=False, uerra=False, crra=False, good=None, bad=None):
+        self.__last_n = 0
+        self.__values = None
 
-def CHECK(name, a):
-    check(name, a)
+        self.__filename = ''
+        self.__error = 0
+        self.__warning = 0
+        self.__field = 0
+        self.__param = 'unknown'
 
-def check(name, a):
-    global ctx
-    if not a:
-        print("%s, field %d [%s]: %s failed" % (ctx.filename, ctx.field, ctx.param, name))
-        ctx.error += 1
+        self.__valueflg = valueflg
+        self.__warnflg = warnflg
+        self.__is_lam = lam
+        self.__is_s2s = s2s
+        self.__is_s2s_refcst= s2s_refcst
+        self.__is_uerra = uerra
+        self.__is_crra = crra
+        self.__good = good
+        self.__bad = bad
 
-#/*
-#def warn(const char* name,int a):
-    #if not a: 
-        #print('%s, field %d [%s]: %s failed' (filename, field, param, name));
-        #warning += 1;
-#*/
+        self.__check_map = {
+            'daily_average': self.__daily_average,
+            'from_start': self.__from_start,
+            'given_level': self.__given_level,
+            'given_thickness': self.__given_thickness,
+            'has_bitmap': self.__has_bitmap,
+            'has_soil_layer': self.__has_soil_layer,
+            'has_soil_level': self.__has_soil_level,
+            'height_level': self.__height_level,
+            'point_in_time': self.__point_in_time,
+            'potential_temperature_level': self.__potential_temperature_level,
+            'potential_vorticity_level': self.__potential_vorticity_level,
+            'predefined_level': self.__predefined_level,
+            'predefined_thickness': self.__predefined_thickness,
+            'pressure_level': self.__pressure_level,
+            'resolution_s2s': self.__resolution_s2s,
+            'resolution_s2s_ocean': self.__resolution_s2s_ocean,
+            'since_prev_pp': self.__since_prev_pp,
+            'six_hourly': self.__six_hourly,
+            'three_hourly': self.__three_hourly
+        }
 
-def save(h, name, f):
-    if f == None:
-        return
-    try:
-        buffer = codes_get_message(h)
-    except Exception as e:
-        print("%s, field %d [%s]: cannot get message: %s" % (ctx.filename, ctx.field, ctx.param, str(e)))
-        sys.exit(1)
-    try:
-        f.write(bytearray(buffer))
-    except Exception as e:
-        print(str(e))
-        sys.exit(1)
+        self.__fgood = None
+        if self.__good:
+            self.__fgood = open(self.__good, 'w')
+            if not self.__fgood:
+                print("Couldn't open %s" % self.__good)
+                sys.exit(1)
 
-def get(h, what) -> int:
-    try:
-        val = codes_get_long(h, what)
-    except Exception as e:
-        print("%s, field %d [%s]: cannot get %s: %s" % (ctx.filename, ctx.field, ctx.param, what, str(e)))
-        ctx.error += 1;
-        val = -1;
-    return val;
+        self.__fbad = None
+        if self.__bad:
+            self.__fbad = open(self.__bad, 'w')
+            if not self.__fbad:
+                print("Couldn't open %s" % self.__bad)
+                sys.exit(1)
 
-def dget(h, what) -> float:
-    try:
-        val = codes_get_double(h, what)
-    except Exception as e:
-        print("%s, field %d [%s]: cannot get %s: %s" % (ctx.filename, ctx.field, ctx.param, what, str(e)))
-        ctx.error += 1;
-        val = -1;
-    return val;
+    def __del__(self):
+        if self.__fgood != None and not self.__fgood.closed:
+            self.__fgood.close()
+        if self.__fbad != None and not self.__fbad.closed:
+            self.__fbad.close()
 
-def missing(h, what) -> bool:
-    try:
-        return False if codes_is_missing(h, what) == 0 else True
-    except KeyValueNotFoundError as e:
-        return True
+    def __check(self, name, a):
+        if not a:
+            print('%s, field %d [%s]: %s failed' % (self.__filename, self.__field, self.__param, name))
+            self.__error += 1
 
-def eq(h, what, value) -> int:
-    return get(h, what) == value
+    #def warn(const char* name,int a):
+        #if not a: 
+            #print('%s, field %d [%s]: %s failed' (filename, field, param, name));
+            #warning += 1;
 
-def ne(h, what, value) -> int:
-    return get(h,what) != value
-
-def ge(h, what, value) -> int:
-    return get(h, what) >= value
-
-def le(h, what, value) -> int:
-    return get(h, what) <= value
-
-def DBL_EQUAL(d1, d2, tolerance) -> bool:
-    return math.fabs(d1 - d2) <= tolerance
-
-def gaussian_grid(h):
-    global last_n
-    global values
-
-    tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
-    n = get(h,"numberOfParallelsBetweenAPoleAndTheEquator"); # This is the key N
-
-    north = dget(h,"latitudeOfFirstGridPointInDegrees")
-    south = dget(h,"latitudeOfLastGridPointInDegrees")
-
-    west = dget(h,"longitudeOfFirstGridPointInDegrees")
-    east = dget(h,"longitudeOfLastGridPointInDegrees")
-
-    if n != last_n:
-        try:
-            values = codes_get_gaussian_latitudes(n)
-        except:
-            print("%s, field %d [%s]: cannot get gaussian latitudes for N%ld: %s" % (ctx.filename, ctx.field, ctx.param,n, str(e)))
-            ctx.error += 1
-            last_n = 0
+    def __save(self, h, name, f):
+        if f == None:
             return
-        last_n = n;
-
-    # TODO
-    if values == None:
-        assert(0)
-        return
-
-    if values != None:
-        values[0] = np.rint(values[0] * 1e6) / 1e6;
-
-    if not DBL_EQUAL(north, values[0], tolerance) or not DBL_EQUAL(south, -values[0], tolerance):
-        print("N=%ld north=%f south=%f v(=gauss_lat[0])=%f north-v=%0.30f south-v=%0.30f" % (n, north, south, values[0], north-values[0], south+values[0]))
-
-    CHECK('DBL_EQUAL(north, values[0], tolerance)', DBL_EQUAL(north, values[0], tolerance))
-    CHECK('DBL_EQUAL(south, -values[0], tolerance)', DBL_EQUAL(south, -values[0], tolerance))
-
-    if missing(h,"numberOfPointsAlongAParallel"): # same as key Ni 
-        # If missing, this is a REDUCED gaussian grid 
-        MAXIMUM_RESOLUTION = 640;
-        CHECK('get(h,"PLPresent")', get(h,"PLPresent"))
-        CHECK('DBL_EQUAL(west, 0.0, tolerance)', DBL_EQUAL(west, 0.0, tolerance))
-        if n > MAXIMUM_RESOLUTION:
-            print("Gaussian number N (=%ld) cannot exceed %ld" % (n, MAXIMUM_RESOLUTION))
-            CHECK('n <= MAXIMUM_RESOLUTION', n <= MAXIMUM_RESOLUTION)
-    else:
-        # REGULAR gaussian grid 
-        l_west = get(h,"longitudeOfFirstGridPoint")
-        l_east = get(h,"longitudeOfLastGridPoint")
-        parallel = get(h,"numberOfPointsAlongAParallel")
-        we = get(h,"iDirectionIncrement")
-        dwest = dget(h,"longitudeOfFirstGridPointInDegrees")
-        deast = dget(h,"longitudeOfLastGridPointInDegrees")
-        dwe = dget(h,"iDirectionIncrementInDegrees")
-        # print('parallel=%ld east=%ld west=%ld we=%ld' % (parallel, east, west, we))
-
-        CHECK('parallel == (l_east-l_west)/we + 1', parallel == (l_east-l_west)/we + 1)
-        CHECK('abs((deast-dwest)/dwe + 1 - parallel) < 1e-10', abs((deast-dwest)/dwe + 1 - parallel) < 1e-10)
-        CHECK('not get(h,"PLPresent")', not get(h,"PLPresent"))
-
-    CHECK('ne(h,"Nj",0)', ne(h,"Nj",0))
-
-    get(h,"PLPresent")
-
-    i = 0
-    count = codes_get_size(h,"pl")
-    expected_lon2 = 0
-    total = 0
-    max_pl = 0
-    numberOfValues = get(h,"numberOfValues")
-    numberOfDataPoints = get(h,"numberOfDataPoints")
-
-
-    pl = codes_get_double_array(h,"pl")
-
-    if len(pl) != count:
-        print("len(pl)=%ld count=%ld" % (len(pl), count))
-
-    CHECK('len(pl) == count', len(pl) == count)
-    CHECK('len(pl) == 2*n', len(pl) == 2*n)
-
-    total = 0;
-    max_pl = pl[0]; #  max elem of pl array = num points at equator
-
-    for p in pl:
-        total = total + p
-        if p > max_pl:
-            max_pl = p
-
-
-    # Do not assume maximum of pl array is 4N! not true for octahedral
-
-    expected_lon2 = 360.0 - 360.0/max_pl;
-    if not DBL_EQUAL(expected_lon2, east, tolerance):
-        print("east actual=%g expected=%g diff=%g",east, expected_lon2, expected_lon2-east)
-
-    CHECK('DBL_EQUAL(expected_lon2, east, tolerance)', DBL_EQUAL(expected_lon2, east, tolerance))
-
-    if numberOfDataPoints != total:
-        print("GAUSS numberOfValues=%ld numberOfDataPoints=%ld sum(pl)=%ld" % (
-                numberOfValues,
-                numberOfDataPoints,
-                total))
-
-    CHECK('numberOfDataPoints == total', numberOfDataPoints == total)
-
-    CHECK('missing(h,"iDirectionIncrement")', missing(h,"iDirectionIncrement"))
-    CHECK('missing(h,"iDirectionIncrementInDegrees")', missing(h,"iDirectionIncrementInDegrees"))
-
-    CHECK('eq(h,"iDirectionIncrementGiven",0)', eq(h,"iDirectionIncrementGiven",0))
-    CHECK('eq(h,"jDirectionIncrementGiven",1)', eq(h,"jDirectionIncrementGiven",1))
-
-    CHECK('eq(h,"resolutionAndComponentFlags1",0)', eq(h,"resolutionAndComponentFlags1",0))
-    CHECK('eq(h,"resolutionAndComponentFlags2",0)', eq(h,"resolutionAndComponentFlags2",0))
-    CHECK('eq(h,"resolutionAndComponentFlags6",0)', eq(h,"resolutionAndComponentFlags6",0))
-    CHECK('eq(h,"resolutionAndComponentFlags7",0)', eq(h,"resolutionAndComponentFlags7",0))
-    CHECK('eq(h,"resolutionAndComponentFlags8",0)', eq(h,"resolutionAndComponentFlags8",0))
-
-def check_validity_datetime(h):
-    global ctx
-    # If we just set the stepRange (for non-instantaneous fields) to its
-    # current value, then this causes the validity date and validity time
-    # keys to be correctly computed.
-    # Then we can compare the previous (possibly wrongly coded) value with
-    # the newly computed one
-
-    stepType = codes_get_string(h, "stepType")
-
-    if stepType != "instant": # not instantaneous
-        # Check only applies to accumulated, max etc.
-        stepRange = codes_get_string(h, "stepRange")
-
-        saved_validityDate = get(h, "validityDate")
-        saved_validityTime = get(h, "validityTime")
-
-        codes_set_string(h, "stepRange", stepRange);
-
-        validityDate = get(h, "validityDate");
-        validityTime = get(h, "validityTime");
-        if validityDate!=saved_validityDate or validityTime!=saved_validityTime:
-            print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (ctx.filename, ctx.field, ctx.param, validityDate, validityTime))
-            ctx.warning += 1
-
-def check_range(h, p, min_value, max_value):
-    global ctx
-    missing = 0;
-    if ctx.valueflg != 0:
-        return
-
-    missing = dget(h,"missingValue")
-
-    # See ECC-437
-    if not get(h,"bitMapIndicator") == 0 and min_value == missing and max_value == missing:
-        if min_value < p['min1'] or min_value > p['min2']: 
-            print("warning: %s, field %d [%s]: %s minimum value %g is not in [%g,%g]" % (ctx.filename, ctx.field, ctx.param, p['name'], min_value, p['min1'], p['min2']))
-            print("  => [%g,%g]" % (min_value if min_value < p['min1'] else p['min1'], min_value if min_value > p['min2'] else p['min2']))
-            ctx.warning += 1
-
-        if max_value < p['max1'] or max_value > p['max2']:
-            print("warning: %s, field %d [%s]: %s maximum value %g is not in [%g,%g]" % (ctx.filename, ctx.field, ctx.param, p['name'], max_value, p['max1'], p['max2']))
-            print("  => [%g,%g]" % (max_value if max_value < p['max1'] else p['max1'], max_value if max_value > p['max2'] else p['max2']))
-            ctx.warning += 1
-
-
-def point_in_time(h, p, min_value, max_value):
-    global ctx
-    topd = get(h,"typeOfProcessedData")
-
-    if topd == 0: # Analysis
-        if ctx.is_uerra:
-            CHECK('eq(h,"productDefinitionTemplateNumber",0) or eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",0) or eq(h,"productDefinitionTemplateNumber",1))
-        if get(h,"productDefinitionTemplateNumber") == 1:
-            CHECK('ne(h,"numberOfForecastsInEnsemble",0)', ne(h,"numberOfForecastsInEnsemble",0))
-            CHECK('le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble"))', le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")))
-
-    elif topd == 1: # Forecast
-        if ctx.is_uerra:
-            CHECK('eq(h,"productDefinitionTemplateNumber",0) or eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",0) or eq(h,"productDefinitionTemplateNumber",1))
-        if get(h,"productDefinitionTemplateNumber") == 1:
-            CHECK('ne(h,"numberOfForecastsInEnsemble",0)', ne(h,"numberOfForecastsInEnsemble",0))
-            CHECK('le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble"))', le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")))
-
-    elif topd == 2: # Analysis and forecast products
-        CHECK('eq(h,"productDefinitionTemplateNumber",0)', eq(h,"productDefinitionTemplateNumber",0))
-
-    elif topd == 3: # Control forecast products 
-        CHECK('eq(h,"perturbationNumber",0)', eq(h,"perturbationNumber",0))
-        CHECK('ne(h,"numberOfForecastsInEnsemble",0)', ne(h,"numberOfForecastsInEnsemble",0))
-        if ctx.is_s2s_refcst:
-            CHECK('eq(h,"productDefinitionTemplateNumber",60)', eq(h,"productDefinitionTemplateNumber",60))
-        elif ctx.is_s2s:
-            # CHECK('eq(h,"productDefinitionTemplateNumber",60) or eq(h,"productDefinitionTemplateNumber",11) or eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",60) or eq(h,"productDefinitionTemplateNumber",11) or eq(h,"productDefinitionTemplateNumber",1))
-            CHECK('eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",1))
-        else:
-            CHECK('eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",1))
-
-    elif topd == 4: # Perturbed forecast products
-        CHECK('ne(h,"perturbationNumber",0)', ne(h,"perturbationNumber",0))
-        CHECK('ne(h,"numberOfForecastsInEnsemble",0)', ne(h,"numberOfForecastsInEnsemble",0))
-        if ctx.is_s2s_refcst:
-            CHECK('eq(h,"productDefinitionTemplateNumber",60)', eq(h,"productDefinitionTemplateNumber",60))
-        elif ctx.is_s2s:
-            # CHECK('eq(h,"productDefinitionTemplateNumber",60) or eq(h,"productDefinitionTemplateNumber",11) or eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",60) or eq(h,"productDefinitionTemplateNumber",11) or eq(h,"productDefinitionTemplateNumber",1))
-            CHECK('eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",1))
-        else:
-            CHECK('eq(h,"productDefinitionTemplateNumber",1)', eq(h,"productDefinitionTemplateNumber",1));
-        if ctx.is_lam:
-            CHECK('le(h,"perturbationNumber", get(h,"numberOfForecastsInEnsemble"))', le(h,"perturbationNumber", get(h,"numberOfForecastsInEnsemble")))
-        else:
-            # Is there always cf in tigge global datasets??
-            CHECK('le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")-1)', le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")-1))
-
-    else:
-        print("Unsupported typeOfProcessedData %ld" % get(h,"typeOfProcessedData"))
-        CHECK('0', 0)
-
-    if ctx.is_lam:
-        if get(h,"indicatorOfUnitOfTimeRange") == 10: # three hours
-            # Three hourly is OK 
-            pass
-        else:
-            CHECK('eq(h,"indicatorOfUnitOfTimeRange",1)', eq(h,"indicatorOfUnitOfTimeRange",1)) # Hours
-            CHECK('(get(h,"forecastTime) % 3) == 0"', (get(h,"forecastTime") % 3) == 0) # Every three hours
-    elif ctx.is_uerra:
-        if(get(h,"indicatorOfUnitOfTimeRange") == 1): #hourly
-            CHECK(
-                '(eq(h,"forecastTime",1) or eq(h,"forecastTime",2) or eq(h,"forecastTime",4) or eq(h,"forecastTime",5)) or (get(h,"forecastTime") % 3) == 0',
-                 (eq(h,"forecastTime",1) or eq(h,"forecastTime",2) or eq(h,"forecastTime",4) or eq(h,"forecastTime",5)) or (get(h,"forecastTime") % 3) == 0)
-    else:
-        if get(h,"indicatorOfUnitOfTimeRange") == 11: #six hour
-            # Six hourly is OK
-            pass
-        else:
-            CHECK('eq(h,"indicatorOfUnitOfTimeRange",1)', eq(h,"indicatorOfUnitOfTimeRange",1)) # Hours
-            CHECK('(get(h,"forecastTime) % 6) == 0"', (get(h,"forecastTime") % 6) == 0) # Every six hours
-
-    check_range(h, p, min_value, max_value)
-
-def height_level(h, p, min_value, max_value):
-    global ctx
-    level = get(h, "level");
-    levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
-    if ctx.is_uerra:
-        if level in levels:
-            pass
-        else:
-            print("%s, field %d [%s]: invalid height level %ld" % (ctx.filename, ctx.field, ctx.param, level))
-            ctx.error += 1
-
-def pressure_level(h, p, min_value, max_value):
-    global ctx
-    level = get(h,"level");
-
-    if ctx.is_uerra and not ctx.is_crra:
-        if level in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10]:
-            pass
-        else:
-            print("%s, field %d [%s]: invalid pressure level %ld" % (ctx.filename, ctx.field, ctx.param, level))
-            ctx.error += 1
-    elif ctx.is_uerra and ctx.is_crra:
-        if level in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10, 7, 5, 3, 2, 1]:
-            pass
-        else:
-            print("%s, field %d [%s]: invalid pressure level %ld" % (ctx.filename, ctx.field, ctx.param, level))
-            ctx.error += 1
-    elif ctx.is_s2s:
-        if level in [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]:
-            pass
-        else:
-            print("%s, field %d [%s]: invalid pressure level %ld" % (ctx.filename, ctx.field, ctx.param, level))
-            ctx.error += 1
-    else:
-        if level in [1000, 200, 250, 300, 500, 700, 850, 925, 50]:
-            pass
-        else:
-            print("%s, field %d [%s]: invalid pressure level %ld" % (ctx.filename, ctx.field, ctx.param, level))
-            ctx.error += 1
-
-def potential_vorticity_level(h, p, min_value, max_value):
-    global ctx
-    level = get(h, "level")
-    if level == 2:
-        pass
-    else:
-        print("%s, field %d [%s]: invalid potential vorticity level %ld" % (ctx.filename, ctx.field, ctx.param, level))
-        ctx.error += 1
-
-def potential_temperature_level(h, p, min_value, max_value):
-    global ctx
-    level = get(h, "level")
-    if level == 320:
-        pass
-    else:
-        print("%s, field %d [%s]: invalid potential temperature level %ld" % (ctx.filename, ctx.field, ctx.param, level))
-        ctx.error += 1
-
-def statistical_process(h, p, min_value, max_value):
-    global ctx
-    topd = get(h, "typeOfProcessedData")
-
-    if topd ==  0: # Analysis
-        if ctx.is_uerra:
-            CHECK('eq(h,"productDefinitionTemplateNumber",8) or eq(h,"productDefinitionTemplateNumber",11)', eq(h,"productDefinitionTemplateNumber",8) or eq(h,"productDefinitionTemplateNumber",11))
-    elif topd == 1: # Forecast
-        if ctx.is_uerra:
-            CHECK('eq(h,"productDefinitionTemplateNumber",8) or eq(h,"productDefinitionTemplateNumber",11)', eq(h,"productDefinitionTemplateNumber",8) or eq(h,"productDefinitionTemplateNumber",11))
-    elif topd == 2: # Analysis and forecast products
-        CHECK('eq(h,"productDefinitionTemplateNumber",8)', eq(h,"productDefinitionTemplateNumber",8))
-    elif topd == 3: # Control forecast products
-        if not ctx.is_s2s_refcst:
-            CHECK('eq(h,"productDefinitionTemplateNumber",11)', eq(h,"productDefinitionTemplateNumber",11))
-        else:
-            CHECK('eq(h,"productDefinitionTemplateNumber",61)', eq(h,"productDefinitionTemplateNumber",61))
-    elif topd == 4: # Perturbed forecast products
-        if not ctx.is_s2s_refcst:
-            CHECK('eq(h,"productDefinitionTemplateNumber",11)', eq(h,"productDefinitionTemplateNumber",11))
-        else:
-            CHECK('eq(h,"productDefinitionTemplateNumber",61)', eq(h,"productDefinitionTemplateNumber",61))
-    else:
-        print("Unsupported typeOfProcessedData %ld" % (get(h,"typeOfProcessedData")))
-        ctx.error += 1
-        return;
-
-    if ctx.is_lam:
-        if get(h,"indicatorOfUnitOfTimeRange") == 10: # three hours
-            # Three hourly is OK
-            pass
-        else:
-            CHECK('eq(h,"indicatorOfUnitOfTimeRange",1)', eq(h,"indicatorOfUnitOfTimeRange",1)) # Hours
-            CHECK('(get(h,"forecastTime"', (get(h,"forecastTime") % 3) == 0); # Every three hours
-    elif ctx.is_uerra:
-#  forecastTime for uerra might be all steps decreased by 1 i.e 0,1,2,3,4,5,8,11...29 too many... */
-        if get(h,"indicatorOfUnitOfTimeRange") == 1:
-            CHECK('le(h,"forecastTime",30)', le(h,"forecastTime",30))
-    else:
-        if get(h,"indicatorOfUnitOfTimeRange") == 11: # six hours
-            # Six hourly is OK
-            pass
-        else:
-            CHECK('eq(h,"indicatorOfUnitOfTimeRange",1)', eq(h,"indicatorOfUnitOfTimeRange",1)); # Hours
-            CHECK('(get(h,"forecastTime"', (get(h,"forecastTime") % 6) == 0); # Every six hours
-
-    CHECK('eq(h,"numberOfTimeRange",1)', eq(h,"numberOfTimeRange",1))
-    CHECK('eq(h,"numberOfMissingInStatisticalProcess",0)', eq(h,"numberOfMissingInStatisticalProcess",0))
-    CHECK('eq(h,"typeOfTimeIncrement",2)', eq(h,"typeOfTimeIncrement",2))
-    # CHECK('eq(h,"indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed",255)', eq(h,"indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed",255))
-
-    if ctx.is_s2s:
-        if get(h,"typeOfStatisticalProcessing") == 0:
-            CHECK('eq(h,"timeIncrementBetweenSuccessiveFields",1) or eq(h,"timeIncrementBetweenSuccessiveFields",4)', eq(h,"timeIncrementBetweenSuccessiveFields",1) or eq(h,"timeIncrementBetweenSuccessiveFields",4))
-        else:
-            CHECK('eq(h,"timeIncrementBetweenSuccessiveFields",0)', eq(h,"timeIncrementBetweenSuccessiveFields",0))
-    else:
-        CHECK('eq(h,"timeIncrementBetweenSuccessiveFields",0)', eq(h,"timeIncrementBetweenSuccessiveFields",0))
-
-    CHECK('eq(h,"minuteOfEndOfOverallTimeInterval",0)', eq(h,"minuteOfEndOfOverallTimeInterval",0))
-    CHECK('eq(h,"secondOfEndOfOverallTimeInterval",0)', eq(h,"secondOfEndOfOverallTimeInterval",0))
-
-    if ctx.is_uerra:
-        CHECK('(eq(h,"endStep",1) or eq(h,"endStep",2) or eq(h,"endStep",4) or eq(h,"endStep",5)) or (get(h,"endStep"', (eq(h,"endStep",1) or eq(h,"endStep",2) or eq(h,"endStep",4) or eq(h,"endStep",5)) or (get(h,"endStep") % 3) == 0)
-    elif ctx.is_lam:
-        CHECK('(get(h,"endStep"', (get(h,"endStep") % 3) == 0);  # Every three hours
-    else:
-        CHECK('(get(h,"endStep"', (get(h,"endStep") % 6) == 0); # Every six hours
-
-    if get(h,"indicatorOfUnitForTimeRange") == 11:
-        # Six hourly is OK
-        CHECK('get(h,"lengthOfTimeRange")*6 + get(h,"startStep") == get(h,"endStep")', get(h,"lengthOfTimeRange")*6 + get(h,"startStep") == get(h,"endStep"))
-    elif get(h,"indicatorOfUnitForTimeRange") == 10:
-        # Three hourly is OK
-        CHECK('get(h,"lengthOfTimeRange")*3 + get(h,"startStep") == get(h,"endStep")', get(h,"lengthOfTimeRange")*3 + get(h,"startStep") == get(h,"endStep"))
-    else:
-        CHECK('eq(h,"indicatorOfUnitForTimeRange",1)', eq(h,"indicatorOfUnitForTimeRange",1)) # Hours
-        CHECK('get(h,"lengthOfTimeRange") + get(h,"startStep") == get(h,"endStep")', get(h,"lengthOfTimeRange") + get(h,"startStep") == get(h,"endStep"))
-
-def has_bitmap(h, p, min_value, max_value):
-    # print('bitMapIndicator %ld' % get(h,"bitMapIndicator"))
-    CHECK('eq(h,"bitMapIndicator",0)', eq(h,"bitMapIndicator",0))
-
-def has_soil_level(h, p, min_value, max_value):
-    CHECK('get(h,"topLevel") == get(h,"bottomLevel")', get(h,"topLevel") == get(h,"bottomLevel"))
-    CHECK('le(h,"level",14)', le(h,"level",14)); # max in UERRA
-
-def has_soil_layer(h, p, min_value, max_value):
-    CHECK('get(h,"topLevel") == get(h,"bottomLevel") - 1', get(h,"topLevel") == get(h,"bottomLevel") - 1)
-    CHECK('le(h,"level",14)', le(h,"level",14)); # max in UERRA
-
-def resolution_s2s(h, p, min_value, max_value):
-    CHECK('eq(h,"iDirectionIncrement",1500000)', eq(h,"iDirectionIncrement",1500000))
-    CHECK('eq(h,"jDirectionIncrement",1500000)', eq(h,"jDirectionIncrement",1500000))
-
-def resolution_s2s_ocean(h, p, min_value, max_value):
-    CHECK('eq(h,"iDirectionIncrement",1000000)', eq(h,"iDirectionIncrement",1000000))
-    CHECK('eq(h,"jDirectionIncrement",1000000)', eq(h,"jDirectionIncrement",1000000))
-
-def six_hourly(h, p, min_value, max_value):
-    statistical_process(h,p,min_value,max_value);
-
-    if get(h,"indicatorOfUnitForTimeRange") == 11:
-        CHECK('eq(h,"lengthOfTimeRange",1)', eq(h,"lengthOfTimeRange",1))
-    else:
-        CHECK('eq(h,"lengthOfTimeRange",6)', eq(h,"lengthOfTimeRange",6))
-
-    CHECK('get(h,"endStep") == get(h,"startStep") + 6', get(h,"endStep") == get(h,"startStep") + 6)
-    check_range(h,p,min_value,max_value)
-
-def since_prev_pp(h, p, min_value, max_value):
-    statistical_process(h,p,min_value,max_value)
-    CHECK('eq(h,"indicatorOfUnitForTimeRange",1)', eq(h,"indicatorOfUnitForTimeRange",1))
-    CHECK('get(h,"endStep") == get(h,"startStep") + get(h,"lengthOfTimeRange")', get(h,"endStep") == get(h,"startStep") + get(h,"lengthOfTimeRange"))
-    check_range(h,p,min_value,max_value)
-
-def three_hourly(h, p, min_value, max_value):
-    statistical_process(h,p,min_value,max_value)
-
-    if get(h,"indicatorOfUnitForTimeRange") == 11:
-        CHECK('eq(h,"lengthOfTimeRange",1)', eq(h,"lengthOfTimeRange",1))
-    else:
-        CHECK('eq(h,"lengthOfTimeRange",3)', eq(h,"lengthOfTimeRange",3))
-
-    CHECK('get(h,"endStep") == get(h,"startStep") + 3', get(h,"endStep") == get(h,"startStep") + 3)
-    check_range(h,p,min_value,max_value)
-
-def from_start(h, p, min_value, max_value):
-    global ctx
-    step = get(h,"endStep")
-    statistical_process(h,p,min_value,max_value)
-    CHECK('eq(h,"startStep",0)', eq(h,"startStep",0))
-
-    if step == 0:
-        if not ctx.is_uerra:
-            CHECK('min_value == 0 and max_value == 0', min_value == 0 and max_value == 0); # ??? xxx
-    else:
-        check_range(h,p,min_value/step,max_value/step)
-
-def daily_average(h, p, min_value, max_value):
-    step = get(h,"endStep")
-    CHECK('get(h,"startStep") == get(h,"endStep") - 24', get(h,"startStep") == get(h,"endStep") - 24)
-    statistical_process(h,p,min_value,max_value)
-
-    if step == 0:
-        CHECK('min_value == 0 and max_value == 0', min_value == 0 and max_value == 0)
-    else:
-        check_range(h,p,min_value,max_value)
-
-def given_level(h, p, min_value, max_value):
-    CHECK('ne(h,"typeOfFirstFixedSurface",255)', ne(h,"typeOfFirstFixedSurface",255))
-    CHECK('not missing(h,"scaleFactorOfFirstFixedSurface")', not missing(h,"scaleFactorOfFirstFixedSurface"))
-    CHECK('not missing(h,"scaledValueOfFirstFixedSurface")', not missing(h,"scaledValueOfFirstFixedSurface"))
-
-    CHECK('eq(h,"typeOfSecondFixedSurface",255)', eq(h,"typeOfSecondFixedSurface",255))
-    CHECK('missing(h,"scaleFactorOfSecondFixedSurface")', missing(h,"scaleFactorOfSecondFixedSurface"))
-    CHECK('missing(h,"scaledValueOfSecondFixedSurface")', missing(h,"scaledValueOfSecondFixedSurface"))
-
-def predefined_level(h, p, min_value, max_value):
-    CHECK('ne(h,"typeOfFirstFixedSurface",255)', ne(h,"typeOfFirstFixedSurface",255))
-    CHECK('missing(h,"scaleFactorOfFirstFixedSurface")', missing(h,"scaleFactorOfFirstFixedSurface"))
-    CHECK('missing(h,"scaledValueOfFirstFixedSurface")', missing(h,"scaledValueOfFirstFixedSurface"))
-
-    CHECK('eq(h,"typeOfSecondFixedSurface",255)', eq(h,"typeOfSecondFixedSurface",255))
-    CHECK('missing(h,"scaleFactorOfSecondFixedSurface")', missing(h,"scaleFactorOfSecondFixedSurface"))
-    CHECK('missing(h,"scaledValueOfSecondFixedSurface")', missing(h,"scaledValueOfSecondFixedSurface"))
-
-def predefined_thickness(h, p, min_value, max_value):
-    CHECK('ne(h,"typeOfFirstFixedSurface",255)', ne(h,"typeOfFirstFixedSurface",255))
-    CHECK('missing(h,"scaleFactorOfFirstFixedSurface")', missing(h,"scaleFactorOfFirstFixedSurface"))
-    CHECK('missing(h,"scaledValueOfFirstFixedSurface")', missing(h,"scaledValueOfFirstFixedSurface"))
-
-    CHECK('ne(h,"typeOfSecondFixedSurface",255)', ne(h,"typeOfSecondFixedSurface",255))
-    CHECK('missing(h,"scaleFactorOfSecondFixedSurface")', missing(h,"scaleFactorOfSecondFixedSurface"))
-    CHECK('missing(h,"scaledValueOfSecondFixedSurface")', missing(h,"scaledValueOfSecondFixedSurface"))
-
-def given_thickness(h, p, min_value, max_value):
-    CHECK('ne(h,"typeOfFirstFixedSurface",255)', ne(h,"typeOfFirstFixedSurface",255))
-    CHECK('not missing(h,"scaleFactorOfFirstFixedSurface")', not missing(h,"scaleFactorOfFirstFixedSurface"))
-    CHECK('not missing(h,"scaledValueOfFirstFixedSurface")', not missing(h,"scaledValueOfFirstFixedSurface"))
-
-    CHECK('ne(h,"typeOfSecondFixedSurface",255)', ne(h,"typeOfSecondFixedSurface",255))
-    CHECK('not missing(h,"scaleFactorOfSecondFixedSurface")', not missing(h,"scaleFactorOfSecondFixedSurface"))
-    CHECK('not missing(h,"scaledValueOfSecondFixedSurface")', not missing(h,"scaledValueOfSecondFixedSurface"))
-
-def latlon_grid(h):
-    global ctx
-    tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
-    data_points = get(h,"numberOfDataPoints")
-    meridian = get(h,"numberOfPointsAlongAMeridian")
-    parallel = get(h,"numberOfPointsAlongAParallel")
-
-    north = get(h,"latitudeOfFirstGridPoint")
-    south = get(h,"latitudeOfLastGridPoint")
-    west = get(h,"longitudeOfFirstGridPoint")
-    east = get(h,"longitudeOfLastGridPoint")
-
-    ns= get(h,"jDirectionIncrement")
-    we= get(h,"iDirectionIncrement")
-
-    dnorth = dget(h,"latitudeOfFirstGridPointInDegrees")
-    dsouth = dget(h,"latitudeOfLastGridPointInDegrees")
-    dwest = dget(h,"longitudeOfFirstGridPointInDegrees")
-    deast = dget(h,"longitudeOfLastGridPointInDegrees")
-
-    dns = dget(h,"jDirectionIncrementInDegrees")
-    dwe = dget(h,"iDirectionIncrementInDegrees")
-
-    if eq(h,"basicAngleOfTheInitialProductionDomain",0):
-        CHECK('missing(h,"subdivisionsOfBasicAngle")', missing(h,"subdivisionsOfBasicAngle"))
-    else:
-        # long basic    = get(h,"basicAngleOfTheInitialProductionDomain")
-        # long division = get(h,"subdivisionsOfBasicAngle")
-        CHECK('not missing(h,"subdivisionsOfBasicAngle")', not missing(h,"subdivisionsOfBasicAngle"))
-        CHECK('not eq(h,"subdivisionsOfBasicAngle",0)', not eq(h,"subdivisionsOfBasicAngle",0))
-
-    if missing(h,"subdivisionsOfBasicAngle"):
-        CHECK('eq(h,"basicAngleOfTheInitialProductionDomain",0)', eq(h,"basicAngleOfTheInitialProductionDomain",0))
-
-    CHECK('meridian*parallel == data_points', meridian*parallel == data_points)
-
-    CHECK('eq(h,"resolutionAndComponentFlags1",0)', eq(h,"resolutionAndComponentFlags1",0))
-    CHECK('eq(h,"resolutionAndComponentFlags2",0)', eq(h,"resolutionAndComponentFlags2",0))
-    CHECK('eq(h,"resolutionAndComponentFlags6",0)', eq(h,"resolutionAndComponentFlags6",0))
-    CHECK('eq(h,"resolutionAndComponentFlags7",0)', eq(h,"resolutionAndComponentFlags7",0))
-    CHECK('eq(h,"resolutionAndComponentFlags8",0)', eq(h,"resolutionAndComponentFlags8",0))
-
-    CHECK('eq(h,"iDirectionIncrementGiven",1)', eq(h,"iDirectionIncrementGiven",1))
-    CHECK('eq(h,"jDirectionIncrementGiven",1)', eq(h,"jDirectionIncrementGiven",1))
-
-    CHECK('eq(h,"numberOfOctectsForNumberOfPoints",0)', eq(h,"numberOfOctectsForNumberOfPoints",0))
-    CHECK('eq(h,"interpretationOfNumberOfPoints",0)', eq(h,"interpretationOfNumberOfPoints",0))
-
-    if get(h,"iScansNegatively") != 0:
-        tmp = east
-        dtmp = deast
-
-        east = west
-        west = tmp
-
-        deast = dwest
-        dwest = dtmp
-
-    if get(h,"jScansPositively") != 0:
-        tmp = north
-        dtmp = dnorth
-
-        north = south
-        south = tmp
-
-        dnorth = dsouth
-        dsouth = dtmp
-
-    if not (ctx.is_lam or ctx.is_uerra):
-        CHECK('north > south', north > south)
-        CHECK('east > west', east> west)
-
-        # Check that the grid is symmetrical */
-        CHECK('north == -south', north == -south)
-        CHECK('DBL_EQUAL(dnorth, -dsouth, tolerance) ',  DBL_EQUAL(dnorth, -dsouth, tolerance) )
-        CHECK('parallel == (east-west)/we + 1', parallel == (east-west)/we + 1)
-        CHECK('math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10', math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10)
-        CHECK('meridian == (north-south)/ns + 1', meridian == (north-south)/ns + 1)
-        CHECK('math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 ', math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 )
-
-        # Check that the field is global */
-        area = (dnorth-dsouth) * (deast-dwest)
-        globe = 360.0*180.0
-        CHECK('area <= globe', area <= globe)
-        CHECK('area >= globe*0.95', area >= globe*0.95)
-
-    # GRIB2 requires longitudes are always positive */
-    CHECK('east >= 0', east >= 0)
-    CHECK('west >= 0', west >= 0)
-
-    #print('meridian=%ld north=%ld south=%ld ns=%ld ', (meridian, north, south, ns))
-    #print('meridian=%ld north=%f south=%f ns=%f ', (meridian, dnorth, dsouth, dns))
-    #print('parallel=%ld east=%ld west=%ld we=%ld ', (parallel, east, west, we))
-    #print('parallel=%ld east=%f west=%f we=%f ', (parallel, deast, dwest, dwe))
-
-def X(h, name):
-    print("%s=%ld " % (name, get(h, name)), end='')
-
-def check_parameter(h, min_value, max_value):
-    global ctx
-
-    best = -1;
-    match = -1;
-    i = 0;
-
-    #for (i = 0; i < NUMBER(parameters); i++):
-    for parameter in parameters:
-        j = 0;
-        matches = 0;
-
-        #while(parameter.pairs[j].key != NULL)
-        for pair in parameter['pairs']:
-            val = -1;
-            ktype = pair['key_type']
-            if ktype == int:
-                try:
-                    val = codes_get_long(h, pair['key'])
-                    if pair['value_long'] == val:
-                        matches += 1
-                except:
-                    pass
-            elif ktype == str:
-                if ctx.is_uerra and pair['key'].lower() == "model":
-                    # print("Skipping model keyword for UERRA class")
-                    matches += 1 # xxx hack to pretend that model key was matched.
-                else:
-                    if pair['value_string'].lower() == "MISSING".lower():
-                        is_miss = codes_is_missing(h, pair['key'])
-                        if is_miss != 0:
-                            matches += 1
-                    # elif codes_get_string(h, pair['key']):
-                    else:
-                        try:
-                            strval = codes_get_string(h, pair['key'])
-                            if pair['value_string'] == strval:
-                                matches += 1
-                        except:
-                            pass
-            else:
-                assert("Unknown key type")
-            j += 1
-#if 0
-            #print("%s %s %ld val -> %d %d %d" % (
-                    #pair.key,
-                    #pair.value_string,
-                    #val,
-                    #matches,
-                    #j,
-                    #best))
-#endif
-
-        if matches == j and matches > best:
-            best = matches
-            match = i
-        i += 1
-
-    if match >= 0:
-        # int j = 0;
-        ctx.param = parameters[match]['name']
-        i = 0
-        for check_func in parameters[match]['checks']:
-            check_map[check_func](h, parameters[match], min_value, max_value)
-            i += 1
-                #print('=========================')
-                #print('%s -> %d %d' , (param, match, best))
-                #while(parameters[match].pairs[j].key != NULL):
-                #     print('%s val -> %ld %d' % (parameters[match].pairs[j].key, parameters[match].pairs[j].value,j));
-                #     j += 1
-                #print('matched parameter: %s % param);
-    else:
-        print("%s, field %d [%s]: cannot match parameter" % (ctx.filename, ctx.field, ctx.param))
-        X(h, 'origin')
-        X(h, "discipline")
-        X(h, "parameterCategory")
-        X(h, "parameterNumber")
-        X(h, "typeOfFirstFixedSurface")
-        X(h, "scaleFactorOfFirstFixedSurface")
-        X(h, "scaledValueOfFirstFixedSurface")
-        X(h, "typeOfSecondFixedSurface")
-        X(h, "scaleFactorOfSecondFixedSurface")
-        X(h, "scaledValueOfSecondFixedSurface")
-        print("")
-        ctx.error += 1
-
-def check_packing(h):
-    global ctx
-    # ECC-1009: Warn if not using simple packing
-    expected_packingType = "grid_simple";
-    packingType = codes_get_string(h, "packingType")
-
-    if packingType != expected_packingType:
-        print("warning: %s, field %d [%s]: invalid packingType %s (Should be %s)" %(ctx.filename, ctx.field, ctx.param, packingType, expected_packingType))
-        ctx.warning += 1
-
-def verify(h):
-    global ctx
-
-    min_value = 0
-    max_value = 0
-
-    CHECK('eq(h,"editionNumber",2)', eq(h,"editionNumber",2))
-    # CHECK('missing(h,"reserved") or eq(h,"reserved",0)', missing(h,"reserved") or eq(h,"reserved",0))
-
-
-    if ctx.valueflg:
-        count = 0
         try:
-            count = codes_get_size(h,"values")
+            buffer = codes_get_message(h)
         except Exception as e:
-            print("%s, field %d [%s]: cannot get number of values: %s" % (ctx.filename, ctx.field, ctx.param, str(e)))
-            ctx.error += 1
+            print('%s, field %d [%s]: cannot get message: %s' % (self.__filename, self.__field, self.__param, str(e)))
+            sys.exit(1)
+        try:
+            f.write(bytearray(buffer))
+        except Exception as e:
+            print(str(e))
+            sys.exit(1)
+
+    def __get(self, h, what) -> int:
+        try:
+            val = codes_get_long(h, what)
+        except Exception as e:
+            print('%s, field %d [%s]: cannot get %s: %s' % (self.__filename, self.__field, self.__param, what, str(e)))
+            self.__error += 1;
+            val = -1;
+        return val;
+
+    def __dget(self, h, what) -> float:
+        try:
+            val = codes_get_double(h, what)
+        except Exception as e:
+            print('%s, field %d [%s]: cannot get %s: %s' % (self.__filename, self.__field, self.__param, what, str(e)))
+            self.__error += 1;
+            val = -1;
+        return val;
+
+    def __missing(self, h, what) -> bool:
+        try:
+            return False if codes_is_missing(h, what) == 0 else True
+        except KeyValueNotFoundError as e:
+            return True
+
+    def __eq(self, h, what, value) -> int:
+        return self.__get(h, what) == value
+
+    def __ne(self, h, what, value) -> int:
+        return self.__get(h,what) != value
+
+    def __ge(self, h, what, value) -> int:
+        return self.__get(h, what) >= value
+
+    def __le(self, h, what, value) -> int:
+        return self.__get(h, what) <= value
+
+    def __dbl_equal(self, d1, d2, tolerance) -> bool:
+        return math.fabs(d1 - d2) <= tolerance
+
+    def __gaussian_grid(self, h):
+        tolerance = 1.0 / 1000000.0; # angular tolerance for grib2: micro degrees
+        n = self.__get(h, 'numberOfParallelsBetweenAPoleAndTheEquator'); # This is the key N
+
+        north = self.__dget(h, 'latitudeOfFirstGridPointInDegrees')
+        south = self.__dget(h, 'latitudeOfLastGridPointInDegrees')
+
+        west = self.__dget(h, 'longitudeOfFirstGridPointInDegrees')
+        east = self.__dget(h, 'longitudeOfLastGridPointInDegrees')
+
+        if n != self.__last_n:
+            try:
+                self.__values = codes_get_gaussian_latitudes(n)
+            except:
+                print('%s, field %d [%s]: cannot get gaussian latitudes for N%ld: %s' % 
+                      (self.__filename, self.__field, self.__param,n, str(e)))
+                self.__error += 1
+                self.__last_n = 0
+                return
+            self.__last_n = n;
+
+        # TODO
+        if self.__values == None:
+            assert(0)
+            return
+
+        if self.__values != None:
+            self.__values[0] = np.rint(self.__values[0] * 1e6) / 1e6;
+
+        if not self.__dbl_equal(north, self.__values[0], tolerance) or not self.__dbl_equal(south, -self.__values[0], tolerance):
+            print('N=%ld north=%f south=%f v(=gauss_lat[0])=%f north-v=%0.30f south-v=%0.30f' % 
+                  (n, north, south, self.__values[0], north-self.__values[0], south+self.__values[0]))
+
+        self.__check('DBL_EQUAL(north, values[0], tolerance)', self.__dbl_equal(north, self.__values[0], tolerance))
+        self.__check('DBL_EQUAL(south, -values[0], tolerance)', self.__dbl_equal(south, -self.__values[0], tolerance))
+
+        if self.__missing(h,'numberOfPointsAlongAParallel'): # same as key Ni 
+            # If missing, this is a REDUCED gaussian grid 
+            MAXIMUM_RESOLUTION = 640;
+            self.__check('get(h,"PLPresent")', self.__get(h,'PLPresent'))
+            self.__check('DBL_EQUAL(west, 0.0, tolerance)', self.__dbl_equal(west, 0.0, tolerance))
+            if n > MAXIMUM_RESOLUTION:
+                print('Gaussian number N (=%ld) cannot exceed %ld' % (n, MAXIMUM_RESOLUTION))
+                self.__check('n <= MAXIMUM_RESOLUTION', n <= MAXIMUM_RESOLUTION)
+        else:
+            # REGULAR gaussian grid 
+            l_west = self.__get(h, 'longitudeOfFirstGridPoint')
+            l_east = self.__get(h, 'longitudeOfLastGridPoint')
+            parallel = self.__get(h, 'numberOfPointsAlongAParallel')
+            we = self.__get(h, 'iDirectionIncrement')
+            dwest = self.__dget(h, 'longitudeOfFirstGridPointInDegrees')
+            deast = self.__dget(h, 'longitudeOfLastGridPointInDegrees')
+            dwe = self.__dget(h, 'iDirectionIncrementInDegrees')
+            # print('parallel=%ld east=%ld west=%ld we=%ld' % (parallel, east, west, we))
+
+            self.__check('parallel == (l_east-l_west)/we + 1', parallel == (l_east-l_west)/we + 1)
+            self.__check('abs((deast-dwest)/dwe + 1 - parallel) < 1e-10', abs((deast-dwest)/dwe + 1 - parallel) < 1e-10)
+            self.__check('!get(h,"PLPresent")', not self.__get(h, 'PLPresent'))
+
+        self.__check('ne(h,"Nj",0)', self.__ne(h,'Nj', 0))
+
+        self.__get(h, 'PLPresent')
+
+        i = 0
+        count = codes_get_size(h, 'pl')
+        expected_lon2 = 0
+        total = 0
+        max_pl = 0
+        numberOfValues = self.__get(h, 'numberOfValues')
+        numberOfDataPoints = self.__get(h, 'numberOfDataPoints')
+
+        pl = codes_get_double_array(h,'pl')
+
+        if len(pl) != count:
+            print('len(pl)=%ld count=%ld' % (len(pl), count))
+
+        self.__check('len(pl) == count', len(pl) == count)
+        self.__check('len(pl) == 2*n', len(pl) == 2*n)
+
+        total = 0;
+        max_pl = pl[0]; #  max elem of pl array = num points at equator
+
+        for p in pl:
+            total = total + p
+            if p > max_pl:
+                max_pl = p
+
+        # Do not assume maximum of pl array is 4N! not true for octahedral
+
+        expected_lon2 = 360.0 - 360.0/max_pl;
+        if not self.__dbl_equal(expected_lon2, east, tolerance):
+            print('east actual=%g expected=%g diff=%g', east, expected_lon2, expected_lon2-east)
+
+        self.__check('DBL_EQUAL(expected_lon2, east, tolerance)', self.__dbl_equal(expected_lon2, east, tolerance))
+
+        if numberOfDataPoints != total:
+            print("GAUSS numberOfValues=%ld numberOfDataPoints=%ld sum(pl)=%ld" % (
+                    numberOfValues,
+                    numberOfDataPoints,
+                    total))
+
+        self.__check('numberOfDataPoints == total', numberOfDataPoints == total)
+
+        self.__check('missing(h,"iDirectionIncrement")', self.__missing(h, 'iDirectionIncrement'))
+        self.__check('missing(h,"iDirectionIncrementInDegrees")', self.__missing(h, 'iDirectionIncrementInDegrees'))
+
+        self.__check('eq(h,"iDirectionIncrementGiven",0)', self.__eq(h, 'iDirectionIncrementGiven', 0))
+        self.__check('eq(h,"jDirectionIncrementGiven",1)', self.__eq(h, 'jDirectionIncrementGiven', 1))
+
+        self.__check('eq(h,"resolutionAndComponentFlags1",0)', self.__eq(h, 'resolutionAndComponentFlags1', 0))
+        self.__check('eq(h,"resolutionAndComponentFlags2",0)', self.__eq(h, 'resolutionAndComponentFlags2', 0))
+        self.__check('eq(h,"resolutionAndComponentFlags6",0)', self.__eq(h, 'resolutionAndComponentFlags6', 0))
+        self.__check('eq(h,"resolutionAndComponentFlags7",0)', self.__eq(h, 'resolutionAndComponentFlags7', 0))
+        self.__check('eq(h,"resolutionAndComponentFlags8",0)', self.__eq(h, 'resolutionAndComponentFlags8', 0))
+
+    def __check_validity_datetime(self, h):
+        # If we just set the stepRange (for non-instantaneous fields) to its
+        # current value, then this causes the validity date and validity time
+        # keys to be correctly computed.
+        # Then we can compare the previous (possibly wrongly coded) value with
+        # the newly computed one
+
+        stepType = codes_get_string(h, 'stepType')
+
+        if stepType != 'instant': # not instantaneous
+            # Check only applies to accumulated, max etc.
+            stepRange = codes_get_string(h, 'stepRange')
+
+            saved_validityDate = self.__get(h, 'validityDate')
+            saved_validityTime = self.__get(h, 'validityTime')
+
+            codes_set_string(h, 'stepRange', stepRange);
+
+            validityDate = self.__get(h, 'validityDate');
+            validityTime = self.__get(h, 'validityTime');
+            if validityDate!=saved_validityDate or validityTime!=saved_validityTime:
+                print('warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)' % (self.__filename, self.__field, self.__param, validityDate, validityTime))
+                self.__warning += 1
+
+    def __check_range(self, h, p, min_value, max_value):
+
+        missing = 0;
+        if self.__valueflg != 0:
+            return
+
+        missing = self.__dget(h,'missingValue')
+
+        # See ECC-437
+        if not self.__get(h,'bitMapIndicator') == 0 and min_value == missing and max_value == missing:
+            if min_value < p['min1'] or min_value > p['min2']: 
+                print('warning: %s, field %d [%s]: %s minimum value %g is not in [%g,%g]' %
+                      (self.__filename, self.__field, self.__param, p['name'], min_value, p['min1'], p['min2']))
+                print('  => [%g,%g]' % (min_value if min_value < p['min1'] else p['min1'],
+                                        min_value if min_value > p['min2'] else p['min2']))
+                self.__warning += 1
+
+            if max_value < p['max1'] or max_value > p['max2']:
+                print('warning: %s, field %d [%s]: %s maximum value %g is not in [%g,%g]' %
+                      (self.__filename, self.__field, self.__param, p['name'], max_value, p['max1'], p['max2']))
+                print('  => [%g,%g]' % (max_value if max_value < p['max1'] else p['max1'],
+                                        max_value if max_value > p['max2'] else p['max2']))
+                self.__warning += 1
+
+    def __point_in_time(self, h, p, min_value, max_value):
+        topd = self.__get(h, 'typeOfProcessedData')
+
+        if topd == 0: # Analysis
+            if self.__is_uerra:
+                self.__check('eq(h,"productDefinitionTemplateNumber",0)||eq(h,"productDefinitionTemplateNumber",1)',
+                             self.__eq(h,'productDefinitionTemplateNumber',0) or self.__eq(h,'productDefinitionTemplateNumber',1))
+            if self.__get(h, "productDefinitionTemplateNumber") == 1:
+                self.__check('ne(h,"numberOfForecastsInEnsemble",0)',
+                             self.__ne(h, 'numberOfForecastsInEnsemble', 0))
+                self.__check('le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble"))', 
+                             self.__le(h, 'perturbationNumber', get(h, 'numberOfForecastsInEnsemble')))
+        elif topd == 1: # Forecast
+            if self.__is_uerra:
+                self.__check('eq(h,"productDefinitionTemplateNumber",0)||eq(h,"productDefinitionTemplateNumber",1)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 0) or self.__eq(h, 'productDefinitionTemplateNumber', 1))
+            if self.__get(h,"productDefinitionTemplateNumber") == 1:
+                self.__check('ne(h,"numberOfForecastsInEnsemble",0)', 
+                             self.__ne(h, 'numberOfForecastsInEnsemble', 0))
+                self.__check('le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble"))',
+                             self.__le(h, 'perturbationNumber', get(h,'numberOfForecastsInEnsemble')))
+        elif topd == 2: # Analysis and forecast products
+            self.__check('eq(h,"productDefinitionTemplateNumber",0)',
+                         self.__eq(h, 'productDefinitionTemplateNumber', 0))
+        elif topd == 3: # Control forecast products 
+            self.__check('eq(h,"perturbationNumber",0)',
+                         self.__eq(h, 'perturbationNumber', 0))
+            self.__check('ne(h,"numberOfForecastsInEnsemble",0)',
+                         self.__ne(h, 'numberOfForecastsInEnsemble', 0))
+            if self.__is_s2s_refcst:
+                self.__check('eq(h,"productDefinitionTemplateNumber",60)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 60))
+            elif self.__is_s2s:
+                # self.__check('eq(h,"productDefinitionTemplateNumber",60)||eq(h,"productDefinitionTemplateNumber",11)||eq(h,"productDefinitionTemplateNumber",1)', 
+                #              self.__eq(h, 'productDefinitionTemplateNumber', 60) or self.__eq(h, 'productDefinitionTemplateNumber', 11) or self.__eq(h, 'productDefinitionTemplateNumber', 1))
+                self.__check('eq(h,"productDefinitionTemplateNumber",1)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 1))
+            else:
+                self.__check('eq(h,"productDefinitionTemplateNumber",1)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 1))
+        elif topd == 4: # Perturbed forecast products
+            self.__check('ne(h,"perturbationNumber",0)',
+                         self.__ne(h, 'perturbationNumber', 0))
+            self.__check('ne(h,"numberOfForecastsInEnsemble",0)',
+                         self.__ne(h, 'numberOfForecastsInEnsemble', 0))
+            if self.__is_s2s_refcst:
+                self.__check('eq(h,"productDefinitionTemplateNumber",60)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 60))
+            elif self.__is_s2s:
+                # self.__check('eq(h,"productDefinitionTemplateNumber",60)||eq(h,"productDefinitionTemplateNumber",11)||eq(h,"productDefinitionTemplateNumber",1)',
+                #              self.__eq(h, 'productDefinitionTemplateNumber', 60) or self.__eq(h, 'productDefinitionTemplateNumber', 11) or self.__eq(h, 'productDefinitionTemplateNumber', 1))
+                self.__check('eq(h,"productDefinitionTemplateNumber",1)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 1))
+            else:
+                self.__check('eq(h,"productDefinitionTemplateNumber",1)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 1));
+            if self.__is_lam:
+                self.__check('le(h,"perturbationNumber", get(h,"numberOfForecastsInEnsemble"))',
+                             self.__le(h, 'perturbationNumber', self.__get(h, 'numberOfForecastsInEnsemble')))
+            else:
+                # Is there always cf in tigge global datasets??
+                self.__check('le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")-1)',
+                             self.__le(h, 'perturbationNumber', self.__get(h, 'numberOfForecastsInEnsemble')-1))
+        else:
+            print("Unsupported typeOfProcessedData %ld" % self.__get(h,"typeOfProcessedData"))
+            self.__check('0', 0)
+
+        if self.__is_lam:
+            if self.__get(h, 'indicatorOfUnitOfTimeRange') == 10: # three hours
+                # Three hourly is OK 
+                pass
+            else:
+                self.__check('eq(h,"indicatorOfUnitOfTimeRange",1)',
+                             self.__eq(h, 'indicatorOfUnitOfTimeRange', 1)) # Hours
+                self.__check('(get(h,"forecastTime") % 3) == 0',
+                             (self.__get(h, 'forecastTime') % 3) == 0) # Every three hours
+        elif self.__is_uerra:
+            if(self.__get(h, 'indicatorOfUnitOfTimeRange') == 1): #hourly
+                self.__check('(eq(h,"forecastTime",1)||eq(h,"forecastTime",2)||eq(h,"forecastTime",4)||eq(h,"forecastTime",5))||(get(h,"forecastTime") % 3) == 0',
+                     (eq(h, 'forecastTime', 1) or self.__eq(h, 'forecastTime', 2) or self.__eq(h, 'forecastTime', 4) or self.__eq(h, 'forecastTime', 5)) or (get(h, 'forecastTime') % 3) == 0)
+        else:
+            if self.__get(h, 'indicatorOfUnitOfTimeRange') == 11: #six hour
+                # Six hourly is OK
+                pass
+            else:
+                self.__check('eq(h,"indicatorOfUnitOfTimeRange",1)',
+                             self.__eq(h, 'indicatorOfUnitOfTimeRange', 1)) # Hours
+                self.__check('(get(h,"forecastTime") % 6) == 0',
+                             (self.__get(h, 'forecastTime') % 6) == 0) # Every six hours
+
+        self.__check_range(h, p, min_value, max_value)
+
+    def __height_level(self, h, p, min_value, max_value):
+        level = self.__get(h, 'level');
+        levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
+        if self.__is_uerra:
+            if level in levels:
+                pass
+            else:
+                print('%s, field %d [%s]: invalid height level %ld' % (self.__filename, self.__field, self.__param, level))
+                self.__error += 1
+
+    def __pressure_level(self, h, p, min_value, max_value):
+        level = self.__get(h, 'level');
+
+        if self.__is_uerra and not self.__is_crra:
+            if level in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10]:
+                pass
+            else:
+                print('%s, field %d [%s]: invalid pressure level %ld' % (self.__filename, self.__field, self.__param, level))
+                self.__error += 1
+        elif self.__is_uerra and self.__is_crra:
+            if level in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10, 7, 5, 3, 2, 1]:
+                pass
+            else:
+                print('%s, field %d [%s]: invalid pressure level %ld' % (self.__filename, self.__field, self.__param, level))
+                self.__error += 1
+        elif self.__is_s2s:
+            if level in [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]:
+                pass
+            else:
+                print('%s, field %d [%s]: invalid pressure level %ld' % (self.__filename, self.__field, self.__param, level))
+                self.__error += 1
+        else:
+            if level in [1000, 200, 250, 300, 500, 700, 850, 925, 50]:
+                pass
+            else:
+                print('%s, field %d [%s]: invalid pressure level %ld' % (self.__filename, self.__field, self.__param, level))
+                self.__error += 1
+
+    def __potential_vorticity_level(self, h, p, min_value, max_value):
+        level = self.__get(h, 'level')
+        if level == 2:
+            pass
+        else:
+            print('%s, field %d [%s]: invalid potential vorticity level %ld' % (self.__filename, self.__field, self.__param, level))
+            self.__error += 1
+
+    def __potential_temperature_level(self, h, p, min_value, max_value):
+        level = self.__get(h, 'level')
+        if level == 320:
+            pass
+        else:
+            print('%s, field %d [%s]: invalid potential temperature level %ld' % (self.__filename, self.__field, self.__param, level))
+            self.__error += 1
+
+    def __statistical_process(self, h, p, min_value, max_value):
+        topd = self.__get(h, 'typeOfProcessedData')
+
+        if topd ==  0: # Analysis
+            if self.__is_uerra:
+                self.__check('eq(h,"productDefinitionTemplateNumber",8)||eq(h,"productDefinitionTemplateNumber",11)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 8) or self.__eq(h, 'productDefinitionTemplateNumber', 11))
+        elif topd == 1: # Forecast
+            if self.__is_uerra:
+                self.__check('eq(h,"productDefinitionTemplateNumber",8)||eq(h,"productDefinitionTemplateNumber",11)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 8) or self.__eq(h, 'productDefinitionTemplateNumber', 11))
+        elif topd == 2: # Analysis and forecast products
+            self.__check('eq(h,"productDefinitionTemplateNumber",8)',
+                         self.__eq(h, 'productDefinitionTemplateNumber', 8))
+        elif topd == 3: # Control forecast products
+            if not self.__is_s2s_refcst:
+                self.__check('eq(h,"productDefinitionTemplateNumber",11)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 11))
+            else:
+                self.__check('eq(h,"productDefinitionTemplateNumber",61)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 61))
+        elif topd == 4: # Perturbed forecast products
+            if not self.__is_s2s_refcst:
+                self.__check('eq(h,"productDefinitionTemplateNumber",11)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 11))
+            else:
+                self.__check('eq(h,"productDefinitionTemplateNumber",61)',
+                             self.__eq(h, 'productDefinitionTemplateNumber', 61))
+        else:
+            print('Unsupported typeOfProcessedData %ld' % (self.__get(h, 'typeOfProcessedData')))
+            self.__error += 1
             return;
 
-        bitmap = not eq(h,"bitMapIndicator",255);
+        if self.__is_lam:
+            if self.__get(h, 'indicatorOfUnitOfTimeRange') == 10: # three hours
+                # Three hourly is OK
+                pass
+            else:
+                self.__check('eq(h,"indicatorOfUnitOfTimeRange",1)',
+                             self.__eq(h, 'indicatorOfUnitOfTimeRange', 1)) # Hours
+                self.__check('(get(h,"forecastTime"',
+                             (self.__get(h, 'forecastTime') % 3) == 0); # Every three hours
+        elif self.__is_uerra:
+            # forecastTime for uerra might be all steps decreased by 1 i.e 0,1,2,3,4,5,8,11...29 too many...
+            if self.__get(h, 'indicatorOfUnitOfTimeRange') == 1:
+                self.__check('le(h,"forecastTime",30)',
+                             self.__le(h, 'forecastTime', 30))
+        else:
+            if self.__get(h, 'indicatorOfUnitOfTimeRange') == 11: # six hours
+                # Six hourly is OK
+                pass
+            else:
+                self.__check('eq(h,"indicatorOfUnitOfTimeRange",1)',
+                             self.__eq(h, 'indicatorOfUnitOfTimeRange', 1)); # Hours
+                self.__check('(get(h,"forecastTime"',
+                             (self.__get(h, 'forecastTime') % 6) == 0); # Every six hours
 
-        CHECK('eq(h,"numberOfDataPoints",count)', eq(h,"numberOfDataPoints", count));
+        self.__check('eq(h,"numberOfTimeRange",1)',
+                     self.__eq(h, 'numberOfTimeRange', 1))
+        self.__check('eq(h,"numberOfMissingInStatisticalProcess",0)',
+                     self.__eq(h, 'numberOfMissingInStatisticalProcess', 0))
+        self.__check('eq(h,"typeOfTimeIncrement",2)',
+                     self.__eq(h, 'typeOfTimeIncrement', 2))
+        # self.__check('eq(h,"indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed",255)',
+                     # self.__eq(h, 'indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed', 255))
 
-        n = count
+        if self.__is_s2s:
+            if self.__get(h,"typeOfStatisticalProcessing") == 0:
+                self.__check('eq(h,"timeIncrementBetweenSuccessiveFields",1)||eq(h,"timeIncrementBetweenSuccessiveFields",4)',
+                             self.__eq(h, 'timeIncrementBetweenSuccessiveFields', 1) or self.__eq(h, 'timeIncrementBetweenSuccessiveFields', 4))
+            else:
+                self.__check('eq(h,"timeIncrementBetweenSuccessiveFields",0)',
+                             self.__eq(h, 'timeIncrementBetweenSuccessiveFields', 0))
+        else:
+            self.__check('eq(h,"timeIncrementBetweenSuccessiveFields",0)',
+                         self.__eq(h, 'timeIncrementBetweenSuccessiveFields', 0))
+
+        self.__check('eq(h,"minuteOfEndOfOverallTimeInterval",0)',
+                     self.__eq(h, 'minuteOfEndOfOverallTimeInterval', 0))
+        self.__check('eq(h,"secondOfEndOfOverallTimeInterval",0)',
+                     self.__eq(h, 'secondOfEndOfOverallTimeInterval', 0))
+
+        if self.__is_uerra:
+            self.__check('(eq(h,"endStep",1)||eq(h,"endStep",2)||eq(h,"endStep",4)||eq(h,"endStep",5))||(get(h,"endStep"',
+                         (eq(h, 'endStep', 1) or self.__eq(h, 'endStep', 2) or self.__eq(h, 'endStep', 4) or self.__eq(h, 'endStep', 5)) or (get(h, 'endStep') % 3) == 0)
+        elif self.__is_lam:
+            self.__check('(get(h,"endStep") % 3) == 0',
+                         (self.__get(h, 'endStep') % 3) == 0);  # Every three hours
+        else:
+            self.__check('(get(h,"endStep") % 6) == 0',
+                         (self.__get(h, 'endStep') % 6) == 0); # Every six hours
+
+        if self.__get(h, 'indicatorOfUnitForTimeRange') == 11:
+            # Six hourly is OK
+            self.__check('get(h,"lengthOfTimeRange")*6 + get(h,"startStep") == get(h,"endStep")',
+                         self.__get(h, 'lengthOfTimeRange')*6 + self.__get(h, 'startStep') == self.__get(h, 'endStep'))
+        elif self.__get(h, 'indicatorOfUnitForTimeRange') == 10:
+            # Three hourly is OK
+            self.__check('get(h,"lengthOfTimeRange")*3 + get(h,"startStep") == get(h,"endStep")',
+                         self.__get(h, 'lengthOfTimeRange')*3 + self.__get(h, 'startStep') == self.__get(h, 'endStep'))
+        else:
+            self.__check('eq(h,"indicatorOfUnitForTimeRange",1)',
+                         self.__eq(h, 'indicatorOfUnitForTimeRange', 1)) # Hours
+            self.__check('get(h,"lengthOfTimeRange") + get(h,"startStep") == get(h,"endStep")',
+                         self.__get(h, 'lengthOfTimeRange') + self.__get(h, 'startStep') == self.__get(h, 'endStep'))
+
+    def __has_bitmap(self, h, p, min_value, max_value):
+        # print('bitMapIndicator %ld' % self.__get(h,"bitMapIndicator"))
+        self.__check('eq(h,"bitMapIndicator",0)',
+                     self.__eq(h, 'bitMapIndicator', 0))
+
+    def __has_soil_level(self, h, p, min_value, max_value):
+        self.__check('get(h,"topLevel") == get(h,"bottomLevel")',
+                     self.__get(h, 'topLevel') == self.__get(h, 'bottomLevel'))
+        self.__check('le(h,"level",14)',
+                     self.__le(h, 'level', 14)); # max in UERRA
+
+    def __has_soil_layer(self, h, p, min_value, max_value):
+        self.__check('get(h,"topLevel") == get(h,"bottomLevel") - 1',
+                     self.__get(h, 'topLevel') == self.__get(h, 'bottomLevel') - 1)
+        self.__check('le(h,"level",14)',
+                     self.__le(h, 'level', 14)); # max in UERRA
+
+    def __resolution_s2s(self, h, p, min_value, max_value):
+        self.__check('eq(h,"iDirectionIncrement",1500000)',
+                     self.__eq(h, 'iDirectionIncrement', 1500000))
+        self.__check('eq(h,"jDirectionIncrement",1500000)',
+                     self.__eq(h, 'jDirectionIncrement', 1500000))
+
+    def __resolution_s2s_ocean(self, h, p, min_value, max_value):
+        self.__check('eq(h,"iDirectionIncrement",1000000)',
+                     self.__eq(h, 'iDirectionIncrement', 1000000))
+        self.__check('eq(h,"jDirectionIncrement",1000000)',
+                     self.__eq(h, 'jDirectionIncrement', 1000000))
+
+    def __six_hourly(self, h, p, min_value, max_value):
+        self.__statistical_process(h,p,min_value,max_value);
+
+        if self.__get(h, 'indicatorOfUnitForTimeRange') == 11:
+            self.__check('eq(h,"lengthOfTimeRange",1)',
+                         self.__eq(h, 'lengthOfTimeRange', 1))
+        else:
+            self.__check('eq(h,"lengthOfTimeRange",6)',
+                         self.__eq(h, 'lengthOfTimeRange', 6))
+
+        self.__check('get(h,"endStep") == get(h,"startStep") + 6',
+                     self.__get(h,"endStep") == self.__get(h,"startStep") + 6)
+        self.__check_range(h,p,min_value,max_value)
+
+    def __since_prev_pp(self, h, p, min_value, max_value):
+        self.__statistical_process(h,p,min_value,max_value)
+        self.__check('eq(h,"indicatorOfUnitForTimeRange",1)',
+                     self.__eq(h, 'indicatorOfUnitForTimeRange', 1))
+        self.__check('get(h,"endStep") == get(h,"startStep") + get(h,"lengthOfTimeRange")',
+                     self.__get(h, 'endStep') == self.__get(h, 'startStep') + self.__get(h, 'lengthOfTimeRange'))
+        self.__check_range(h, p, min_value, max_value)
+
+    def __three_hourly(self, h, p, min_value, max_value):
+        self.__statistical_process(h, p, min_value, max_value)
+
+        if self.__get(h, 'indicatorOfUnitForTimeRange') == 11:
+            self.__check('eq(h,"lengthOfTimeRange",1)',
+                         self.__eq(h, 'lengthOfTimeRange', 1))
+        else:
+            self.__check('eq(h,"lengthOfTimeRange",3)', 
+                         self.__eq(h, 'lengthOfTimeRange', 3))
+
+        self.__check('get(h,"endStep") == get(h,"startStep") + 3',
+                     self.__get(h, 'endStep') == self.__get(h, 'startStep') + 3)
+        self.__check_range(h, p, min_value, max_value)
+
+    def __from_start(self, h, p, min_value, max_value):
+        step = self.__get(h, 'endStep')
+        self.__statistical_process(h, p, min_value, max_value)
+        self.__check('eq(h,"startStep",0)',
+                     self.__eq(h, 'startStep', 0))
+
+        if step == 0:
+            if not self.__is_uerra:
+                self.__check('min_value == 0 and max_value == 0',
+                             min_value == 0 and max_value == 0); # ??? xxx
+        else:
+            self.__check_range(h, p, min_value / step, max_value/step)
+
+    def __daily_average(self, h, p, min_value, max_value):
+        step = self.__get(h, 'endStep')
+        self.__check('get(h,"startStep") == get(h,"endStep") - 24',
+                     self.__get(h, 'startStep') == self.__get(h, 'endStep') - 24)
+        self.__statistical_process(h, p, min_value, max_value)
+
+        if step == 0:
+            self.__check('min_value == 0 && max_value == 0',
+                         min_value == 0 and max_value == 0)
+        else:
+            self.__check_range(h,p,min_value,max_value)
+
+    def __given_level(self, h, p, min_value, max_value):
+        self.__check('ne(h,"typeOfFirstFixedSurface",255)',
+                     self.__ne(h, 'typeOfFirstFixedSurface', 255))
+        self.__check('!missing(h,"scaleFactorOfFirstFixedSurface")',
+                     not self.__missing(h, 'scaleFactorOfFirstFixedSurface'))
+        self.__check('!missing(h,"scaledValueOfFirstFixedSurface")',
+                     not self.__missing(h, 'scaledValueOfFirstFixedSurface'))
+
+        self.__check('eq(h,"typeOfSecondFixedSurface",255)',
+                     self.__eq(h, 'typeOfSecondFixedSurface', 255))
+        self.__check('missing(h,"scaleFactorOfSecondFixedSurface")',
+                     self.__missing(h, 'scaleFactorOfSecondFixedSurface'))
+        self.__check('missing(h,"scaledValueOfSecondFixedSurface")',
+                     self.__missing(h, 'scaledValueOfSecondFixedSurface'))
+
+    def __predefined_level(self, h, p, min_value, max_value):
+        self.__check('ne(h,"typeOfFirstFixedSurface",255)',
+                     self.__ne(h, 'typeOfFirstFixedSurface', 255))
+        self.__check('missing(h,"scaleFactorOfFirstFixedSurface")',
+                     self.__missing(h, 'scaleFactorOfFirstFixedSurface'))
+        self.__check('missing(h,"scaledValueOfFirstFixedSurface")',
+                     self.__missing(h, 'scaledValueOfFirstFixedSurface'))
+
+        self.__check('eq(h,"typeOfSecondFixedSurface",255)',
+                     self.__eq(h, 'typeOfSecondFixedSurface', 255))
+        self.__check('missing(h,"scaleFactorOfSecondFixedSurface")',
+                     self.__missing(h, 'scaleFactorOfSecondFixedSurface'))
+        self.__check('missing(h,"scaledValueOfSecondFixedSurface")',
+                     self.__missing(h, 'scaledValueOfSecondFixedSurface'))
+
+    def __predefined_thickness(self, h, p, min_value, max_value):
+        self.__check('ne(h,"typeOfFirstFixedSurface",255)',
+                     self.__ne(h, "typeOfFirstFixedSurface", 255))
+        self.__check('missing(h,"scaleFactorOfFirstFixedSurface")',
+                     self.__missing(h, 'scaleFactorOfFirstFixedSurface'))
+        self.__check('missing(h,"scaledValueOfFirstFixedSurface")',
+                     self.__missing(h, 'scaledValueOfFirstFixedSurface'))
+
+        self.__check('ne(h,"typeOfSecondFixedSurface",255)',
+                     self.__ne(h, 'typeOfSecondFixedSurface', 255))
+        self.__check('missing(h,"scaleFactorOfSecondFixedSurface")',
+                     self.__missing(h, 'scaleFactorOfSecondFixedSurface'))
+        self.__check('missing(h,"scaledValueOfSecondFixedSurface")',
+                     self.__missing(h, 'scaledValueOfSecondFixedSurface'))
+
+    def __given_thickness(self, h, p, min_value, max_value):
+        self.__check('ne(h,"typeOfFirstFixedSurface",255)',
+                     self.__ne(h, 'typeOfFirstFixedSurface', 255))
+        self.__check('!missing(h,"scaleFactorOfFirstFixedSurface")',
+                     not self.__missing(h, 'scaleFactorOfFirstFixedSurface'))
+        self.__check('!missing(h,"scaledValueOfFirstFixedSurface")',
+                     not self.__missing(h, 'scaledValueOfFirstFixedSurface'))
+
+        self.__check('ne(h,"typeOfSecondFixedSurface",255)',
+                     self.__ne(h, 'typeOfSecondFixedSurface', 255))
+        self.__check('!missing(h,"scaleFactorOfSecondFixedSurface")',
+                     not self.__missing(h, 'scaleFactorOfSecondFixedSurface'))
+        self.__check('!missing(h,"scaledValueOfSecondFixedSurface")',
+                     not self.__missing(h, 'scaledValueOfSecondFixedSurface'))
+
+    def __latlon_grid(self, h):
+        tolerance = 1.0 / 1000000.0; # angular tolerance for grib2: micro degrees
+        data_points = self.__get(h, 'numberOfDataPoints')
+        meridian = self.__get(h, 'numberOfPointsAlongAMeridian')
+        parallel = self.__get(h, 'numberOfPointsAlongAParallel')
+
+        north = self.__get(h, 'latitudeOfFirstGridPoint')
+        south = self.__get(h, 'latitudeOfLastGridPoint')
+        west = self.__get(h, 'longitudeOfFirstGridPoint')
+        east = self.__get(h, 'longitudeOfLastGridPoint')
+
+        ns= self.__get(h, 'jDirectionIncrement')
+        we= self.__get(h, 'iDirectionIncrement')
+
+        dnorth = self.__dget(h, 'latitudeOfFirstGridPointInDegrees')
+        dsouth = self.__dget(h, 'latitudeOfLastGridPointInDegrees')
+        dwest = self.__dget(h, 'longitudeOfFirstGridPointInDegrees')
+        deast = self.__dget(h, 'longitudeOfLastGridPointInDegrees')
+
+        dns = self.__dget(h, 'jDirectionIncrementInDegrees')
+        dwe = self.__dget(h, 'iDirectionIncrementInDegrees')
+
+        if self.__eq(h, 'basicAngleOfTheInitialProductionDomain', 0):
+            self.__check('missing(h,"subdivisionsOfBasicAngle")',
+                         self.__missing(h, 'subdivisionsOfBasicAngle'))
+        else:
+            # long basic    = self.__get(h, 'basicAngleOfTheInitialProductionDomain')
+            # long division = self.__get(h, 'subdivisionsOfBasicAngle')
+            self.__check('!missing(h,"subdivisionsOfBasicAngle")',
+                         not self.__missing(h, 'subdivisionsOfBasicAngle'))
+            self.__check('!eq(h,"subdivisionsOfBasicAngle",0)',
+                         not self.__eq(h, 'subdivisionsOfBasicAngle', 0))
+
+        if self.__missing(h, 'subdivisionsOfBasicAngle'):
+            self.__check('eq(h,"basicAngleOfTheInitialProductionDomain",0)',
+                         self.__eq(h, 'basicAngleOfTheInitialProductionDomain', 0))
+
+        self.__check('meridian*parallel == data_points', meridian*parallel == data_points)
+
+        self.__check('eq(h,"resolutionAndComponentFlags1",0)',
+                     self.__eq(h, 'resolutionAndComponentFlags1', 0))
+        self.__check('eq(h,"resolutionAndComponentFlags2",0)',
+                     self.__eq(h, 'resolutionAndComponentFlags2', 0))
+        self.__check('eq(h,"resolutionAndComponentFlags6",0)',
+                     self.__eq(h, 'resolutionAndComponentFlags6', 0))
+        self.__check('eq(h,"resolutionAndComponentFlags7",0)',
+                     self.__eq(h, 'resolutionAndComponentFlags7', 0))
+        self.__check('eq(h,"resolutionAndComponentFlags8",0)',
+                     self.__eq(h, 'resolutionAndComponentFlags8', 0))
+
+        self.__check('eq(h,"iDirectionIncrementGiven",1)',
+                     self.__eq(h, 'iDirectionIncrementGiven', 1))
+        self.__check('eq(h,"jDirectionIncrementGiven",1)',
+                     self.__eq(h, 'jDirectionIncrementGiven', 1))
+
+        self.__check('eq(h,"numberOfOctectsForNumberOfPoints",0)',
+                     self.__eq(h, 'numberOfOctectsForNumberOfPoints', 0))
+        self.__check('eq(h,"interpretationOfNumberOfPoints",0)',
+                     self.__eq(h, 'interpretationOfNumberOfPoints', 0))
+
+        if self.__get(h,"iScansNegatively") != 0:
+            tmp = east
+            dtmp = deast
+
+            east = west
+            west = tmp
+
+            deast = dwest
+            dwest = dtmp
+
+        if self.__get(h,"jScansPositively") != 0:
+            tmp = north
+            dtmp = dnorth
+
+            north = south
+            south = tmp
+
+            dnorth = dsouth
+            dsouth = dtmp
+
+        if not (self.__is_lam or self.__is_uerra):
+            self.__check('north > south', north > south)
+            self.__check('east > west', east> west)
+
+            # Check that the grid is symmetrical */
+            self.__check('north == -south', north == -south)
+            self.__check('DBL_EQUAL(dnorth, -dsouth, tolerance)',  self.__dbl_equal(dnorth, -dsouth, tolerance) )
+            self.__check('parallel == (east-west)/we + 1', parallel == (east - west) / we + 1)
+            self.__check('fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10', math.fabs((deast - dwest) / dwe + 1 - parallel) < 1e-10)
+            self.__check('meridian == (north-south)/ns + 1', meridian == (north-south)/ns + 1)
+            self.__check('fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10', math.fabs((dnorth - dsouth) / dns + 1 - meridian) < 1e-10 )
+
+            # Check that the field is global */
+            area = (dnorth-dsouth) * (deast-dwest)
+            globe = 360.0*180.0
+            self.__check('area <= globe', area <= globe)
+            self.__check('area >= globe*0.95', area >= globe*0.95)
+
+        # GRIB2 requires longitudes are always positive */
+        self.__check('east >= 0', east >= 0)
+        self.__check('west >= 0', west >= 0)
+
+        #print('meridian=%ld north=%ld south=%ld ns=%ld', (meridian, north, south, ns))
+        #print('meridian=%ld north=%f south=%f ns=%f', (meridian, dnorth, dsouth, dns))
+        #print('parallel=%ld east=%ld west=%ld we=%ld', (parallel, east, west, we))
+        #print('parallel=%ld east=%f west=%f we=%f', (parallel, deast, dwest, dwe))
+
+    def __x(self, h, name):
+        print("%s=%ld " % (name, self.__get(h, name)), end='')
+
+    def __check_parameter(self, h, min_value, max_value):
+        best = -1;
+        match = -1;
+        i = 0;
+
+        for parameter in parameters:
+            j = 0;
+            matches = 0;
+            for pair in parameter['pairs']:
+                val = -1;
+                if pair['key_type'] == 'int':
+                    try:
+                        val = codes_get_long(h, pair['key'])
+                        if pair['value_long'] == val:
+                            matches += 1
+                    except:
+                        pass
+                elif pair['key_type'] == 'str':
+                    if self.__is_uerra and pair['key'].lower() == "model":
+                        # print("Skipping model keyword for UERRA class")
+                        matches += 1 # xxx hack to pretend that model key was matched.
+                    else:
+                        if pair['value_string'].lower() == "MISSING".lower():
+                            is_miss = codes_is_missing(h, pair['key'])
+                            if is_miss != 0:
+                                matches += 1
+                        # elif codes_get_string(h, pair['key']):
+                        else:
+                            try:
+                                strval = codes_get_string(h, pair['key'])
+                                if pair['value_string'] == strval:
+                                    matches += 1
+                            except:
+                                pass
+                else:
+                    assert("Unknown key type")
+                    sys.exit(1)
+
+                j += 1
+                # if 0
+                #     print("%s %s %ld val -> %d %d %d" % (
+                #             pair.key,
+                #             pair.value_string,
+                #             val,
+                #             matches,
+                #             j,
+                #             best))
+                # endif
+
+            if matches == j and matches > best:
+                best = matches
+                match = i
+            i += 1
+
+        if match >= 0:
+            self.__param = parameters[match]['name']
+            eprint("match: %d, param: %s" % (match, self.__param))
+            if match == 0:
+                eprint("Exit")
+                sys.exit(1)
+            # sys.exit(1)
+            i = 0
+            # j = 0
+            for check_func in parameters[match]['checks']:
+                self.__check_map[check_func](h, parameters[match], min_value, max_value)
+                i += 1
+                # print('=========================')
+                # print('%s -> %d %d' , (self.__param, match, best))
+                # for pair in  parameters[match].pairs:
+                #     print('%s val -> %ld %d' % (pair['key'], pair['value'], j))
+                #     j += 1
+                # print('matched parameter: %s' % self.__param)
+        else:
+            print('%s, field %d [%s]: cannot match parameter' % (self.__filename, self.__field, self.__param))
+            self.__x(h, 'origin')
+            self.__x(h, 'discipline')
+            self.__x(h, 'parameterCategory')
+            self.__x(h, 'parameterNumber')
+            self.__x(h, 'typeOfFirstFixedSurface')
+            self.__x(h, 'scaleFactorOfFirstFixedSurface')
+            self.__x(h, 'scaledValueOfFirstFixedSurface')
+            self.__x(h, 'typeOfSecondFixedSurface')
+            self.__x(h, 'scaleFactorOfSecondFixedSurface')
+            self.__x(h, 'scaledValueOfSecondFixedSurface')
+            print('')
+            self.__error += 1
+
+    def __check_packing(self, h):
+        # ECC-1009: Warn if not using simple packing
+        expected_packingType = 'grid_simple';
+        packingType = codes_get_string(h, 'packingType')
+
+        if packingType != expected_packingType:
+            print('warning: %s, field %d [%s]: invalid packingType %s (Should be %s)' % (self.__filename, self.__field, self.__param, packingType, expected_packingType))
+            self.__warning += 1
+
+    def __verify(self, h):
+        min_value = 0
+        max_value = 0
+
+        self.__check('eq(h,"editionNumber",2)',
+                     self.__eq(h, 'editionNumber',2))
+        # self.__check('missing(h,"reserved")||eq(h,"reserved",0)',
+                     # self.__missing(h, 'reserved') or self.__eq(h, 'reserved', 0))
+
+
+        if self.__valueflg:
+            count = 0
+            try:
+                count = codes_get_size(h,"values")
+            except Exception as e:
+                print('%s, field %d [%s]: cannot get number of values: %s' % (self.__filename, self.__field, self.__param, str(e)))
+                self.__error += 1
+                return;
+
+            bitmap = not self.__eq(h, "bitMapIndicator",255);
+
+            self.__check('eq(h,"numberOfDataPoints",count)',
+                         self.__eq(h, 'numberOfDataPoints', count));
+
+            n = count
+
+            try:
+                self.__values = codes_get_double_array(h, 'values')
+            except Exception as e:
+                print('%s, field %d [%s]: cannot get values: %s' % (self.__filename, self.__field, self.__param, str(e)))
+                self.__error += 1
+                return
+
+            if n != count:
+                print('%s, field %d [%s]: value count changed %ld -> %ld' % (self.__filename, self.__field, self.__param, count, n))
+                self.__error += 1
+                return
+
+            if bitmap:
+                missing = self.__dget(h, 'missingValue')
+                min_value = max_value = missing;
+                for value in self.__values:
+                    if (min_value == missing) or ((value != missing) and (min_value > value)):
+                        min_value = value
+                    if (max_value == missing) or ((value != missing) and (max_value < value)):
+                        max_value = value
+            else:
+                min_value = max_value = self.__values[0]
+                for value in self.__values:
+                    if min_value > value:
+                        min_value = value
+                    if max_value < value:
+                        max_value = value;
+
+        self.__check_parameter(h, min_value, max_value);
+        self.__check_packing(h);
+
+        # Section 1
+
+        self.__check('ge(h,"gribMasterTablesVersionNumber",4)',
+                     self.__ge(h, 'gribMasterTablesVersionNumber', 4))
+        self.__check('eq(h,"versionNumberOfGribLocalTables",0)',
+                     self.__eq(h, "versionNumberOfGribLocalTables", 0)) # Local tables not used
+
+        self.__check('eq(h,"significanceOfReferenceTime",1)',
+                     self.__eq(h, 'significanceOfReferenceTime', 1)); # Start of forecast
+
+        if not self.__is_s2s:
+            # todo check for how many years back the reforecast is done? Is it coded in the grib???
+            # Check if the date is OK
+            date = self.__get(h,"date");
+            # self.__check(date > 20060101);
+            self.__check('(date / 10000) == get(h,"year")',
+                         int(date / 10000) == self.__get(h, 'year'))
+            self.__check('((date % 10000) / 100) == get(h,"month")',
+                         int((date % 10000) / 100) == self.__get(h, 'month'))
+            self.__check('((date % 100)) == get(h,"day")',
+                         (int(date % 100)) == self.__get(h, 'day'))
+
+        if self.__is_uerra:
+            self.__check('le(h,"hour",24)',
+                         self.__le(h, 'hour', 24))
+        elif self.__is_lam:
+            self.__check('eq(h,"hour",0)||eq(h,"hour",3)||eq(h,"hour",6)||eq(h,"hour",9)||eq(h,"hour",12)||eq(h,"hour",15)||eq(h,"hour",18)||eq(h,"hour",21))',
+                 self.__eq(h, 'hour', 0) or self.__eq(h, 'hour', 3) or self.__eq(h, 'hour', 6) or self.__eq(h, 'hour', 9) or self.__eq(h, 'hour', 12) or self.__eq(h, 'hour', 15) or self.__eq(h, 'hour', 18) or self.__eq(h, 'hour', 21))
+        else:
+            # Only 00, 06 12 and 18 Cycle OK 
+            self.__check('eq(h,"hour",0)||eq(h,"hour",6)||eq(h,"hour",12)||eq(h,"hour",18)',
+                         self.__eq(h, 'hour', 0) or self.__eq(h, 'hour', 6) or self.__eq(h, 'hour', 12) or self.__eq(h, 'hour', 18))
+
+        self.__check('eq(h,"minute",0)',
+                     self.__eq(h, 'minute', 0))
+        self.__check('eq(h,"second",0)',
+                     self.__eq(h, 'second', 0))
+        self.__check('ge(h,"startStep",0)',
+                     self.__ge(h, 'startStep', 0))
+
+        if self.__is_s2s:
+            self.__check('eq(h,"productionStatusOfProcessedData",6)||eq(h,"productionStatusOfProcessedData",7)',
+                         self.__eq(h, 'productionStatusOfProcessedData', 6) or self.__eq(h, 'productionStatusOfProcessedData', 7)) #S2S prod or test
+            self.__check('le(h,"endStep",100*24)',
+                         self.__le(h, 'endStep', 100 * 24))
+        elif not self.__is_uerra:
+            self.__check('eq(h,"productionStatusOfProcessedData",4)||eq(h,"productionStatusOfProcessedData",5)',
+                         self.__eq(h, 'productionStatusOfProcessedData', 4) or self.__eq(h, 'productionStatusOfProcessedData', 5)) # TIGGE prod or test
+            self.__check('le(h,"endStep",30*24)',
+                         self.__le(h, 'endStep', 30 * 24))
+
+        if self.__is_uerra:
+            self.__check('(eq(h,"step",1)||eq(h,"step",2)||eq(h,"step",4)||eq(h,"step",5))||(get(h,"step") % 3) == 0)',
+                         (eq(h, 'step', 1) or self.__eq(h, 'step', 2) or self.__eq(h, 'step', 4) or self.__eq(h, 'step', 5)) or (get(h, 'step') % 3) == 0)
+        elif self.__is_lam:
+            self.__check('(get(h,"step") % 3) == 0',
+                         (self.__get(h, 'step') % 3) == 0)
+        else:
+            self.__check('(get(h,"step") % 6) == 0',
+                         (self.__get(h, 'step') % 6) == 0)
+
+        if self.__is_uerra:
+            if self.__is_crra:
+                self.__check('eq(h,"productionStatusOfProcessedData",10)||eq(h,"productionStatusOfProcessedData",11)',
+                             self.__eq(h, 'productionStatusOfProcessedData', 10) or self.__eq(h, 'productionStatusOfProcessedData', 11)) # CRRA prodortest
+            else:
+                self.__check('eq(h,"productionStatusOfProcessedData",8)||eq(h,"productionStatusOfProcessedData",9)',
+                             self.__eq(h, 'productionStatusOfProcessedData', 8) or self.__eq(h, 'productionStatusOfProcessedData', 9)); #  UERRA prodortest
+            self.__check('le(h,"endStep",30)', self.__le(h,"endStep",30))
+            # 0 = analysis , 1 = forecast
+            self.__check('eq(h,"typeOfProcessedData",0)||eq(h,"typeOfProcessedData",1)',
+                         self.__eq(h, 'typeOfProcessedData', 0) or self.__eq(h, 'typeOfProcessedData', 1))
+            if self.__get(h, 'typeOfProcessedData') == 0:
+                self.__check('eq(h,"step",0)',
+                             self.__eq(h, 'step', 0))
+            else:
+                self.__check('(eq(h,"step",1)||eq(h,"step",2)||eq(h,"step",4)||eq(h,"step",5))||(get(h,"step") % 3) == 0)',
+                             (eq(h, 'step', 1) or self.__eq(h, 'step', 2) or self.__eq(h, 'step', 4) or self.__eq(h, 'step', 5)) or (get(h, 'step') % 3) == 0)
+        else:
+            # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
+            self.__check('eq(h,"typeOfProcessedData",2)||eq(h,"typeOfProcessedData",3)||eq(h,"typeOfProcessedData",4)',
+                         self.__eq(h, 'typeOfProcessedData', 2) or self.__eq(h, 'typeOfProcessedData', 3) or self.__eq(h, 'typeOfProcessedData', 4));
+
+        # TODO: validate local usage. Empty for now xxx
+        # self.__check('eq(h,"section2.sectionLength",5)', self.__eq(h,"section2.sectionLength",5))
+
+        # Section 3
+
+        self.__check('eq(h,"sourceOfGridDefinition",0)',
+                     self.__eq(h, 'sourceOfGridDefinition', 0)) # Specified in Code table 3.1 
+
+        dtn = self.__get(h, 'gridDefinitionTemplateNumber')
+
+        if dtn in [0, 1]:
+            # gridDefinitionTemplateNumber == 1: rotated latlon
+            self.__latlon_grid(h);
+        elif dtn == 30: #Lambert conformal
+            # lambert_grid(h); # TODO xxx
+            # print('warning: Lambert grid - geometry checking not implemented yet!')
+            # self.__check('eq(h,"scanningMode",64)', self.__eq(h, 'scanningMode', 64)) /* M-F data used to have it wrong.. but it might depends on other projection set up as well!
+            pass
+        elif dtn == 40: # gaussian grid (regular or reduced)
+            version_string = codes_get_version_info()
+            version = [int(v) for v in version_string['bindings'].split('.')]
+            if version[0] >= 1 and version[1] >= 5:
+                self.__gaussian_grid(h)
+            else:
+                # raise(Exception('Require eccodes-python 1.5.0 or higher'))
+                print('WARNING: Require eccodes-python 1.5.0 or higher for checking gaussian grids')
+        else:
+            print('%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld' %
+                    (self.__filename, self.__field, self.__param, self.__get(h, 'gridDefinitionTemplateNumber')))
+            self.__error += 1
+            return;
+
+        # If there is no bitmap, this should be true
+        # self.__check('eq(h,"bitMapIndicator",255)', self.__eq(h,"bitMapIndicator",255))
+
+        if self.__eq(h, 'bitMapIndicator', 255):
+            self.__check('get(h,"numberOfValues") == get(h,"numberOfDataPoints")',
+                         self.__get(h, 'numberOfValues') == self.__get(h, 'numberOfDataPoints'))
+        else:
+            self.__check('get(h,"numberOfValues") <= get(h,"numberOfDataPoints")',
+                         self.__get(h, 'numberOfValues') <= self.__get(h, 'numberOfDataPoints'))
+
+        # Check values 
+        self.__check('eq(h,"typeOfOriginalFieldValues",0)',
+                     self.__eq(h, 'typeOfOriginalFieldValues', 0)) # Floating point 
+
+        self.__check_validity_datetime(h)
+
+        # do not store empty values e.g. fluxes at step 0
+        #    todo ?? now it's allowed in the code here!
+        #    if not self.__missing(h, 'typeOfStatisticalProcessing'):
+        #      self.__check('ne(h,"stepRange",0)', self.__ne(h,"stepRange",0))
+
+    def validate(self, path):
+        count = 0;
+        self.__filename = path;
+        self.__field = 0;
 
         try:
-            values = codes_get_double_array(h, "values")
+            f = open(path, 'rb')
         except Exception as e:
-            print("%s, field %d [%s]: cannot get values: %s" % (ctx.filename, ctx.field, ctx.param, str(e)))
-            ctx.error += 1
+            print('%s: %s' % (path, str(e)));
+            self.__error += 1;
+            return;
+
+        while 1:
+            try:
+                handle = codes_grib_new_from_file(f)
+            except Exception as e:
+                print('%s: grib_handle_new_from_file: %s' %(path, str(e)))
+                self.__error += 1
+                return
+
+            if handle == None:
+                break
+
+            last_error   = self.__error;
+            last_warning = self.__warning;
+
+            self.__field += 1
+            self.__verify(handle);
+
+            if (last_error != self.__error) or ((self.__warnflg != 0) and (last_warning != self.__warning)):
+                self.__save(handle, self.__bad, self.__fbad)
+            else:
+                self.__save(handle, self.__good, self.__fgood)
+
+            codes_release(handle)
+            count = count + 1
+            self.__param = 'unknown'
+
+        if count == 0:
+            print('%s does not contain any GRIBs' % path)
+            self.__error += 1
             return
 
-        if n != count:
-            print("%s, field %d [%s]: value count changed %ld -> %ld" % (ctx.filename, ctx.field, ctx.param, count, n))
-            ctx.error += 1
-            return
+    def get_error_counter(self):
+        return self.__error
 
-        if bitmap:
-            missing = dget(h, "missingValue")
-            min_value = max_value = missing;
-            for value in values:
-                if (min_value == missing) or ((value != missing) and (min_value > value)):
-                    min_value = value
-                if (max_value == missing) or ((value != missing) and (max_value < value)):
-                    max_value = value
-        else:
-            min_value = max_value = values[0]
-            for value in values:
-                if min_value > value:
-                    min_value = value
-                if max_value < value:
-                    max_value = value;
+    def get_warning_counter(self):
+        return self.__warning
 
-    check_parameter(h, min_value, max_value);
-    check_packing(h);
 
-    # Section 1
-
-    CHECK('ge(h,"gribMasterTablesVersionNumber",4)', ge(h,"gribMasterTablesVersionNumber",4))
-    CHECK('eq(h,"versionNumberOfGribLocalTables",0)', eq(h,"versionNumberOfGribLocalTables",0)) # Local tables not used
-
-    CHECK('eq(h,"significanceOfReferenceTime",1)', eq(h,"significanceOfReferenceTime",1)); # Start of forecast
-
-    if not ctx.is_s2s:
-        # todo check for how many years back the reforecast is done? Is it coded in the grib???
-        # Check if the date is OK
-        date = get(h,"date");
-        # CHECK(date > 20060101);
-        CHECK('(date / 10000) == get(h,"year")', int(date / 10000) == get(h,"year"))
-        CHECK('((date % 10000) / 100) == get(h,"month")', int((date % 10000) / 100) == get(h,"month"))
-        CHECK('((date % 100)) == get(h,"day")', (int(date % 100)) == get(h,"day"))
-
-    if ctx.is_uerra:
-        CHECK('le(h,"hour",24)', le(h,"hour",24))
-    elif ctx.is_lam:
-        CHECK(
-            'eq(h,"hour",0) or eq(h,"hour",3) or eq(h,"hour",6) or eq(h,"hour",9) or eq(h,"hour",12) or eq(h,"hour",15) or eq(h,"hour",18) or eq(h,"hour",21))',
-             eq(h,"hour",0) or eq(h,"hour",3) or eq(h,"hour",6) or eq(h,"hour",9) or eq(h,"hour",12) or eq(h,"hour",15) or eq(h,"hour",18) or eq(h,"hour",21))
-    else:
-        # Only 00, 06 12 and 18 Cycle OK 
-        CHECK('eq(h,"hour",0) or eq(h,"hour",6) or eq(h,"hour",12) or eq(h,"hour",18)', eq(h,"hour",0) or eq(h,"hour",6) or eq(h,"hour",12) or eq(h,"hour",18))
-
-    CHECK('eq(h,"minute",0)', eq(h,"minute",0))
-    CHECK('eq(h,"second",0)', eq(h,"second",0))
-    CHECK('ge(h,"startStep",0)', ge(h,"startStep",0))
-
-    if ctx.is_s2s:
-        CHECK('eq(h,"productionStatusOfProcessedData",6) or eq(h,"productionStatusOfProcessedData",7)', eq(h,"productionStatusOfProcessedData",6) or eq(h,"productionStatusOfProcessedData",7)) #S2S prod or test
-        CHECK('le(h,"endStep",100*24)', le(h,"endStep",100*24))
-    elif not ctx.is_uerra:
-        CHECK('eq(h,"productionStatusOfProcessedData",4) or eq(h,"productionStatusOfProcessedData",5)', eq(h,"productionStatusOfProcessedData",4) or eq(h,"productionStatusOfProcessedData",5)) # TIGGE prod or test
-        CHECK('le(h,"endStep",30*24)', le(h,"endStep",30*24))
-
-    if ctx.is_uerra:
-        CHECK(
-            '(eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)',
-             (eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)
-    elif ctx.is_lam:
-        CHECK('(get(h,"step") % 3) == 0', (get(h,"step") % 3) == 0)
-    else:
-        CHECK('(get(h,"step") % 6) == 0', (get(h,"step") % 6) == 0)
-
-    if ctx.is_uerra:
-        if ctx.is_crra:
-            CHECK('eq(h,"productionStatusOfProcessedData",10) or eq(h,"productionStatusOfProcessedData",11)', eq(h,"productionStatusOfProcessedData",10) or eq(h,"productionStatusOfProcessedData",11)) # CRRA prodortest
-        else:
-            CHECK('eq(h,"productionStatusOfProcessedData",8) or eq(h,"productionStatusOfProcessedData",9)', eq(h,"productionStatusOfProcessedData",8) or eq(h,"productionStatusOfProcessedData",9)); #  UERRA prodortest
-        CHECK('le(h,"endStep",30)', le(h,"endStep",30))
-        # 0 = analysis , 1 = forecast
-        CHECK('eq(h,"typeOfProcessedData",0) or eq(h,"typeOfProcessedData",1)', eq(h,"typeOfProcessedData",0) or eq(h,"typeOfProcessedData",1))
-        if get(h,"typeOfProcessedData") == 0:
-            CHECK('eq(h,"step",0)', eq(h,"step",0))
-        else:
-            CHECK(
-                '(eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)',
-                 (eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)
-    else:
-        # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
-        CHECK('eq(h,"typeOfProcessedData",2) or eq(h,"typeOfProcessedData",3) or eq(h,"typeOfProcessedData",4)', eq(h,"typeOfProcessedData",2) or eq(h,"typeOfProcessedData",3) or eq(h,"typeOfProcessedData",4));
-
-    # TODO: validate local usage. Empty for now xxx
-    # CHECK('eq(h,"section2.sectionLength",5)', eq(h,"section2.sectionLength",5))
-
-    # Section 3
-
-    CHECK('eq(h,"sourceOfGridDefinition",0)', eq(h,"sourceOfGridDefinition",0)) # Specified in Code table 3.1 
-
-    dtn = get(h,"gridDefinitionTemplateNumber")
-
-    if dtn in [0, 1]:
-        # dtn == 1: rotated latlon
-        latlon_grid(h);
-    elif dtn == 30: #Lambert conformal
-        # lambert_grid(h); # TODO xxx
-        # print("warning: Lambert grid - geometry checking not implemented yet!")
-        # CHECK('eq(h,"scanningMode",64)', eq(h,"scanningMode",64));*/ /* M-F data used to have it wrong.. but it might depends on other projection set up as well!
-        pass
-    elif dtn == 40: # gaussian grid (regular or reduced)
-        version_string = codes_get_version_info()
-        version = [int(v) for v in version_string['bindings'].split('.')]
-        if version[0] >= 1 and version[1] >= 5:
-            gaussian_grid(h)
-        else:
-            # raise(Exception('Require eccodes-python 1.5.0 or higher'))
-            print('WARNING: Require eccodes-python 1.5.0 or higher for checking gaussian grids')
-    else:
-        print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
-                (ctx.filename, ctx.field, ctx.param, get(h,"gridDefinitionTemplateNumber")))
-        ctx.error += 1
-        return;
-
-    # If there is no bitmap, this should be true
-    # CHECK('eq(h,"bitMapIndicator",255)', eq(h,"bitMapIndicator",255))
-
-    if eq(h,"bitMapIndicator",255):
-        CHECK('get(h,"numberOfValues") == get(h,"numberOfDataPoints")', get(h,"numberOfValues") == get(h,"numberOfDataPoints"))
-    else:
-        CHECK('get(h,"numberOfValues") <= get(h,"numberOfDataPoints")', get(h,"numberOfValues") <= get(h,"numberOfDataPoints"))
-
-    # Check values 
-    CHECK('eq(h,"typeOfOriginalFieldValues",0)', eq(h,"typeOfOriginalFieldValues",0)) # Floating point 
-
-    check_validity_datetime(h)
-
-    # do not store empty values e.g. fluxes at step 0
-    #    todo ?? now it's allowed in the code here!
-    #    if not missing(h,"typeOfStatisticalProcessing"):
-    #      CHECK('ne(h,"stepRange",0)', ne(h,"stepRange",0))
-
-def validate(path):
-    global ctx
-
-    count = 0;
-    ctx.filename = path;
-    ctx.field = 0;
-
-    try:
-        f = open(path, 'rb')
-    except Exception as e:
-        print("%s: %s" % (path, str(e)));
-        ctx.error += 1;
-        return;
-
-    while 1:
-        try:
-            handle = codes_grib_new_from_file(f)
-        except Exception as e:
-            print("%s: grib_handle_new_from_file: %s" %(path, str(e)))
-            ctx.error += 1
-            return
-
-        if handle == None:
-            break
-
-        last_error   = ctx.error;
-        last_warning = ctx.warning;
-
-        ctx.field += 1
-        verify(handle);
-
-        if (last_error != ctx.error) or ((ctx.warnflg != 0) and (last_warning != ctx.warning)):
-            save(handle, ctx.bad, ctx.fbad)
-        else:
-            save(handle, ctx.good, ctx.fgood)
-
-        codes_release(handle)
-        count = count + 1
-        ctx.param = "unknown"
-
-    if count == 0:
-        print("%s does not contain any GRIBs" % path)
-        ctx.error += 1
-        return
-
-if __name__ == "__main__":
-    check_map = dict()
-    check_map['daily_average'] = daily_average
-    check_map['from_start'] = from_start
-    check_map['given_level'] = given_level
-    check_map['given_thickness'] = given_thickness
-    check_map['has_bitmap'] = has_bitmap
-    check_map['has_soil_layer'] = has_soil_layer
-    check_map['has_soil_level'] = has_soil_level
-    check_map['height_level'] = height_level
-    check_map['point_in_time'] = point_in_time
-    check_map['potential_temperature_level'] = potential_temperature_level
-    check_map['potential_vorticity_level'] = potential_vorticity_level
-    check_map['predefined_level'] = predefined_level
-    check_map['predefined_thickness'] = predefined_thickness
-    check_map['pressure_level'] = pressure_level
-    check_map['resolution_s2s'] = resolution_s2s
-    check_map['resolution_s2s_ocean'] = resolution_s2s_ocean
-    check_map['since_prev_pp'] = since_prev_pp
-    check_map['six_hourly'] = six_hourly
-    check_map['three_hourly'] = three_hourly
-
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--warnflg', help='warnings are treated as errors', action='store_true')
     parser.add_argument('-z', '--zeroflg', help='return 0 to calling shell', action='store_true')
@@ -1033,41 +1168,24 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--crra', help='check crra fields (-u must be also used in this case)', action='store_true')
     args = parser.parse_args()
 
-    ctx = Context()
-    ctx.warnflg = args.warnflg
-    ctx.zeroflg = args.zeroflg
-    ctx.valueflg = args.valueflg
-    ctx.is_lam = args.lam
-    ctx.is_s2s = args.s2s
-    ctx.is_s2s_refcst = args.s2s_refcst
-    ctx.is_uerra = args.uerra
-    ctx.is_crra = args.crra
+    checker = TiggeChecker(warnflg=args.warnflg,
+                           valueflg=args.valueflg,
+                           lam=args.lam,
+                           s2s=args.s2s,
+                           s2s_refcst=args.s2s_refcst,
+                           uerra=args.uerra,
+                           crra=args.crra,
+                           good=args.good,
+                           bad=args.bad,
+                           )
 
-    if args.good:
-        good = args.good
-        fgood = open(args.good,"w")
-        if not fgood:
-            print("Couldn't open %s" % good)
-            sys.exit(1)
-
-    if args.bad:
-        bad = args.bad
-        fbad = open(args.bad,"w")
-        if not fbad:
-            print("Couldn't open %s" % bad)
-            sys.exit(1)
+    for filename in FileScanner(args.path):
+        checker.validate(filename)
 
     err = 0
-    for path in args.path:
-        scan(path, validate)
-        if ctx.error != 0:
-            err = 1
-        if ctx.warning and ctx.warnflg:
-            err = 1
+    if checker.get_error_counter() != 0:
+        err = 1
+    if checker.get_warning_counter() and args.warnflg:
+        err = 1
 
-    if ctx.fgood != None and not ctx.fgood.closed:
-        ctx.fgood.close()
-    if ctx.fbad != None and not ctx.fbad.closed:
-        ctx.fbad.close()
-
-    sys.exit(0 if ctx.zeroflg else err)
+    sys.exit(0 if args.zeroflg else err)
