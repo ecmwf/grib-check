@@ -8,7 +8,7 @@ import argparse
 from tigge_check_parameters import parameters
 import numpy as np
 import json
-from shared import *
+from file_scanner import *
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)

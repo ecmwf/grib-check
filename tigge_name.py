@@ -5,7 +5,7 @@ import math
 import argparse
 import sys
 import os
-from shared import *
+from file_scanner import *
 
 
 class TiggeName:
