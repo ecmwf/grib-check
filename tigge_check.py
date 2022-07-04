@@ -10,9 +10,6 @@ import numpy as np
 import json
 from file_scanner import *
 
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
 class TiggeChecker:
     def __init__(self, valueflg=False, warnflg=False, lam=False, s2s=False, s2s_refcst=False, uerra=False, crra=False, good=None, bad=None):
         self.__last_n = 0
@@ -870,9 +867,7 @@ class TiggeChecker:
 
         if match >= 0:
             self.__param = parameters[match]['name']
-            eprint("match: %d, param: %s" % (match, self.__param))
             if match == 0:
-                eprint("Exit")
                 sys.exit(1)
             # sys.exit(1)
             i = 0
