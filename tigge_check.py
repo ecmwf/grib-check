@@ -867,9 +867,6 @@ class TiggeChecker:
 
         if match >= 0:
             self.__param = parameters[match]['name']
-            if match == 0:
-                sys.exit(1)
-            # sys.exit(1)
             i = 0
             # j = 0
             for check_func in parameters[match]['checks']:
