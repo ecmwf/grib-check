@@ -12,7 +12,7 @@ class FileScanner:
                         self.fns.append(root + '/' + fn)
             else:
                 self.fns.append(path)
-        print(self.fns)
+        # print(self.fns)
 
     def __iter__(self):
         self.pos = 0
