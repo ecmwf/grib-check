@@ -17,10 +17,12 @@ class IndexedLookupTable:
         # 3   enfo       pf
         normalized_keys = pd.DataFrame(stripped_keys.tolist())
 
-        self.idx_keys=list(normalized_keys.columns.values)
-        self.indexed_table = normalized_keys.join(df).set_index(self.idx_keys)
+        keys=list(normalized_keys.columns.values)
+        self.indexed_table = normalized_keys.join(df).set_index(keys)
+        d = {k: self.indexed_table.index.get_level_values(k).dtype for k in keys}
+        self.idx_keys = {k: str if str(v) == "object" else int for k, v in d.items()}
 
-    def get_index_keys(self) -> list:
+    def get_index_keys(self) -> dict:
         return self.idx_keys
 
     def get_element(self, index_kv: dict):
