@@ -8,7 +8,7 @@ class TestIndexedLookupTable(unittest.TestCase):
     def test_get_index(self):
         table = IndexedLookupTable("test_data.json")
         idx_keys = table.get_index_keys()
-        self.assertEqual(["stream", "dataType"], idx_keys)
+        self.assertEqual({"stream": str, "dataType": str}, idx_keys)
 
     def test_get_element(self):
         table = IndexedLookupTable("test_data.json")

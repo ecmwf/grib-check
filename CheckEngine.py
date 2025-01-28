@@ -89,7 +89,8 @@ class CheckEngine:
 
     def validate(self, message):
         keys = self._test_store.get_index_keys()
-        index = {key: message.get(key) for key in keys}
+        # Use datatype=int for fast lookup. Potential issue if the key is not an integer
+        index = {key: message.get(key, datatype=dtype) for (key, dtype) in keys.items()}
         kv = self._test_store.get_element(index)
         test = self._create_test(message, kv)
         return test.run() if test is not None else False
