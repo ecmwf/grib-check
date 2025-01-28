@@ -85,3 +85,25 @@ class WmoTest(Test):
 
     # def status_msg(self) -> str:
     #     return f"{self._evaluate_str()}: {self.key}: {self.expected_value} == {self.actual_value}"
+    
+
+class TiggeTest(Test):
+    def __init__(self, message: Message, parameter: dict, check_map: dict):
+        self.__message = message
+        self.__parameter = parameter
+        self.__check_map = check_map
+
+    def _check(self, name, message, a):
+        logger.debug(f"_check({name}, {a.status_msg()})")
+        if not a.evaluate():
+            pass
+            # print(f"{self.__filename}, field {message.position()}: {a.status_msg()}")
+            # print(f"Expected: {a.expected_value}, Actual: {a.actual_value}")
+            # self.__error += 1
+
+    def run(self) -> bool:
+        data = self.__parameter
+        for check_func in data["checks"]:
+            self.__check_map[check_func](self.__message, data)
+
+        return False
