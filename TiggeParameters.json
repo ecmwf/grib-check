@@ -1,4 +1,4 @@
-parameters = [
+[
     {
         "name": "10_meter_u_velocity_sfc.glob",
         "min1": -100,
