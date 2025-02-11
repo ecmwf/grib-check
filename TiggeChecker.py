@@ -3,6 +3,7 @@ from IndexedLookupTable import IndexedLookupTable
 from Grib import Grib
 from Test import Test, TiggeTest
 from Message import Message
+from Assert import Ne, Eq, Exists, Missing
 
 
 class TiggeChecker(CheckEngine):
@@ -10,8 +11,6 @@ class TiggeChecker(CheckEngine):
         self,
         valueflg=False,
         warnflg=False,
-        good=None,
-        bad=None,
     ):
         check_map = {
             # "daily_average": self.__daily_average,
@@ -37,34 +36,18 @@ class TiggeChecker(CheckEngine):
 
         # parameters = IndexedLookupTable("TiggeParameters.json")
         parameters = IndexedLookupTable("test_tigge_data.json")
-        super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg, good=good, bad=bad, check_map=check_map)
-
+        super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg, check_map=check_map)
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
         return TiggeTest(message, parameters, self._check_map)
 
-        # self.__valueflg = valueflg
-        # self.__warnflg = warnflg
-
-    # def __product_definition_template_number(self, handle, p, min_value, max_value):
-    def __given_level(self, handle, p):
-        print("dummy give_level()")
-        # do some crazy stuff here
-        # if stream in [enfo]
-        #     if type in [fcmean,…]
-        #         Ex 1 should have 11
-        #         if type in [taem,taes,….]
-        #         Ex 2,3 should have 12
-        #     else
-        #         Ex 4, should have 1
-        pass
+    def __given_level(self, message, p):
+        print(Ne(message, "typeOfFirstFixedSurface", 255, 'ne(h,"typeOfFirstFixedSurface",255)'))
+        print(Exists(message, "scaleFactorOfFirstFixedSurface", 'missing(h,"scaleFactorOfFirstFixedSurface")'))
+        print(Exists(message, "scaledValueOfFirstFixedSurface", 'missing(h,"scaledValueOfFirstFixedSurface")'))
+        print(Eq(message, "typeOfFirstFixedSurface", 103, 'eq(h,"typeOfFirstFixedSurface",103)'))
+        print(Missing(message, "scaleFactorOfFirstFixedSurface", 'missing(h,"scaleFactorOfFirstFixedSurface")'))
+        print(Missing(message, "scaledValueOfFirstFixedSurface", 'missing(h,"scaledValueOfFirstFixedSurface")'))
 
     def __point_in_time(self, handle, p):
-    # def __derived_forecast(self, handle, p, min_value, max_value):
         print("dummy point_in_time()")
-        # do some crazy stuff
-        # if type in [taem]
-        #     Ex 2 should have 0
-        # if type in [taes]
-        #     Ex 3 should have 4
-        pass
