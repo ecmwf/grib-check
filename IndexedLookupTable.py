@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class IndexedLookupTable:
     def __init__(self, filename: str):
         df = pd.read_json(filename, orient='records')

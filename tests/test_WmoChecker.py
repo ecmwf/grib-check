@@ -6,7 +6,7 @@ class TestWmoChecker(unittest.TestCase):
     def test_load_data_from_file(self):
         checker = WmoChecker()
 
-        for message in Grib("dgov-data/od_eefo_taes_sfc_2024_0001_reduced_gg.grib2"):
+        for message in Grib("./tests/dgov-data/od_eefo_taes_sfc_2024_0001_reduced_gg.grib2"):
             checker.validate(message)
 
 

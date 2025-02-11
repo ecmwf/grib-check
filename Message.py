@@ -3,7 +3,6 @@ import numpy as np
 from eccodes import (
     codes_release,
     codes_is_missing,
-    codes_get_version_info,
     codes_get_message,
     codes_get_size,
     codes_get_long,
@@ -11,8 +10,6 @@ from eccodes import (
     codes_get_string,
     codes_get_double_array,
     codes_get_native_type,
-    codes_get_gaussian_latitudes,
-    codes_set_string,
     KeyValueNotFoundError,
 )
 import logging
@@ -26,6 +23,10 @@ class Message:
     def __init__(self, h, position=None):
         self.__h = h
         self.__position = position
+
+    @property
+    def handle(self):
+        return self.__h
 
     def __del__(self):
         codes_release(self.__h)
@@ -58,15 +59,14 @@ class Message:
         return codes_get_size(self.__h, key)
 
     def get_double_array(self, key) -> np.ndarray:
-    # def get_double_array(self, key) -> list:
         return codes_get_double_array(self.__h, key)
 
     def get_buffer(self, key) -> bytes:
         return codes_get_message(self.__h)
 
-    def is_missing(self, h, key) -> bool:
+    def is_missing(self, key) -> bool:
         try:
-            return False if codes_is_missing(h, key) == 0 else True
+            return False if codes_is_missing(self.__h, key) == 0 else True
         except KeyValueNotFoundError:
             return True
 
@@ -74,42 +74,12 @@ class Message:
         return self.__position
 
     def minmax(self):
-
-        count = 0
-        try:
-            count = self.get_size("values")
-        except Exception as e:
-            # print(
-            #     "%s, field %d [%s]: cannot get number of values: %s"
-            #     % (self.__filename, self.__field, self.__param, str(e))
-            # )
-            # self.__error += 1
-            return
-
-
         bitmap = not Eq(self, "bitMapIndicator", 255).evaluate()
-        # self.__check(
-        #     'eq(h,"numberOfDataPoints",count)',
-        #     self._eq(h, "numberOfDataPoints", count),
-        # )
-        n = count
+
         try:
             self.__values = self.get_double_array("values")
         except Exception as e:
-            # print(
-            #     "%s, field %d [%s]: cannot get values: %s"
-            #     % (self.__filename, self.__field, self.__param, str(e))
-            # )
-            # self.__error += 1
             return
-
-        # if n != count:
-        #     print(
-        #         "%s, field %d [%s]: value count changed %ld -> %ld"
-        #         % (self.__filename, self.__field, self.__param, count, n)
-        #     )
-        #     self.__error += 1
-        #     return
 
         if bitmap:
             missing = self.get("missingValue")
