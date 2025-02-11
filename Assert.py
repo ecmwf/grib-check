@@ -6,56 +6,77 @@ logger = logging.getLogger(__name__)
 
 
 class Assert:
-    def __init__(self, message, key, value):
+    def __init__(self, message, key, value, msg=None):
         self.datatype = type(value)
         self.actual_value = message.get(key, self.datatype)
         self.key = key
         self.expected_value = value
         assert type(self.actual_value) is self.datatype
 
+    def __str__(self) -> str:
+        raise NotImplementedError
+
     def evaluate(self) -> bool:
         raise NotImplementedError
 
-    def status_msg(self) -> str:
-        raise NotImplementedError
-
-    def _evaluate_str(self) -> str:
+    def _evaluate_as_str(self) -> str:
         if self.evaluate():
             return "PASSED"
         else:
             return "FAILED"
 
+class Exists(Assert):
+    def __init__(self, message, key, msg=None):
+        self.is_missing = message.is_missing(key)
+        self.key = key
+
+    def evaluate(self) -> bool:
+        return not self.is_missing
+
+    def __str__(self) -> str:
+        return f"{self._evaluate_as_str()}: {self.key} exists"
+
+class Missing(Assert):
+    def __init__(self, message, key, msg=None):
+        self.is_missing = message.is_missing(key)
+        self.key = key
+
+    def evaluate(self) -> bool:
+        return self.is_missing
+
+    def __str__(self) -> str:
+        return f"{self._evaluate_as_str()}: {self.key} exists"
 
 class Eq(Assert):
     def evaluate(self) -> bool:
         return self.actual_value == self.expected_value
 
-    def status_msg(self) -> str:
-        return f"{self._evaluate_str()}: {self.key}: {self.expected_value} == {self.actual_value}"
+    def __str__(self) -> str:
+        return f"{self._evaluate_as_str()}: {self.key}: {self.expected_value} == {self.actual_value}"
 
 
 class Ne(Assert):
     def evaluate(self) -> bool:
         return self.actual_value != self.expected_value
 
-    def status_msg(self) -> str:
-        return f"{self._evaluate_str()}: {self.key}: {self.expected_value} != {self.actual_value}"
+    def __str__(self) -> str:
+        return f"{self._evaluate_as_str()}: {self.key}: {self.expected_value} != {self.actual_value}"
 
 
 class Ge(Assert):
     def evaluate(self) -> bool:
         return self.actual_value >= self.expected_value
 
-    def status_msg(self) -> str:
-        return f"{self._evaluate_str()}: {self.key}: {self.expected_value} >= {self.actual_value}"
+    def __str__(self) -> str:
+        return f"{self._evaluate_as_str()}: {self.key}: {self.expected_value} >= {self.actual_value}"
 
 
 class Le(Assert):
     def evaluate(self) -> bool:
         return self.actual_value <= self.expected_value
 
-    def status_msg(self) -> str:
-        return f"{self._evaluate_str()}: {self.key}: {self.expected_value} <= {self.actual_value}"
+    def __str__(self) -> str:
+        return f"{self._evaluate_as_str()}: {self.key}: {self.expected_value} <= {self.actual_value}"
 
 
 class Gt(Assert):
@@ -66,5 +87,5 @@ class Gt(Assert):
     def evaluate(self) -> bool:
         return math.fabs(self.actual_value - self.expected_value) > self.tolerance
 
-    def status_msg(self) -> str:
-        return f"{self._evaluate_str()}: {self.key}: {self.expected_value} > {self.actual_value} +/- {self.tolerance}"
+    def __str__(self) -> str:
+        return f"{self._evaluate_as_str()}: {self.key}: {self.expected_value} > {self.actual_value} +/- {self.tolerance}"
