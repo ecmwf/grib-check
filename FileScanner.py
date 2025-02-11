@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
-
 import os
+
 
 class FileScanner:
     def __init__(self, paths):
@@ -12,7 +11,6 @@ class FileScanner:
                         self.fns.append(root + '/' + fn)
             else:
                 self.fns.append(path)
-        # print(self.fns)
 
     def __iter__(self):
         self.pos = 0

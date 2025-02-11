@@ -93,7 +93,7 @@ class TestTest(unittest.TestCase):
             ]
         }
 
-        for message in Grib("./data/tigge_ecmf_sfc_10v.grib"):
+        for message in Grib("./tests/tigge/tigge_ecmf_sfc_10v.grib"):
             test = TiggeTest(message, parameter, check_map)
             test.run()
 
