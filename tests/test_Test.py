@@ -1,10 +1,12 @@
 import unittest
 from Grib import Grib
 from Test import WmoTest, TiggeTest
+from Report import Report
 
 def dummy(a, b):
-    msgs = ["dummy"]
-    return [True, msgs] 
+    report = Report()
+    report.add("dummy")
+    return (True, report)
 
 class TestTest(unittest.TestCase):
     # def test_create_wmo_test(self):
@@ -96,7 +98,8 @@ class TestTest(unittest.TestCase):
 
         for message in Grib("./tests/tigge/tigge_ecmf_sfc_10v.grib"):
             test = TiggeTest(message, parameter, check_map)
-            test.run()
+            result, report = test.run()
+            print(result, report)
 
 
 

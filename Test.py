@@ -3,6 +3,7 @@ import math
 import logging
 from Assert import Eq
 from Grib import Grib
+from Report import Report
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +15,11 @@ class Test:
     def score(self):
         raise NotImplementedError
 
-    def run(self) -> bool:
+    def run(self) -> tuple[bool, Report]:
         raise NotImplementedError
 
     def _evaluate_str(self) -> str:
-        if self.run():
-            return "PASSED"
-        else:
-            return "FAILED"
-
+        return "PASSED" if self.run() else "FAILED"
 
 class WmoTest(Test):
     def __init__(self, message: Message, parameter: dict, check_map: dict):
@@ -34,7 +31,7 @@ class WmoTest(Test):
         logger.debug(f"_check({name}, {a})")
         return a.evaluate()
 
-    def run(self) -> bool:
+    def run(self) -> tuple[bool, Report]:
         data = self.__parameter
         for kv in data["expected"]:
             key = kv["key"]
@@ -54,7 +51,7 @@ class WmoTest(Test):
             else:
                 print(f"  {check_func}: FAILED")
 
-        return False
+        return (False, Report())
     
 class TiggeTest(Test):
     def __init__(self, message: Message, parameter: dict, check_map: dict):
@@ -71,16 +68,15 @@ class TiggeTest(Test):
         if not a.evaluate():
             pass
 
-    def run(self) -> bool:
+    def run(self) -> tuple[bool, Report]:
         data = self.__parameter
+        report = Report()
+        results = []
         for check_func in data["checks"]:
-            result, summary = self.__check_map[check_func](self.__message, data)
-            if result:
-                print(f"  PASSED: {check_func}")
-            else:
-                print(f"  FAILED: {check_func}")
+            result, checks_report = self.__check_map[check_func](self.__message, data)
+            results.append(result)
+            result_str = "PASSED" if result else "FAILED"
+            report.add(f"{result_str}: {check_func}")
+            report.add(checks_report)
 
-            if summary:
-                [print(f"    {s}") for s in summary]
-
-        return False
+        return (all(results), report)

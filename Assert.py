@@ -25,6 +25,9 @@ class Assert:
         else:
             return "FAILED"
 
+    def result(self) -> tuple[bool, str]:
+        return self.evaluate(), self.__str__()
+
 class Exists(Assert):
     def __init__(self, message, key, msg=None):
         self.is_missing = message.is_missing(key)

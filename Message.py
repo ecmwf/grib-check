@@ -18,6 +18,7 @@ from eccodes import (
 import logging
 from inspect import currentframe, getframeinfo
 from Assert import Eq
+from Report import Report
 
 logger = logging.getLogger(__name__)
 
@@ -27,31 +28,32 @@ class Message:
         self.__h = h
         self.__position = position
 
-    def __str__(self):
-        output = [f"Message[{self.__position}]"]
+    def get_report(self):
+        report = Report()
+        report.add(f"Message[{self.__position}]")
         iterator = codes_keys_iterator_new(self.__h, "ls") 
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
-            output.append(f"{key}={self.get(key)}")
+            report.add(f"{key}={self.get(key)}")
 
-        output.append("")
+        report.add("")
 
         iterator = codes_keys_iterator_new(self.__h, "mars") 
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
-            output.append(f"{key}={self.get(key)}")
+            report.add(f"{key}={self.get(key)}")
 
-        output.append("")
+        report.add("")
 
-        output.append(f"model={self.get('model')}")
-        output.append(f"paramId={self.get('paramId')}")
-        output.append(f"discipline={self.get('discipline')}")
-        output.append(f"parameterCategory={self.get('parameterCategory')}")
-        output.append(f"parameterNumber={self.get('parameterNumber')}")
-        output.append(f"typeOfStatisticalProcessing={self.get('typeOfStatisticalProcessing')}")
-        output.append(f"typeOfFirstFixedSurface={self.get('typeOfFirstFixedSurface', int)}")
+        report.add(f"model={self.get('model')}")
+        report.add(f"paramId={self.get('paramId')}")
+        report.add(f"discipline={self.get('discipline')}")
+        report.add(f"parameterCategory={self.get('parameterCategory')}")
+        report.add(f"parameterNumber={self.get('parameterNumber')}")
+        report.add(f"typeOfStatisticalProcessing={self.get('typeOfStatisticalProcessing')}")
+        report.add(f"typeOfFirstFixedSurface={self.get('typeOfFirstFixedSurface', int)}")
 
-        return "\n".join(output)
+        return report
 
     @property
     def handle(self):
