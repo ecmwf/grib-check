@@ -10,19 +10,22 @@ class WmoChecker(CheckEngine):
         self,
         valueflg=False,
         warnflg=False,
+        verbosity=0,
     ):
-        check_map = {
+        self.__check_map = {
             "product_definition_template_number": self.__product_definition_template_number,
             "derived_forecast": self.__derived_forecast
         }
         parameters = IndexedLookupTable("WmoParameters.json")
-        super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg, check_map=check_map)
+        super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg)
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
-        return WmoTest(message, parameters, self._check_map)
+        return WmoTest(message, parameters, self.__check_map)
 
     def __product_definition_template_number(self, handle, p):
-        print("dummy product_definition_template_number()")
+        msgs = ["Not implemented: dummy product_definition_template_number()"]
+        return [True, msgs]
 
     def __derived_forecast(self, handle, p):
-        print("dummy derived_forecast()")
+        msg = ["Not implemented: dummy derived_forecast()"]
+        return [True, msg]

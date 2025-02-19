@@ -10,6 +10,9 @@ from eccodes import (
     codes_get_string,
     codes_get_double_array,
     codes_get_native_type,
+    codes_keys_iterator_new,
+    codes_keys_iterator_next,
+    codes_keys_iterator_get_name,
     KeyValueNotFoundError,
 )
 import logging
@@ -23,6 +26,32 @@ class Message:
     def __init__(self, h, position=None):
         self.__h = h
         self.__position = position
+
+    def __str__(self):
+        output = [f"Message[{self.__position}]"]
+        iterator = codes_keys_iterator_new(self.__h, "ls") 
+        while iterator is not None and codes_keys_iterator_next(iterator):
+            key = codes_keys_iterator_get_name(iterator)
+            output.append(f"{key}={self.get(key)}")
+
+        output.append("")
+
+        iterator = codes_keys_iterator_new(self.__h, "mars") 
+        while iterator is not None and codes_keys_iterator_next(iterator):
+            key = codes_keys_iterator_get_name(iterator)
+            output.append(f"{key}={self.get(key)}")
+
+        output.append("")
+
+        output.append(f"model={self.get('model')}")
+        output.append(f"paramId={self.get('paramId')}")
+        output.append(f"discipline={self.get('discipline')}")
+        output.append(f"parameterCategory={self.get('parameterCategory')}")
+        output.append(f"parameterNumber={self.get('parameterNumber')}")
+        output.append(f"typeOfStatisticalProcessing={self.get('typeOfStatisticalProcessing')}")
+        output.append(f"typeOfFirstFixedSurface={self.get('typeOfFirstFixedSurface', int)}")
+
+        return "\n".join(output)
 
     @property
     def handle(self):

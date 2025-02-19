@@ -3,7 +3,8 @@ from Grib import Grib
 from Test import WmoTest, TiggeTest
 
 def dummy(a, b):
-    print("dummy")
+    msgs = ["dummy"]
+    return [True, msgs] 
 
 class TestTest(unittest.TestCase):
     # def test_create_wmo_test(self):
