@@ -8,6 +8,8 @@ from Message import Message
 class Grib:
     def __init__(self, path):
         self.__error = 0
+        self.position = 0
+        self.f = None
         try:
             self.f = open(path, "rb")
         except Exception as e:
@@ -16,7 +18,8 @@ class Grib:
             return
 
     def __del__(self):
-        self.f.close()
+        if self.f is not None:
+            self.f.close()
 
     def __iter__(self):
         self.position = 0

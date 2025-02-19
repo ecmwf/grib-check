@@ -12,7 +12,6 @@ class CheckEngine:
     def __init__(
         self,
         tests: IndexedLookupTable,
-        check_map: dict,
         valueflg=False,
         warnflg=False,
     ):
@@ -25,7 +24,6 @@ class CheckEngine:
         self.__valueflg = valueflg
         self.__warnflg = warnflg
 
-        self._check_map = check_map
         assert tests is not None
         self._test_store = tests 
 
@@ -57,12 +55,14 @@ class CheckEngine:
         print(f"{name}={message.get(name)}")
 
     def validate(self, message):
-        keys = self._test_store.get_index_keys()
-        # Use datatype=int for fast lookup. Potential issue if the key is not an integer
-        index = {key: message.get(key, datatype=dtype) for (key, dtype) in keys.items()}
-        kv = self._test_store.get_element(index)
-        test = self._create_test(message, kv)
-        return test.run() if test is not None else False
+        kv = self._test_store.get_element(message)
+        if kv is not None:
+            test = self._create_test(message, kv)
+            return test.run() if test is not None else False
+        else:
+            logger.error(f"Could not find parameter for: {message}")
+            return False
+
 
     def get_error_counter(self):
         return self.__error

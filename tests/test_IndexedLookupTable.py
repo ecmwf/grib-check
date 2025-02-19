@@ -1,18 +1,14 @@
 import unittest
 from IndexedLookupTable import IndexedLookupTable
+from Grib import Grib
+from Message import Message
 
 class TestIndexedLookupTable(unittest.TestCase):
-    def test_load_data_from_file(self):
-        IndexedLookupTable("test_data.json")
-
-    def test_get_index(self):
-        table = IndexedLookupTable("test_data.json")
-        idx_keys = table.get_index_keys()
-        self.assertEqual({"stream": str, "dataType": str}, idx_keys)
-
     def test_get_element(self):
         table = IndexedLookupTable("test_data.json")
-        element = table.get_element({"stream": "eefo", "dataType": "fcmean"})
+        grib = Grib("tests/wmo/od_eefo_fcmean_sfc_2024_0001_reduced_gg.grib2")
+        message = next(grib)
+        element = table.get_element(message)
         self.assertEqual(
                 {
                 "pairs": [

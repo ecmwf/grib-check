@@ -1,11 +1,14 @@
 import os
 
+import logging
+logger = logging.getLogger(__name__)
 
 class FileScanner:
     def __init__(self, paths):
         self.fns = []
         for path in paths:
             if os.path.isdir(path):
+                logger.debug(f"Scanning {path}")
                 for root, dirs, fns in os.walk(path):
                     for fn in fns:
                         self.fns.append(root + '/' + fn)

@@ -32,8 +32,7 @@ class WmoTest(Test):
 
     def _check(self, name, message, a):
         logger.debug(f"_check({name}, {a})")
-        if not a.evaluate():
-            pass
+        return a.evaluate()
 
     def run(self) -> bool:
         data = self.__parameter
@@ -41,8 +40,6 @@ class WmoTest(Test):
             key = kv["key"]
             value = kv["value"]
             try:
-                val = self.__message.get(key)
-                print(f"key val: {key}, {val}, {value}")
                 self._check("equal", self.__message, Eq(self.__message, key, value))
             except NotImplementedError:
                 raise NotImplementedError("Not implemented")
@@ -50,12 +47,21 @@ class WmoTest(Test):
                 pass
 
         for check_func in data["checks"]:
-            self.__check_map[check_func](self.__message, data)
+            print(f"  {check_func}")
+            result = self.__check_map[check_func](self.__message, data)
+            if result:
+                print(f"  {check_func}: PASSED")
+            else:
+                print(f"  {check_func}: FAILED")
 
         return False
     
 class TiggeTest(Test):
     def __init__(self, message: Message, parameter: dict, check_map: dict):
+        assert parameter is not None
+        assert message is not None
+        assert check_map is not None
+
         self.__message = message
         self.__parameter = parameter
         self.__check_map = check_map
@@ -68,6 +74,13 @@ class TiggeTest(Test):
     def run(self) -> bool:
         data = self.__parameter
         for check_func in data["checks"]:
-            self.__check_map[check_func](self.__message, data)
+            result, summary = self.__check_map[check_func](self.__message, data)
+            if result:
+                print(f"  PASSED: {check_func}")
+            else:
+                print(f"  FAILED: {check_func}")
+
+            if summary:
+                [print(f"    {s}") for s in summary]
 
         return False
