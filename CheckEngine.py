@@ -4,6 +4,7 @@ import logging
 from IndexedLookupTable import IndexedLookupTable
 from Test import Test
 from Message import Message
+from Report import Report
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +28,8 @@ class CheckEngine:
         assert tests is not None
         self._test_store = tests 
 
-
     def _create_test(self, message:Message, parameters:dict) -> Test:
         raise NotImplementedError
-
 
     def __save(self, message, name, f):
         if f is None:
@@ -54,14 +53,21 @@ class CheckEngine:
     def __output_key_value(self, message, name):
         print(f"{name}={message.get(name)}")
 
-    def validate(self, message):
+    def validate(self, message) -> tuple[bool, Report]:
+        report = Report()
         kv = self._test_store.get_element(message)
         if kv is not None:
             test = self._create_test(message, kv)
-            return test.run() if test is not None else False
+            result, test_report = test.run()
+            report.add(test_report)
+            return (result, report)
         else:
             logger.error(f"Could not find parameter for: {message}")
-            return False
+            test_report = Report()
+            test_report.add("Could not find parameter for:")
+            test_report.add(message.get_report())
+            report.add(test_report)
+            return (False, report)
 
 
     def get_error_counter(self):

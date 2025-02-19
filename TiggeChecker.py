@@ -3,7 +3,8 @@ from IndexedLookupTable import IndexedLookupTable
 from Grib import Grib
 from Test import Test, TiggeTest
 from Message import Message
-from Assert import Ne, Eq, Exists, Missing
+from Assert import Le, Ne, Eq, Exists, Missing
+from Report import Report
 
 
 class TiggeChecker(CheckEngine):
@@ -45,89 +46,131 @@ class TiggeChecker(CheckEngine):
 
 
     def __daily_average(self, handle, p):
-        msgs = ["Not implemented: dummy daily_average()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy daily_average()")
+        return (False, report)
 
     def __from_start(self, handle, p):
-        msgs = ["Not implemented: dummy from_start()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy from_start()")
+        return (False, report)
 
-    def __point_in_time(self, handle, p):
-        msgs = ["Not implemented: dummy point_in_time()"]
-        return [False, msgs]
+    def __point_in_time(self, message, p):
+        report = Report()
+        topd = message.get("typeOfProcessedData", int)
+
+        results = list()
+        if topd == 0: # Analysis
+            if message.get("productDefinitionTemplateNumber") == 1:
+                results.append(Ne(message, "numberOfForecastsInEnsemble", 0, 'ne(h,"numberOfForecastsInEnsemble",0)').result())
+                results.append(Le(message, "perturbationNumber", message.get("numberOfForecastsInEnsemble", int), 'le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble"))').result())
+        elif topd == 1: # Forecast
+            if message.get("productDefinitionTemplateNumber") == 1:
+                results.append(Ne(message, "numberOfForecastsInEnsemble", 0, 'ne(h,"numberOfForecastsInEnsemble",0)').result())
+                results.append(Le(message, "perturbationNumber", message.get("numberOfForecastsInEnsemble", int), 'le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble"))').result())
+        elif topd == 2: # Analysis and forecast products
+            results.append(Eq(message, "productDefinitionTemplateNumber", 0, 'eq(h,"productDefinitionTemplateNumber",0)').result())
+            results.append(Eq(message, "perturbationNumber", 0, 'eq(h,"perturbationNumber",0)').result())
+        elif topd == 3: # Control forecast products 
+            results.append(Ne(message, "numberOfForecastsInEnsemble", 0, 'ne(h,"numberOfForecastsInEnsemble",0)').result())
+        elif topd == 4: # Perturbed forecast products
+            results.append(Ne(message, "perturbationNumber", 0, 'ne(h,"perturbationNumber",0)').result())
+            results.append(Ne(message, "numberOfForecastsInEnsemble", 0, 'ne(h,"numberOfForecastsInEnsemble",0)').result())
+        else:
+            results.append((False, "Unsupported typeOfProcessedData %ld" % message.get("typeOfProcessedData", int)))
+
+
+        [report.add(msg) for _, msg in results]
+        evals = [eval for eval, _ in results]
+        return (all(evals), report)
 
     def __given_thickness(self, handle, p):
-        msgs = ["Not implemented: dummy given_thickness()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy given_thickness()")
+        return (False, report)
 
     def __has_bitmap(self, handle, p):
-        msgs = ["Not implemented: dummy has_bitmap()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy has_bitmap()")
+        return (False, report)
 
     def __has_soil_layer(self, handle, p):
-        msgs = ["Not implemented: dummy has_soil_layer()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy has_soil_layer()")
+        return (False, report)
 
     def __has_soil_level(self, handle, p):
-        msgs = ["Not implemented: dummy has_soil_level()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy has_soil_level()")
+        return (False, report)
 
     def __height_level(self, handle, p):
-        msgs = ["Not implemented: dummy height_level()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy height_level()")
+        return (False, report)
 
     def __given_level(self, message, p):
         assertion = [
             Ne(message, "typeOfFirstFixedSurface", 255, 'ne(h,"typeOfFirstFixedSurface",255)'),
             Exists(message, "scaleFactorOfFirstFixedSurface", 'missing(h,"scaleFactorOfFirstFixedSurface")'),
             Exists(message, "scaledValueOfFirstFixedSurface", 'missing(h,"scaledValueOfFirstFixedSurface")'),
-            Eq(message, "typeOfFirstFixedSurface", 103, 'eq(h,"typeOfFirstFixedSurface",103)'),
-            Missing(message, "scaleFactorOfFirstFixedSurface", 'missing(h,"scaleFactorOfFirstFixedSurface")'),
-            Missing(message, "scaledValueOfFirstFixedSurface", 'missing(h,"scaledValueOfFirstFixedSurface")'),
+            Eq(message, "typeOfSecondFixedSurface", 255, 'eq(h,"typeOfSecondFixedSurface",103)'),
+            Missing(message, "scaleFactorOfSecondFixedSurface", 'missing(h,"scaleFactorOfSecondFixedSurface")'),
+            Missing(message, "scaledValueOfSecondFixedSurface", 'missing(h,"scaledValueOfSecondFixedSurface")'),
         ]
-        if self.__verbosity >= 3:
-            msgs = [a.__str__() for a in assertion]
-        else:
-            msgs = None
 
-        return [all([a.evaluate() for a in assertion]), msgs]
+        report = Report()
+        for a in assertion:
+            report.add(a.__str__())
+
+        return (all([a.evaluate() for a in assertion]), report)
 
     def __potential_temperature_level(self, handle, p):
-        msgs = ["Not implemented: dummy potential_temperature_level()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy potential_temperature_level()")
+        return (False, report)
 
     def __potential_vorticity_level(self, handle, p):
-        msgs = ["Not implemented: dummy potential_vorticity_level()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy potential_vorticity_level()")
+        return (False, report)
 
     def __predefined_level(self, handle, p):
-        msgs = ["Not implemented: dummy predefined_level()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy predefined_level()")
+        return (False, report)
 
     def __predefined_thickness(self, handle, p):
-        msgs = ["Not implemented: dummy predefined_thickness()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy predefined_thickness()")
+        return (False, report)
 
     def __pressure_level(self, handle, p):
-        msgs = ["Not implemented: dummy pressure_level()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy pressure_level()")
+        return (False, report)
 
     def __resolution_s2s(self, handle, p):
-        msgs = ["Not implemented: dummy resolution_s2s()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy resolution_s2s()")
+        return (False, report)
 
     def __resolution_s2s_ocean(self, handle, p):
-        msgs = ["Not implemented: dummy resolution_s2s_ocean()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy resolution_s2s_ocean()")
+        return (False, report)
 
     def __since_prev_pp(self, handle, p):
-        msgs = ["Not implemented: dummy since_prev_pp()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy since_prev_pp()")
+        return (False, report)
 
     def __six_hourly(self, handle, p):
-        msgs = ["Not implemented: dummy six_hourly()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy six_hourly()")
+        return (False, report)
 
     def __three_hourly(self, handle, p):
-        msgs = ["Not implemented: dummy three_hourly()"]
-        return [False, msgs]
+        report = Report()
+        report.add("Not implemented: dummy three_hourly()")
+        return (False, report)
