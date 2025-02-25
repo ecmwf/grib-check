@@ -1,7 +1,7 @@
 # from os import writev
 import sys
 import logging
-from IndexedLookupTable import IndexedLookupTable
+from LookupTable import SimpleLookupTable
 from Test import Test
 from Message import Message
 from Report import Report
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class CheckEngine:
     def __init__(
         self,
-        tests: IndexedLookupTable,
+        tests: SimpleLookupTable,
         valueflg=False,
         warnflg=False,
     ):

@@ -1,5 +1,5 @@
 from CheckEngine import CheckEngine
-from IndexedLookupTable import IndexedLookupTable
+from LookupTable import SimpleLookupTable
 from Grib import Grib
 from Test import Test, TiggeTest
 from Message import Message
@@ -37,7 +37,7 @@ class TiggeChecker(CheckEngine):
             "three_hourly": self.__three_hourly,
         }
 
-        parameters = IndexedLookupTable("TiggeParameters.json")
+        parameters = SimpleLookupTable("TiggeParameters.json")
         super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg)
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
