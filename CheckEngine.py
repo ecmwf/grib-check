@@ -64,8 +64,10 @@ class CheckEngine:
         else:
             logger.error(f"Could not find parameter for: {message}")
             test_report = Report()
-            test_report.add("Could not find parameter for:")
-            test_report.add(message.get_report())
+            test_report.add("Could not find parameter")
+            test_sub_report = Report()
+            test_sub_report.add(message.get_report())
+            test_report.add(test_sub_report)
             report.add(test_report)
             return (False, report)
 
