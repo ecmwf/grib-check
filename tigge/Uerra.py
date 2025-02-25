@@ -1,5 +1,4 @@
 from CheckEngine import CheckEngine
-from IndexedLookupTable import IndexedLookupTable
 from Grib import Grib
 from Test import Test, TiggeTest
 from Message import Message

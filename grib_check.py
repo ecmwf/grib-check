@@ -88,8 +88,8 @@ class GribCheck:
                         codes_write(message.handle, self.args.bad)
                 file_report.add(f"{'PASSED' if result else 'FAILED'}: Message[{message.position()}]")
                 file_report.add(message_report)
-                # print(message_report)
-            print(file_report)
+
+            print(file_report.summary(max_level=self.args.report_verbosity))
 
             if count == 0:
                 print("%s does not contain any GRIBs" % filename)
@@ -122,6 +122,7 @@ if __name__ == "__main__":
     parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
     parser.add_argument("-d", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo"], default="tigge")
     parser.add_argument("-v", "--verbosity", help="increase output verbosity", default=0)
+    parser.add_argument("-r", "--report_verbosity", help="increase output verbosity", default=None)
 
     args = parser.parse_args()
 

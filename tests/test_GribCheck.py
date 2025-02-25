@@ -10,6 +10,7 @@ class Config:
         self.zeroflg = False
         self.good = None
         self.bad = None
+        self.report_verbosity = 2
         # self.path = ["./tests/tigge_small/tigge_all.grib2"]
         self.path = ["./tests/tigge_small/tigge_cf_ecmwf.grib2"]
         
