@@ -1,5 +1,5 @@
 import unittest
-from tool import GribCheck
+from grib_check import GribCheck
 
 class Config:
     def __init__(self):
