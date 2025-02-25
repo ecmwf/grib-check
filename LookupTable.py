@@ -1,8 +1,15 @@
 import pandas as pd
 from Message import Message
 
+class LookupTable:
+    def __init__(self, filename: str):
+        raise NotImplementedError
 
-class IndexedLookupTable:
+    def get_element(self, message: Message):
+        raise NotImplementedError
+
+
+class SimpleLookupTable(LookupTable):
     def __init__(self, filename: str):
         self.df = pd.read_json(filename, orient='records')
 
@@ -16,3 +23,11 @@ class IndexedLookupTable:
                 return row.to_dict()
        
         return None
+
+
+class IndexedLookupTable(LookupTable):
+    def __init__(self, filename: str):
+        raise NotImplementedError
+
+    def get_element(self, message: Message):
+        raise NotImplementedError

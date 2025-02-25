@@ -1,11 +1,11 @@
 import unittest
-from IndexedLookupTable import IndexedLookupTable
+from LookupTable import SimpleLookupTable, IndexedLookupTable
 from Grib import Grib
 from Message import Message
 
 class TestIndexedLookupTable(unittest.TestCase):
     def test_get_element(self):
-        table = IndexedLookupTable("tests/test_parameters.json")
+        table = SimpleLookupTable("tests/test_parameters.json")
         grib = Grib("tests/wmo/od_eefo_fcmean_sfc_2024_0001_reduced_gg.grib2")
         message = next(grib)
         element = table.get_element(message)

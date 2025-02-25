@@ -1,5 +1,5 @@
 from CheckEngine import CheckEngine
-from IndexedLookupTable import IndexedLookupTable
+from LookupTable import SimpleLookupTable
 from Grib import Grib
 from Test import Test, WmoTest
 from Message import Message
@@ -16,7 +16,7 @@ class WmoChecker(CheckEngine):
             "product_definition_template_number": self.__product_definition_template_number,
             "derived_forecast": self.__derived_forecast
         }
-        parameters = IndexedLookupTable("WmoParameters.json")
+        parameters = SimpleLookupTable("WmoParameters.json")
         super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg)
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
