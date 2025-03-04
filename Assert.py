@@ -97,3 +97,13 @@ class Gt(Assert):
 
     def __str__(self) -> str:
         return f"{self.key}: {self.expected_value} > {self.actual_value} +/- {self.tolerance}"
+
+class Fail(Assert):
+    def __init__(self, h, msg):
+        self.msg = msg
+
+    def evaluate(self) -> bool:
+        return False
+
+    def __str__(self) -> str:
+        return f"{self.msg}"

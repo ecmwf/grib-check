@@ -43,7 +43,6 @@ class Message:
             report.add(f"{key}={self.get(key)}")
 
         report.add("")
-
         report.add(f"model={self.get('model')}")
         report.add(f"paramId={self.get('paramId')}")
         report.add(f"discipline={self.get('discipline')}")

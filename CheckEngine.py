@@ -15,15 +15,11 @@ class CheckEngine:
         warnflg=False,
     ):
         self.logger = logging.getLogger(__class__.__name__)
-        self.logger.debug("CheckEngine.__init__")
         self.__filename = ""
         self.__error = 0
         self.__warning = 0
         self.__field = 0
         self.__param = "unknown"
-
-        self.__valueflg = valueflg
-        self.__warnflg = warnflg
 
         assert tests is not None
         self._test_store = tests 
