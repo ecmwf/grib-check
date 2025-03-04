@@ -13,6 +13,7 @@ class Config:
         self.report_verbosity = 2
         # self.path = ["./tests/tigge_small/tigge_all.grib2"]
         self.path = ["./tests/tigge_small/tigge_cf_ecmwf.grib2"]
+        self.debug = True
         
 
 class TestGribCheck(unittest.TestCase):

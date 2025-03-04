@@ -5,6 +5,7 @@ from Test import Test, TiggeTest
 from Message import Message
 from Assert import Le, Ne, Eq, Exists, Missing
 from Report import Report
+import logging
 
 
 class TiggeChecker(CheckEngine):
@@ -14,6 +15,7 @@ class TiggeChecker(CheckEngine):
         warnflg=False,
         verbosity=3,
     ):
+        self.logger = logging.getLogger(__class__.__name__)
         self.__verbosity = verbosity
         self.__check_map = {
             "daily_average": self.__daily_average,

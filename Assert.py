@@ -2,11 +2,10 @@
 import math
 import logging
 
-logger = logging.getLogger(__name__)
-
 
 class Assert:
     def __init__(self, message, key, value, msg=None):
+        self.logger = logging.getLogger(__class__.__name__)
         self.datatype = type(value)
         self.actual_value = message.get(key, self.datatype)
         self.key = key

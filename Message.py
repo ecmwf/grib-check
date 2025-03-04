@@ -20,11 +20,10 @@ from inspect import currentframe, getframeinfo
 from Assert import Eq
 from Report import Report
 
-logger = logging.getLogger(__name__)
-
 
 class Message:
     def __init__(self, h, position=None):
+        self.logger = logging.getLogger(__class__.__name__)
         self.__h = h
         self.__position = position
 
@@ -76,12 +75,12 @@ class Message:
             elif datatype is str:
                 return codes_get_string(self.__h, key)
             else:
-                logger.debug(
+                self.logger.debug(
                     f"key: {key}, datatype: {datatype}, frameinfo: {getframeinfo(currentframe()).lineno}"
                 )
                 return None
         except Exception:
-            logger.debug(
+            self.logger.debug(
                 f"key: {key}, Exception, frameinfo: {getframeinfo(currentframe()).lineno}"
             )
             return None
