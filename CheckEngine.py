@@ -6,8 +6,6 @@ from Test import Test
 from Message import Message
 from Report import Report
 
-logger = logging.getLogger(__name__)
-
 
 class CheckEngine:
     def __init__(
@@ -16,6 +14,8 @@ class CheckEngine:
         valueflg=False,
         warnflg=False,
     ):
+        self.logger = logging.getLogger(__class__.__name__)
+        self.logger.debug("CheckEngine.__init__")
         self.__filename = ""
         self.__error = 0
         self.__warning = 0
@@ -62,7 +62,7 @@ class CheckEngine:
             report.add(test_report)
             return (result, report)
         else:
-            logger.error(f"Could not find parameter for: {message}")
+            self.logger.debug(f"Could not find parameter for: {message}")
             test_report = Report()
             test_report.add("Could not find parameter")
             test_sub_report = Report()

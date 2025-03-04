@@ -1,6 +1,7 @@
 import pandas as pd
 from Message import Message
 
+
 class LookupTable:
     def __init__(self, filename: str):
         raise NotImplementedError

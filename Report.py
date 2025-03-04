@@ -1,10 +1,10 @@
 import logging
 
-logger = logging.getLogger(__name__)
 
 class Report:
     def __init__(self):
         self.__entries = list()
+        self.logger = logging.getLogger(__name__)
    
     def __summary(self, entries, level, max_level):
         output = ""

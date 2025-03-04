@@ -5,14 +5,10 @@ from Assert import Eq
 from Grib import Grib
 from Report import Report
 
-logger = logging.getLogger(__name__)
 
         
 class Test:
     def __init__(self, message: Message, key: str, value):
-        raise NotImplementedError
-
-    def score(self):
         raise NotImplementedError
 
     def run(self) -> tuple[bool, Report]:
@@ -23,12 +19,13 @@ class Test:
 
 class WmoTest(Test):
     def __init__(self, message: Message, parameter: dict, check_map: dict):
+        self.logger = logging.getLogger(__class__.__name__)
         self.__message = message
         self.__parameter = parameter
         self.__check_map = check_map
 
     def _check(self, name, message, a):
-        logger.debug(f"_check({name}, {a})")
+        self.logger.debug(f"_check({name}, {a})")
         return a.evaluate()
 
     def run(self) -> tuple[bool, Report]:
@@ -55,6 +52,7 @@ class WmoTest(Test):
     
 class TiggeTest(Test):
     def __init__(self, message: Message, parameter: dict, check_map: dict):
+        self.logger = logging.getLogger(__class__.__name__)
         assert parameter is not None
         assert message is not None
         assert check_map is not None
@@ -64,7 +62,7 @@ class TiggeTest(Test):
         self.__check_map = check_map
 
     def _check(self, name, message, a):
-        logger.debug(f"_check({name}, {a.status_msg()})")
+        self.logger.debug(f"_check({name}, {a.status_msg()})")
         if not a.evaluate():
             pass
 

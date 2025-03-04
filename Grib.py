@@ -1,7 +1,6 @@
 from eccodes import (
     codes_grib_new_from_file,
 )
-
 from Message import Message
 
 
