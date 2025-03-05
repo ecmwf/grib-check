@@ -14,6 +14,7 @@ class TiggeChecker(CheckEngine):
         valueflg=False,
         warnflg=False,
         verbosity=3,
+        param_file="TiggeParameters.json",
     ):
         self.logger = logging.getLogger(__class__.__name__)
         self.__verbosity = verbosity
@@ -39,7 +40,7 @@ class TiggeChecker(CheckEngine):
             "three_hourly": self.__three_hourly,
         }
 
-        parameters = SimpleLookupTable("TiggeParameters.json")
+        parameters = SimpleLookupTable(param_file)
         super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg)
 
     def _create_test(self, message: Message, parameters: dict) -> Test:

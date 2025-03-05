@@ -13,12 +13,13 @@ class WmoChecker(CheckEngine):
         valueflg=False,
         warnflg=False,
         verbosity=0,
+        param_file="WmoParameters.json",
     ):
         self.__check_map = {
             "product_definition_template_number": self.__product_definition_template_number,
             "derived_forecast": self.__derived_forecast
         }
-        parameters = SimpleLookupTable("WmoParameters.json")
+        parameters = SimpleLookupTable(param_file)
         super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg)
 
     def _create_test(self, message: Message, parameters: dict) -> Test:

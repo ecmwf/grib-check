@@ -3,6 +3,8 @@ from Assert import Assert
 from TermColor import TermColor
 
 
+
+
 class Report:
     def __init__(self):
         self.__entries = list()
@@ -30,6 +32,8 @@ class Report:
                     status, msg = entry.result(color)
                     output += "  " * level + f'{pass_str if status else fail_str}: {msg}\n'
                     all_evals = all_evals and status
+                elif type(entry) is str:
+                    output += "  " * level + f"{entry}\n"
                 else:
                     raise NotImplementedError
 
@@ -43,7 +47,7 @@ class Report:
         return summary
 
     def add(self, entry):
-        assert isinstance(entry, Assert) or type(entry) is Report
+        assert isinstance(entry, Assert) or type(entry) is Report or type(entry) is str
         self.__entries.append(entry)
 
 
