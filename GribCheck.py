@@ -3,8 +3,8 @@
 import sys
 import argparse
 from FileScanner import FileScanner
-from WmoChecker import WmoChecker
-from TiggeChecker import TiggeChecker
+from checker.WmoChecker import WmoChecker
+from checker.TiggeChecker import TiggeChecker
 from Grib import Grib
 from Report import Report
 from Assert import Pass, Fail
