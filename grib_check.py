@@ -7,6 +7,7 @@ from WmoChecker import WmoChecker
 from TiggeChecker import TiggeChecker
 from Grib import Grib
 from Report import Report
+from Assert import Pass, Fail
 from eccodes import codes_write
 import logging
 
@@ -75,7 +76,8 @@ class GribCheck:
             for message in Grib(filename):
                 # print(f"Checking message[{message.position()}]")
                 self.logger.debug(f"Check message[{message.position()}]")
-                result, message_report  = checker.validate(message)
+                message_report  = checker.validate(message)
+                result, _ = message_report.summary()
                 count += 1
                 if result:
                     self.logger.debug(f"Message[{message.position()}] is valid")
@@ -85,10 +87,12 @@ class GribCheck:
                     self.logger.debug(f"Message[{message.position()}] is invalid")
                     if fbad:
                         codes_write(message.handle, self.args.bad)
-                file_report.add(f"{'PASSED' if result else 'FAILED'}: Message[{message.position()}]")
+                    
                 file_report.add(message_report)
 
-            print(file_report.summary(max_level=int(self.args.report_verbosity)))
+            status, summary = file_report.summary(max_level=int(self.args.report_verbosity), color=True)
+            # status, summary = file_report.summary()
+            print(summary)
 
             if count == 0:
                 print("%s does not contain any GRIBs" % filename)

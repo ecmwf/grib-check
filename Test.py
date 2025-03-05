@@ -1,7 +1,7 @@
 from Message import Message
 import math
 import logging
-from Assert import Eq
+from Assert import Eq, Fail, Pass
 from Grib import Grib
 from Report import Report
 
@@ -11,7 +11,7 @@ class Test:
     def __init__(self, message: Message, key: str, value):
         raise NotImplementedError
 
-    def run(self) -> tuple[bool, Report]:
+    def run(self) -> Report:
         raise NotImplementedError
 
     def _evaluate_str(self) -> str:
@@ -28,7 +28,7 @@ class WmoTest(Test):
         self.logger.debug(f"_check({name}, {a})")
         return a.evaluate()
 
-    def run(self) -> tuple[bool, Report]:
+    def run(self) -> Report:
         data = self.__parameter
         for kv in data["expected"]:
             key = kv["key"]
@@ -40,15 +40,12 @@ class WmoTest(Test):
             except FloatingPointError as e:
                 pass
 
+        report = Report()
         for check_func in data["checks"]:
-            print(f"  {check_func}")
-            result = self.__check_map[check_func](self.__message, data)
-            if result:
-                print(f"  {check_func}: PASSED")
-            else:
-                print(f"  {check_func}: FAILED")
+            check_report = self.__check_map[check_func](self.__message, data)
+            report.add(check_report)
 
-        return (False, Report())
+        return report
     
 class TiggeTest(Test):
     def __init__(self, message: Message, parameter: dict, check_map: dict):
@@ -66,15 +63,17 @@ class TiggeTest(Test):
         if not a.evaluate():
             pass
 
-    def run(self) -> tuple[bool, Report]:
+    def run(self) -> Report:
         data = self.__parameter
         report = Report()
-        results = []
+        # results = []
         for check_func in data["checks"]:
-            result, checks_report = self.__check_map[check_func](self.__message, data)
-            results.append(result)
-            result_str = "PASSED" if result else "FAILED"
-            report.add(f"{result_str}: {check_func}")
+            checks_report = self.__check_map[check_func](self.__message, data)
+            result, _ = checks_report.summary()
+            if result:
+                report.add(Pass(f"{check_func}"))
+            else:
+                report.add(Fail(f"{check_func}"))
             report.add(checks_report)
 
-        return (all(results), report)
+        return report
