@@ -87,8 +87,11 @@ class Missing(Assert):
     def evaluate(self) -> bool:
         return self.is_missing
 
-    def __str__(self) -> str:
-        return f"{self.key} is missing: {self.is_missing}"
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.key} is missing: {self.is_missing}"
+        else:
+            return f"{self.key} is missing: {self.is_missing}"
 
 
 class Eq(Assert):
