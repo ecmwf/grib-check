@@ -27,7 +27,7 @@ class Report:
                     output += summary
                     all_evals = all_evals and status
                 elif isinstance(entry, Assert):
-                    status, msg = entry.result()
+                    status, msg = entry.result(color)
                     output += "  " * level + f'{pass_str if status else fail_str}: {msg}\n'
                     all_evals = all_evals and status
                 else:

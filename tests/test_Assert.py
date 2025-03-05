@@ -21,8 +21,9 @@ class TestAssert(unittest.TestCase):
         eq2 = Eq(message, "stream", "eefo")
         status2, msg2 = eq2.result()
 
-        status, msg = eq1 & eq2
-        self.assertTrue(status == status1 and status2)
+        a = eq1 & eq2
+        status, msg = a.result()
+        self.assertTrue(status)
         self.assertEqual(f"{msg1} and {msg2}", msg)
             
 if __name__ == '__main__':

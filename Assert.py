@@ -1,6 +1,7 @@
 # from Message import Message
 import math
 import logging
+from TermColor import TermColor
 
 
 class Assert:
@@ -13,26 +14,55 @@ class Assert:
         if self.actual_value is not None:
             assert type(self.actual_value) is self.datatype
 
-    def __str__(self) -> str:
+
+    def as_string(self, color=False) -> str:
         raise NotImplementedError
 
+    def __str__(self) -> str:
+        return self.as_string(color=False)
+    
     def __or__(self, other):
-        self_status, self_status_msg = self.result()
-        other_status, other_status_msg = other.result()
-        status = self_status or other_status
-        return status, f"{self_status_msg} or {other_status_msg}"
+        return Or(self, other)
 
     def __and__(self, other):
-        self_status, self_status_msg = self.result()
-        other_status, other_status_msg = other.result()
-        status = self_status and other_status
-        return status, f"{self_status_msg} and {other_status_msg}"
+        return And(self, other)
 
     def evaluate(self) -> bool:
         raise NotImplementedError
 
-    def result(self) -> tuple[bool, str]:
-        return self.evaluate(), self.__str__()
+    def result(self, color=False) -> tuple[bool, str]:
+        return self.evaluate(), self.as_string(color)
+
+
+class And(Assert):
+    def __init__(self, a:Assert, b:Assert):
+        self.a = a
+        self.b = b
+
+    def evaluate(self) -> bool:
+        return self.a.evaluate() and self.b.evaluate()
+
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.a.as_string(color)} {TermColor.OKCYAN}and{TermColor.ENDC} {self.b.as_string(color)}"
+        else:
+            return f"{self.a.as_string(color)} and {self.b.as_string(color)}"
+
+
+class Or(Assert):
+    def __init__(self, a:Assert, b:Assert):
+        self.a = a
+        self.b = b
+
+    def evaluate(self) -> bool:
+        return self.a.evaluate() or self.b.evaluate()
+
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.a.as_string(color)} {TermColor.OKCYAN}or{TermColor.ENDC} {self.b.as_string(color)}"
+        else:
+            return f"{self.a.as_string(color)} or {self.b.as_string(color)}"
+
 
 class Exists(Assert):
     def __init__(self, message, key, msg=None):
@@ -42,8 +72,12 @@ class Exists(Assert):
     def evaluate(self) -> bool:
         return not self.is_missing
 
-    def __str__(self) -> str:
-        return f"{self.key} exists: {not self.is_missing}"
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.key} exists: {not self.is_missing}"
+        else:
+            return f"{self.key} exists: {not self.is_missing}"
+
 
 class Missing(Assert):
     def __init__(self, message, key, msg=None):
@@ -56,36 +90,49 @@ class Missing(Assert):
     def __str__(self) -> str:
         return f"{self.key} is missing: {self.is_missing}"
 
+
 class Eq(Assert):
     def evaluate(self) -> bool:
         return self.actual_value == self.expected_value
 
-    def __str__(self) -> str:
-        return f"{self.key}: {self.expected_value} == {self.actual_value}"
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.key}: {self.expected_value} == {self.actual_value}"
+        else:
+            return f"{self.key}: {self.expected_value} == {self.actual_value}"
 
 
 class Ne(Assert):
     def evaluate(self) -> bool:
         return self.actual_value != self.expected_value
 
-    def __str__(self) -> str:
-        return f"{self.key}: {self.expected_value} != {self.actual_value}"
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.key}: {self.expected_value} != {self.actual_value}"
+        else:
+            return f"{self.key}: {self.expected_value} != {self.actual_value}"
 
 
 class Ge(Assert):
     def evaluate(self) -> bool:
         return self.actual_value >= self.expected_value
 
-    def __str__(self) -> str:
-        return f"{self.key}: {self.expected_value} >= {self.actual_value}"
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.key}: {self.expected_value} >= {self.actual_value}"
+        else:
+            return f"{self.key}: {self.expected_value} >= {self.actual_value}"
 
 
 class Le(Assert):
     def evaluate(self) -> bool:
         return self.actual_value <= self.expected_value
 
-    def __str__(self) -> str:
-        return f"{self.key}: {self.expected_value} <= {self.actual_value}"
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.key}: {self.expected_value} <= {self.actual_value}"
+        else:
+            return f"{self.key}: {self.expected_value} <= {self.actual_value}"
 
 
 class Gt(Assert):
@@ -96,8 +143,12 @@ class Gt(Assert):
     def evaluate(self) -> bool:
         return math.fabs(self.actual_value - self.expected_value) > self.tolerance
 
-    def __str__(self) -> str:
-        return f"{self.key}: {self.expected_value} > {self.actual_value} +/- {self.tolerance}"
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.key}: {self.expected_value} > {self.actual_value} +/- {self.tolerance}"
+        else:
+            return f"{self.key}: {self.expected_value} > {self.actual_value} +/- {self.tolerance}"
+
 
 class Fail(Assert):
     def __init__(self, msg):
@@ -105,9 +156,10 @@ class Fail(Assert):
 
     def evaluate(self) -> bool:
         return False
-
-    def __str__(self) -> str:
+    
+    def as_string(self, color=False) -> str:
         return f"{self.msg}"
+
 
 class Pass(Assert):
     def __init__(self, msg):
@@ -116,5 +168,5 @@ class Pass(Assert):
     def evaluate(self) -> bool:
         return True
 
-    def __str__(self) -> str:
+    def as_string(self, color=False) -> str:
         return f"{self.msg}"
