@@ -30,19 +30,32 @@ class WmoTest(Test):
 
     def run(self) -> Report:
         data = self.__parameter
+        report = Report()
+        expected_report = Report()
         for kv in data["expected"]:
             key = kv["key"]
             value = kv["value"]
             try:
-                self._check("equal", self.__message, Eq(self.__message, key, value))
+                expected_report.add(Eq(self.__message, key, value))
             except NotImplementedError:
                 raise NotImplementedError("Not implemented")
             except FloatingPointError as e:
                 pass
 
-        report = Report()
+        status, _ = expected_report.summary()
+        if status:
+            report.add(Pass("Check expected values"))
+        else:
+            report.add(Fail("Check expected values"))
+        report.add(expected_report)
+
         for check_func in data["checks"]:
             check_report = self.__check_map[check_func](self.__message, data)
+            status, _ = check_report.summary()
+            if status:
+                report.add(Pass(f"{check_func}"))
+            else:
+                report.add(Fail(f"{check_func}"))
             report.add(check_report)
 
         return report

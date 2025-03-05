@@ -60,9 +60,9 @@ class CheckEngine:
             self.logger.debug(f"Could not find parameter for: {message}")
             test_report = Report()
             test_report.add(Fail("Could not find parameter"))
-            # test_sub_report = Report()
-            # test_sub_report.add(message.get_report())
-            # test_report.add(test_sub_report)
+            test_sub_report = Report()
+            test_sub_report.add(message.get_report())
+            test_report.add(test_sub_report)
 
         result, _ = test_report.summary()
 

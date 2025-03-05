@@ -33,12 +33,14 @@ class GribCheck:
                 warnflg=self.args.warnflg,
                 valueflg=self.args.valueflg,
                 verbosity=self.args.verbosity,
+                param_file=self.args.parameters,
             )
         elif self.args.grib_type == "tigge":
             checker = TiggeChecker(
                 warnflg=self.args.warnflg,
                 valueflg=self.args.valueflg,
                 verbosity=self.args.verbosity,
+                param_file=self.args.parameters,
             )
         # elif self.args.grib_type == "s2s":
         #     pass
@@ -124,10 +126,11 @@ if __name__ == "__main__":
     parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
     parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo"], default="tigge")
     parser.add_argument("-v", "--verbosity", help="increase output verbosity", default=0)
-    parser.add_argument("-r", "--report_verbosity", help="increase output verbosity", default=None)
+    parser.add_argument("-r", "--report_verbosity", help="increase output verbosity", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
-
+    parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
     args = parser.parse_args()
+
     if args.debug:
         print("Debug mode")
         logging.basicConfig(

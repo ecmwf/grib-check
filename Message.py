@@ -29,7 +29,7 @@ class Message:
 
     def get_report(self):
         report = Report()
-        report.add(f"Message[{self.__position}]")
+        # report.add(f"Message[{self.__position}]")
         iterator = codes_keys_iterator_new(self.__h, "ls") 
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
