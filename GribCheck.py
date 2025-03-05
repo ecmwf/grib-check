@@ -92,7 +92,7 @@ class GribCheck:
                     
                 file_report.add(message_report)
 
-            status, summary = file_report.summary(max_level=int(self.args.report_verbosity), color=True)
+            status, summary = file_report.summary(max_level=int(self.args.report_verbosity), color=self.args.color)
             # status, summary = file_report.summary()
             print(summary)
 
@@ -129,6 +129,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--report_verbosity", help="increase output verbosity", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
     parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
+    parser.add_argument("-c", "--color", help="use color in output", action="store_true")
     args = parser.parse_args()
 
     if args.debug:
