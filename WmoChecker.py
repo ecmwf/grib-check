@@ -2,6 +2,8 @@ from CheckEngine import CheckEngine
 from LookupTable import SimpleLookupTable
 from Grib import Grib
 from Test import Test, WmoTest
+from Report import Report
+from Assert import Fail, Pass
 from Message import Message
 
 
@@ -23,9 +25,11 @@ class WmoChecker(CheckEngine):
         return WmoTest(message, parameters, self.__check_map)
 
     def __product_definition_template_number(self, handle, p):
-        msgs = ["Not implemented: dummy product_definition_template_number()"]
-        return [True, msgs]
+        report = Report()
+        report.add(Fail("Not implemented: dummy product_definition_template_number()"))
+        return report
 
     def __derived_forecast(self, handle, p):
-        msg = ["Not implemented: dummy derived_forecast()"]
-        return [True, msg]
+        report = Report()
+        report.add(Fail("Not implemented: dummy derived_forecast()"))
+        return report

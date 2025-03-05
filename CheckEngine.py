@@ -5,6 +5,7 @@ from LookupTable import SimpleLookupTable
 from Test import Test
 from Message import Message
 from Report import Report
+from Assert import Pass, Fail
 
 
 class CheckEngine:
@@ -49,23 +50,30 @@ class CheckEngine:
     def __output_key_value(self, message, name):
         print(f"{name}={message.get(name)}")
 
-    def validate(self, message) -> tuple[bool, Report]:
+    def validate(self, message) -> Report:
         report = Report()
         kv = self._test_store.get_element(message)
         if kv is not None:
             test = self._create_test(message, kv)
-            result, test_report = test.run()
-            report.add(test_report)
-            return (result, report)
+            test_report = test.run()
         else:
             self.logger.debug(f"Could not find parameter for: {message}")
             test_report = Report()
-            test_report.add("Could not find parameter")
-            test_sub_report = Report()
-            test_sub_report.add(message.get_report())
-            test_report.add(test_sub_report)
-            report.add(test_report)
-            return (False, report)
+            test_report.add(Fail("Could not find parameter"))
+            # test_sub_report = Report()
+            # test_sub_report.add(message.get_report())
+            # test_report.add(test_sub_report)
+
+        result, _ = test_report.summary()
+
+        if result:
+            report.add(Pass(f"Message[{message.position()}]"))
+        else:
+            report.add(Fail(f"Message[{message.position()}]"))
+
+        report.add(test_report)
+
+        return report
 
 
     def get_error_counter(self):

@@ -10,7 +10,8 @@ class Assert:
         self.actual_value = message.get(key, self.datatype)
         self.key = key
         self.expected_value = value
-        assert type(self.actual_value) is self.datatype
+        if self.actual_value is not None:
+            assert type(self.actual_value) is self.datatype
 
     def __str__(self) -> str:
         raise NotImplementedError
@@ -42,7 +43,7 @@ class Exists(Assert):
         return not self.is_missing
 
     def __str__(self) -> str:
-        return f"{self.key} exists"
+        return f"{self.key} exists: {not self.is_missing}"
 
 class Missing(Assert):
     def __init__(self, message, key, msg=None):
@@ -53,7 +54,7 @@ class Missing(Assert):
         return self.is_missing
 
     def __str__(self) -> str:
-        return f"{self.key} exists"
+        return f"{self.key} is missing: {self.is_missing}"
 
 class Eq(Assert):
     def evaluate(self) -> bool:
@@ -99,11 +100,21 @@ class Gt(Assert):
         return f"{self.key}: {self.expected_value} > {self.actual_value} +/- {self.tolerance}"
 
 class Fail(Assert):
-    def __init__(self, h, msg):
+    def __init__(self, msg):
         self.msg = msg
 
     def evaluate(self) -> bool:
         return False
+
+    def __str__(self) -> str:
+        return f"{self.msg}"
+
+class Pass(Assert):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def evaluate(self) -> bool:
+        return True
 
     def __str__(self) -> str:
         return f"{self.msg}"

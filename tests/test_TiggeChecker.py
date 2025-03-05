@@ -9,7 +9,7 @@ class TestWmoChecker(unittest.TestCase):
         # for message in Grib("./tests/tigge/tigge_ecmf_sfc_10v.grib"):
         # for message in Grib("./tests/tigge_small/tigge_all.grib2"):
         for message in Grib("tests/tigge/tigge_egrr_sfc_str.grib"):
-            result, report = checker.validate(message)
+            report = checker.validate(message)
             print(report)
 
 if __name__ == '__main__':
