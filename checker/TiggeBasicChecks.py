@@ -35,15 +35,15 @@ class TiggeBasicChecks(CheckEngine):
         parameters = SimpleLookupTable(param_file if param_file is not None else"checker/TiggeParameters.json")
         super().__init__(tests=parameters)
 
-    def _make_sub_report(self, title, checks):
-        report = Report()
-        status, _ = checks.summary()
-        if status:
-            report.add(Pass(title))
-        else:
-            report.add(Fail(title))
-        report.add(checks)
-        return report
+    # def _make_sub_report(self, title, checks):
+    #     report = Report(f"{__class__.__name__}.{self._make_sub_report.__name__}")
+    #     status, _ = checks.summary()
+    #     if status:
+    #         report.add(Pass(title))
+    #     else:
+    #         report.add(Fail(title))
+    #     report.add(checks)
+    #     return report
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
         assert parameters is not None
@@ -108,7 +108,7 @@ class TiggeBasicChecks(CheckEngine):
         return reports
 
     def _point_in_time(self, message, p):
-        checks = Report()
+        checks = Report(__class__.__name__)
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             pass
@@ -120,8 +120,7 @@ class TiggeBasicChecks(CheckEngine):
         else:
             checks.add(Fail("Unsupported typeOfProcessedData %ld" % message.get("typeOfProcessedData", int)))
 
-        report = self._make_sub_report(__class__.__name__, checks)
-        return [report]
+        return [checks]
 
     def _given_thickness(self, message, p):
         report = Report()

@@ -30,8 +30,7 @@ class WmoTest(Test):
 
     def run(self) -> Report:
         data = self.__parameter
-        report = Report()
-        expected_report = Report()
+        expected_report = Report("Check expected values")
         for kv in data["expected"]:
             key = kv["key"]
             value = kv["value"]
@@ -42,22 +41,15 @@ class WmoTest(Test):
             except FloatingPointError as e:
                 pass
 
-        status, _ = expected_report.summary()
-        if status:
-            report.add(Pass("Check expected values"))
-        else:
-            report.add(Fail("Check expected values"))
-        report.add(expected_report)
-
+        checks_report = Report("Checks")
         for check_func in data["checks"]:
             check_report = self.__check_map[check_func](self.__message, data)
-            status, _ = check_report.summary()
-            if status:
-                report.add(Pass(f"{check_func}"))
-            else:
-                report.add(Fail(f"{check_func}"))
-            report.add(check_report)
+            check_report.rename(f"{check_func}")
+            checks_report.add(check_report)
 
+        report = Report()
+        report.add(expected_report)
+        report.add(checks_report)
         return report
     
 class TiggeTest(Test):
@@ -78,19 +70,13 @@ class TiggeTest(Test):
 
     def run(self) -> Report:
         data = self.__parameter
-        report = Report()
+        report = Report("Checks")
         for check_func in data["checks"]:
             check_reports = self.__check_map[check_func](self.__message, data)
-            # print(check_reports)
-            merged_report = Report()
+            merged_report = Report(f'{check_func}')
             for check_report in check_reports:
                 merged_report.add(check_report)
 
-            result, _ = merged_report.summary()
-            if result:
-                report.add(Pass(f"{check_func}"))
-            else:
-                report.add(Fail(f"{check_func}"))
 
             report.add(merged_report)
 

@@ -5,33 +5,35 @@ from Assert import Le, Ne, Eq, Exists, Missing, Fail, Pass
 class TestAssert(unittest.TestCase):
 
     def test_level_1(self):
-        report = Report()
-        report.add(Pass("level 1"))
-        self.assertEqual(str(report), "PASS: level 1\n")
+        report = Report("Report 1")
+        report.add(Pass("Assertion 1"))
+        self.assertEqual(str(report), "PASS: Report 1\n  PASS: Assertion 1\n")
 
-        report.add(Fail("level 1"))
-        self.assertEqual(str(report), "PASS: level 1\nFAIL: level 1\n")
+        report.add(Fail("Assertion 2"))
+        self.assertEqual(str(report), "FAIL: Report 1\n  PASS: Assertion 1\n  FAIL: Assertion 2\n")
 
     def test_nested_report(self):
-        report = Report()
-        report.add(Pass("level 1"))
+        report = Report("Report 1")
+        report.add(Pass("Assertion 1"))
 
-        nested = Report()
-        nested.add(Pass("level 2"))
+        nested = Report("Report 2")
+        nested.add(Pass("Assertion 2"))
+
         report.add(nested)
 
-        self.assertEqual(str(report), "PASS: level 1\n  PASS: level 2\n")
+        self.assertEqual(str(report), "PASS: Report 1\n  PASS: Assertion 1\n  PASS: Report 2\n    PASS: Assertion 2\n")
 
     def test_assertions(self):
-        report1 = Report()
+        report1 = Report("Test report")
         report1.add(Fail("Some error message"))
-        self.assertEqual(str(report1), "FAIL: Some error message\n")
+        self.assertEqual(str(report1), "FAIL: Test report\n  FAIL: Some error message\n")
 
         f = Fail("Some error message")
         p = Pass("Some success message")
-        report2 = Report()
+        report2 = Report("Test report 2")
         report2.add(f & p)
-        self.assertEqual(str(report2), "FAIL: Some error message and Some success message\n")
+
+        self.assertEqual(str(report2), "FAIL: Test report 2\n  FAIL: Some error message and Some success message\n")
 
             
 if __name__ == '__main__':

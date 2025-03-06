@@ -30,9 +30,6 @@ class Assert:
     def status(self) -> bool:
         return self._status
 
-    def result(self, color=False) -> tuple[bool, str]:
-        return self.status(), self.as_string(color)
-
 
 class AssertTrue(Assert):
     def __init__(self, status, msg):

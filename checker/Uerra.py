@@ -12,7 +12,7 @@ class Uerra(TiggeBasicChecks):
 
         min_value, max_value = message.minmax()
         if message.get("endStep") == 0:
-            checks = Report()
+            checks = Report(f"{__class__.__name__}.{self._from_start.__name__}")
             checks.add(AssertTrue(min_value == 0 and max_value == 0, "min_value == 0 and max_value == 0"))
             report = self._make_sub_report(__class__.__name__, checks)
             return reports + [report]
@@ -22,16 +22,16 @@ class Uerra(TiggeBasicChecks):
     def _point_in_time(self, message, p):
         reports = super()._point_in_time(message, p)
 
-        checks= Report()
+        checks= Report(f"{__class__.__name__}.{self._point_in_time.__name__}")
         topd = message.get("typeOfProcessedData", int)
         if topd == 0: # Analysis
             pdtn0 = Eq(message, "productDefinitionTemplateNumber", 0)
             pdtn1 = Eq(message, "productDefinitionTemplateNumber", 1)
-            checks.add((pdtn0 or pdtn1).result())
+            checks.add(pdtn0 or pdtn1)
         elif topd == 1: # Forecast
             pdtn0 = Eq(message, "productDefinitionTemplateNumber", 0)
             pdtn1 = Eq(message, "productDefinitionTemplateNumber", 1)
-            checks.add((pdtn0 or pdtn1).result())
+            checks.add(pdtn0 or pdtn1)
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
@@ -50,19 +50,18 @@ class Uerra(TiggeBasicChecks):
             ft3 = (message.get("forecastTime") % 3) == 0
             checks.add(ft1 or ft2 or ft4 or ft5 or ft3)
 
-        report = self._make_sub_report(__class__.__name__, checks)
-        return reports + [report]
+        return reports + [checks]
 
 
     def _pressure_level(self, message, p):
-        checks = Report()
+        checks = Report(f"{__class__.__name__}.{self._pressure_level.__name__}")
         levels = [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10]
         checks.add(IsIn(message, 'level', levels, 'invalid pressure level'))
-        return checks
+        return [checks]
 
 
     def _height_level(self, message, p):
-        checks = Report()
+        checks = Report(f"{__class__.__name__}.{self._height_level.__name__}")
         levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
         checks.add(IsIn(message, "level", levels, 'invalid height level'))
         return [checks]
