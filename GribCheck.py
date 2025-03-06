@@ -67,15 +67,16 @@ class GribCheck:
         for filename in FileScanner(self.args.path):
             # print(f"Checking {filename}") 
             count = 0
+            # file_report = Report(f"File: {filename}")
             file_report = Report()
-            file_report.add(Pass(f"File: {filename}"))
             for message in Grib(filename):
                 # print(f"Checking message[{message.position()}]")
                 self.logger.debug(f"Check message[{message.position()}]")
-                message_report  = checker.validate(message)
-                result, _ = message_report.summary()
+                message_report = checker.validate(message)
+                message_report.rename(f"{filename}[{message.position()}]")
+                status = message_report.status()
                 count += 1
-                if result:
+                if status:
                     self.logger.debug(f"Message[{message.position()}] is valid")
                     if fgood:
                         codes_write(message.handle, self.args.good)
@@ -86,7 +87,7 @@ class GribCheck:
                     
                 file_report.add(message_report)
 
-            status, summary = file_report.summary(max_level=int(self.args.report_verbosity), color=self.args.color)
+            summary = file_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color)
             # status, summary = file_report.summary()
             print(summary)
 

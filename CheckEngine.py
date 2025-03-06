@@ -37,27 +37,18 @@ class CheckEngine:
         print(f"{name}={message.get(name)}")
 
     def validate(self, message) -> Report:
-        report = Report()
+        report = Report(f"Message[{message.position()}]")
         kv = self._test_store.get_element(message)
         if kv is not None:
             test = self._create_test(message, kv)
-            test_report = test.run()
+            report.add(test.run())
         else:
             self.logger.debug(f"Could not find parameter for: {message}")
-            test_report = Report()
-            test_report.add(Fail("Could not find parameter"))
+            # report = Report()
+            report.add(Fail("Could not find parameter"))
             test_sub_report = Report()
             test_sub_report.add(message.get_report())
-            test_report.add(test_sub_report)
-
-        result, _ = test_report.summary()
-
-        if result:
-            report.add(Pass(f"Message[{message.position()}]"))
-        else:
-            report.add(Fail(f"Message[{message.position()}]"))
-
-        report.add(test_report)
+            report.add(test_sub_report)
 
         return report
 

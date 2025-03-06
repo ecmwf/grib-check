@@ -18,7 +18,7 @@ class Tigge(TiggeBasicChecks):
     def _point_in_time(self, message, p):
         super_reports = super()._point_in_time(message, p)
 
-        checks = Report()
+        checks = Report(__class__.__name__)
         topd = message.get("typeOfProcessedData")
         if topd in [0, 1]: # Analysis, Forecast
             if message.get("productDefinitionTemplateNumber") == 1:
@@ -34,10 +34,7 @@ class Tigge(TiggeBasicChecks):
             nofe = message.get("numberOfForecastsInEnsemble")
             checks.add(AssertTrue(pn < nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
 
-        report = self._make_sub_report(__class__.__name__, checks)
-        report.add(checks)
-
-        return super_reports + [report]
+        return super_reports + [checks]
 
     def _height_level(self, message, p):
         checks = Report()

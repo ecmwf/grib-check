@@ -10,9 +10,6 @@ from Message import Message
 class WmoChecker(CheckEngine):
     def __init__(
         self,
-        valueflg=False,
-        warnflg=False,
-        verbosity=0,
         param_file="WmoParameters.json",
     ):
         self.__check_map = {
@@ -20,7 +17,7 @@ class WmoChecker(CheckEngine):
             "derived_forecast": self.__derived_forecast
         }
         parameters = SimpleLookupTable(param_file)
-        super().__init__(tests=parameters, valueflg=valueflg, warnflg=warnflg)
+        super().__init__(tests=parameters)
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
         return WmoTest(message, parameters, self.__check_map)

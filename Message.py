@@ -30,7 +30,7 @@ class Message:
         self.max = None
 
     def get_report(self):
-        report = Report()
+        report = Report("Mesage dump")
         # report.add(f"Message[{self.__position}]")
         iterator = codes_keys_iterator_new(self.__h, "ls") 
         while iterator is not None and codes_keys_iterator_next(iterator):
@@ -106,7 +106,7 @@ class Message:
 
     def minmax(self):
         if self.min is None or self.max is None:
-            bitmap = not Eq(self, "bitMapIndicator", 255).evaluate()
+            bitmap = not Eq(self, "bitMapIndicator", 255).status()
 
             try:
                 self.__values = self.get_double_array("values")
