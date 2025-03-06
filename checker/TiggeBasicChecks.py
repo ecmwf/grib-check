@@ -35,16 +35,6 @@ class TiggeBasicChecks(CheckEngine):
         parameters = SimpleLookupTable(param_file if param_file is not None else"checker/TiggeParameters.json")
         super().__init__(tests=parameters)
 
-    # def _make_sub_report(self, title, checks):
-    #     report = Report(f"{__class__.__name__}.{self._make_sub_report.__name__}")
-    #     status, _ = checks.summary()
-    #     if status:
-    #         report.add(Pass(title))
-    #     else:
-    #         report.add(Fail(title))
-    #     report.add(checks)
-    #     return report
-
     def _create_test(self, message: Message, parameters: dict) -> Test:
         assert parameters is not None
         return TiggeTest(message, parameters, self.__check_map)
