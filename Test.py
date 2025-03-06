@@ -79,14 +79,19 @@ class TiggeTest(Test):
     def run(self) -> Report:
         data = self.__parameter
         report = Report()
-        # results = []
         for check_func in data["checks"]:
-            checks_report = self.__check_map[check_func](self.__message, data)
-            result, _ = checks_report.summary()
+            check_reports = self.__check_map[check_func](self.__message, data)
+            # print(check_reports)
+            merged_report = Report()
+            for check_report in check_reports:
+                merged_report.add(check_report)
+
+            result, _ = merged_report.summary()
             if result:
                 report.add(Pass(f"{check_func}"))
             else:
                 report.add(Fail(f"{check_func}"))
-            report.add(checks_report)
+
+            report.add(merged_report)
 
         return report

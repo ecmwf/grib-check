@@ -9,19 +9,8 @@ from Assert import Pass, Fail
 
 
 class CheckEngine:
-    def __init__(
-        self,
-        tests: SimpleLookupTable,
-        valueflg=False,
-        warnflg=False,
-    ):
+    def __init__(self, tests: SimpleLookupTable):
         self.logger = logging.getLogger(__class__.__name__)
-        self.__filename = ""
-        self.__error = 0
-        self.__warning = 0
-        self.__field = 0
-        self.__param = "unknown"
-
         assert tests is not None
         self._test_store = tests 
 
@@ -35,10 +24,7 @@ class CheckEngine:
         try:
             buffer = message.get_buffer()
         except Exception as e:
-            print(
-                "%s, field %d [%s]: cannot get message: %s"
-                % (self.__filename, self.__field, self.__param, str(e))
-            )
+            self.logger.error(f"cannot get message: {message.filename}, {message.position})")
             sys.exit(1)
 
         try:
@@ -77,7 +63,9 @@ class CheckEngine:
 
 
     def get_error_counter(self):
-        return self.__error
+        # return self.__error
+        return 0
 
     def get_warning_counter(self):
-        return self.__warning
+        # return self.__warning
+        return 0

@@ -50,4 +50,4 @@ class S2S(TiggeBasicChecks):
         checks = Report()
         levels = [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]
         checks.add(IsIn(message, 'level', levels, 'invalid pressure level'))
-        return checks
+        return [checks]

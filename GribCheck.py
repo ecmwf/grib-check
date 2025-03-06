@@ -4,7 +4,12 @@ import sys
 import argparse
 from FileScanner import FileScanner
 from checker.WmoChecker import WmoChecker
-from checker.TiggeChecker import TiggeChecker
+from checker.Tigge import Tigge
+from checker.Uerra import Uerra
+from checker.S2S import S2S
+from checker.S2SRefcst import S2SRefcst
+from checker.Crra import Crra
+from checker.Lam import Lam
 from Grib import Grib
 from Report import Report
 from Assert import Pass, Fail
@@ -24,34 +29,22 @@ class GribCheck:
         s2s_refcst: subseasonal to subseasonal reforecast
         uerra: uncertainty estimation reanalysis
         crra: climate reanalysis
-
-        Notes: crra requires uerra
         '''
 
         if self.args.grib_type == "wmo":
-            checker = WmoChecker(
-                warnflg=self.args.warnflg,
-                valueflg=self.args.valueflg,
-                verbosity=self.args.verbosity,
-                param_file=self.args.parameters,
-            )
+            checker = WmoChecker(param_file=self.args.parameters)
         elif self.args.grib_type == "tigge":
-            checker = TiggeChecker(
-                warnflg=self.args.warnflg,
-                valueflg=self.args.valueflg,
-                verbosity=self.args.verbosity,
-                param_file=self.args.parameters,
-            )
-        # elif self.args.grib_type == "s2s":
-        #     pass
-        # elif self.args.grib_type == "s2s_refcst":
-        #     pass
-        # elif self.args.grib_type == "uerra":
-        #     pass
-        # elif self.args.grib_type == "crra":
-        #     pass
-        # elif self.args.grib_type == "lam":
-        #     pass
+            checker = Tigge(param_file=self.args.parameters)
+        elif self.args.grib_type == "s2s":
+            checker = S2S(param_file=self.args.parameters)
+        elif self.args.grib_type == "s2s_refcst":
+            checker = S2SRefcst(param_file=self.args.parameters)
+        elif self.args.grib_type == "uerra":
+            checker = Uerra(param_file=self.args.parameters)
+        elif self.args.grib_type == "crra":
+            checker = Crra(param_file=self.args.parameters)
+        elif self.args.grib_type == "lam":
+            checker = Lam(param_file=self.args.parameters)
         else:
             raise ValueError("Unknown data type")
 
@@ -75,6 +68,7 @@ class GribCheck:
             # print(f"Checking {filename}") 
             count = 0
             file_report = Report()
+            file_report.add(Pass(f"File: {filename}"))
             for message in Grib(filename):
                 # print(f"Checking message[{message.position()}]")
                 self.logger.debug(f"Check message[{message.position()}]")
