@@ -26,6 +26,8 @@ class Message:
         self.logger = logging.getLogger(__class__.__name__)
         self.__h = h
         self.__position = position
+        self.min = None
+        self.max = None
 
     def get_report(self):
         report = Report()
@@ -103,31 +105,35 @@ class Message:
         return self.__position
 
     def minmax(self):
-        bitmap = not Eq(self, "bitMapIndicator", 255).evaluate()
+        if self.min is None or self.max is None:
+            bitmap = not Eq(self, "bitMapIndicator", 255).evaluate()
 
-        try:
-            self.__values = self.get_double_array("values")
-        except Exception as e:
-            return
+            try:
+                self.__values = self.get_double_array("values")
+            except Exception as e:
+                return
 
-        if bitmap:
-            missing = self.get("missingValue")
-            min_value = max_value = missing
-            for value in self.__values:
-                if (min_value == missing) or (
-                    (value != missing) and (min_value > value)
-                ):
-                    min_value = value
-                if (max_value == missing) or (
-                    (value != missing) and (max_value < value)
-                ):
-                    max_value = value
-        else:
-            min_value = max_value = self.__values[0]
-            for value in self.__values:
-                if min_value > value:
-                    min_value = value
-                if max_value < value:
-                    max_value = value
+            if bitmap:
+                missing = self.get("missingValue")
+                min_value = max_value = missing
+                for value in self.__values:
+                    if (min_value == missing) or (
+                        (value != missing) and (min_value > value)
+                    ):
+                        min_value = value
+                    if (max_value == missing) or (
+                        (value != missing) and (max_value < value)
+                    ):
+                        max_value = value
+            else:
+                min_value = max_value = self.__values[0]
+                for value in self.__values:
+                    if min_value > value:
+                        min_value = value
+                    if max_value < value:
+                        max_value = value
 
-        return min_value, max_value
+            self.min = min_value
+            self.max = max_value
+
+        return (self.min, self.max)

@@ -12,6 +12,7 @@ class LookupTable:
 
 class SimpleLookupTable(LookupTable):
     def __init__(self, filename: str):
+        assert filename is not None
         self.df = pd.read_json(filename, orient='records')
 
     def get_element(self, message: Message):
