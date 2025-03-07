@@ -14,6 +14,20 @@ from Grib import Grib
 from Report import Report
 from eccodes import codes_write
 import logging
+import concurrent.futures
+
+
+def worker(filename, message, checker, fgood, fbad):
+    message_report = checker.validate(message)
+    message_report.rename(f"{filename}[{message.position()}]")
+    status = message_report.status()
+    if status:
+        if fgood:
+            codes_write(message.handle, fgood)
+    else:
+        if fbad:
+            codes_write(message.handle, fbad)
+    return message_report
 
 
 class GribCheck:
@@ -63,36 +77,12 @@ class GribCheck:
                 print("Couldn't open %s" % self.args.bad)
                 sys.exit(1)
 
-        for filename in FileScanner(self.args.path):
-            # print(f"Checking {filename}") 
-            count = 0
-            # file_report = Report(f"File: {filename}")
-            file_report = Report()
-            for message in Grib(filename):
-                # print(f"Checking message[{message.position()}]")
-                self.logger.debug(f"Checking message[{message.position()}]")
-                message_report = checker.validate(message)
-                message_report.rename(f"{filename}[{message.position()}]")
-                status = message_report.status()
-                count += 1
-                if status:
-                    self.logger.debug(f"Message[{message.position()}] is valid")
-                    if fgood:
-                        codes_write(message.handle, self.args.good)
-                else:
-                    self.logger.debug(f"Message[{message.position()}] is invalid")
-                    if fbad:
-                        codes_write(message.handle, self.args.bad)
-                    
-                file_report.add(message_report)
-
-            summary = file_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color)
-            # status, summary = file_report.summary()
-            print(summary)
-
-            if count == 0:
-                print("%s does not contain any GRIBs" % filename)
-                # self.__error += 1
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.args.num_threads) as executor:
+            for filename in FileScanner(self.args.path):
+                futures = [executor.submit(worker, filename, message, checker, fgood, fbad) for message in Grib(filename)]
+                for future in concurrent.futures.as_completed(futures):
+                    message_report = future.result()
+                    print(message_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color))
 
         if fgood:
             fgood.close()
@@ -124,6 +114,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
     parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
     parser.add_argument("-c", "--color", help="use color in output", action="store_true")
+    parser.add_argument("-n", "--num_threads", help="number of threads", type=int, default=4)
     args = parser.parse_args()
 
     if args.debug:
