@@ -35,6 +35,7 @@ class Report:
                 elif self.__status is False:
                     output = "  " * level + f'{fail_str}: {self.__name}\n'
                 else:
+                    print(f"self.__status={self.__status}, type={type(self.__status)}")
                     raise NotImplementedError
 
                 shift = 1
@@ -81,8 +82,10 @@ class Report:
                 if entry.status() is not None:
                     self.__status = self.__status and entry.status()
         elif type(entry) is str:
+            self.__status = None
             pass
 
+        assert type(self.__status) is bool or self.__status is None
         self.__entries.append(entry)
 
     def error(self, entry):

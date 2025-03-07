@@ -8,6 +8,21 @@ class S2S(TiggeBasicChecks):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
 
+    def _basic_checks(self, message, p):
+        reports = super()._basic_checks(message, p)
+        report = Report(f"{__class__.__name__}._basic_checks")
+
+        # todo check for how many years back the reforecast is done? Is it coded in the grib???
+        # Check if the date is OK
+        date = message.get("date")
+        # report.add(Ge(message, "date", 20060101))
+        report.add(AssertTrue(int(date / 10000) == message.get("year"), "int(date / 10000) == message.get('year')"))
+        report.add(AssertTrue(int((date % 10000) / 100) == message.get("month"), "int((date % 10000) / 100) == message.get('month')"))
+        report.add(AssertTrue(int(date % 100) == message.get("day"), "int(date % 100) == message.get('day')"))
+
+        return reports + [report]
+
+
     # not registered in the lookup table
     def _statistical_process(self, message, p):
         report = Report(f"{__class__.__name__}.statistical_process")

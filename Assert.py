@@ -30,6 +30,7 @@ class Assert:
         return And(self, other)
 
     def status(self) -> bool:
+        assert type(self._status) is bool
         return self._status
 
 
@@ -39,6 +40,7 @@ class AssertTrue(Assert):
         self.__msg = msg
 
     def status(self) -> bool:
+        assert type(self._status) is bool
         return self._status
 
     def as_string(self, color=False) -> str:
