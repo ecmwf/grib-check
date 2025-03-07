@@ -75,7 +75,7 @@ class Or(Assert):
 
 class IsIn(Assert):
     def __init__(self, message, key, values, msg=None):
-        self.__actual_value = message.get(key, list)
+        self.__actual_value = message.get(key)
         self.__key = key
         self.__expected_values = values
         self._status = self.__actual_value in self.__expected_values
