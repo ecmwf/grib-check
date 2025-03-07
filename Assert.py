@@ -36,7 +36,7 @@ class Assert:
 
 class AssertTrue(Assert):
     def __init__(self, status, msg):
-        self._status = status 
+        self._status = bool(status)
         self.__msg = msg
 
     def status(self) -> bool:
