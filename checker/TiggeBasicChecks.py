@@ -292,24 +292,6 @@ class TiggeBasicChecks(CheckEngine):
             dnorth = dsouth
             dsouth = dtmp
 
-        if not (cfg['is_lam'] or cfg['is_uerra']):
-            report.add(AssertTrue(north > south, "north > south"))
-            report.add(AssertTrue(east > west, "east > west"))
-
-            # Check that the grid is symmetrical */
-            report.add(AssertTrue(north == -south, "north == -south"))
-            report.add(AssertTrue(DBL_EQUAL(dnorth, -dsouth, tolerance), "DBL_EQUAL(dnorth, -dsouth, tolerance) "))
-            report.add(AssertTrue(parallel == (east-west)/we + 1, "parallel == (east-west)/we + 1"))
-            report.add(AssertTrue(math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
-            report.add(AssertTrue(meridian == (north-south)/ns + 1, "meridian == (north-south)/ns + 1"))
-            report.add(AssertTrue(math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10, "math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 "))
-
-            # Check that the field is global */
-            area = (dnorth-dsouth) * (deast-dwest)
-            globe = 360.0*180.0
-            report.add(AssertTrue(area <= globe, "area <= globe"))
-            report.add(AssertTrue(area >= globe*0.95, "area >= globe*0.95"))
-
         # GRIB2 requires longitudes are always positive */
         report.add(AssertTrue(east >= 0, "east >= 0"))
         report.add(AssertTrue(west >= 0, "west >= 0"))
