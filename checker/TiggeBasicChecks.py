@@ -552,12 +552,18 @@ class TiggeBasicChecks(CheckEngine):
 
     def _given_thickness(self, message, p):
         report = Report()
-        report.add(Fail("Not implemented: dummy given_thickness()"))
+        report.add(Eq(message, "typeOfSecondFixedSurface", 255))
+        report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
+        report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
+
+        report.add(Ne(message, "typeOfFirstFixedSurface", 255))
+        report.add(Exists(message, "scaleFactorOfFirstFixedSurface"))
+        report.add(Exists(message, "scaledValueOfFirstFixedSurface"))
         return [report]
 
     def _has_bitmap(self, message, p):
         report = Report()
-        report.add(Fail("Not implemented: dummy has_bitmap()"))
+        report.add(Eq(message, "bitMapIndicator", 0))
         return [report]
 
     def _has_soil_layer(self, message, p):
