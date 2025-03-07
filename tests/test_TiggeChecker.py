@@ -1,10 +1,10 @@
 import unittest
 from Grib import Grib
-from TiggeChecker import TiggeChecker
+from checker.Tigge import Tigge
     
 class TestWmoChecker(unittest.TestCase):
     def test_load_data_from_file(self):
-        checker = TiggeChecker(verbosity=4)
+        checker = Tigge()
 
         # for message in Grib("./tests/tigge/tigge_ecmf_sfc_10v.grib"):
         # for message in Grib("./tests/tigge_small/tigge_all.grib2"):

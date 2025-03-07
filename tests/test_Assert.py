@@ -8,23 +8,18 @@ class TestAssert(unittest.TestCase):
         grib = Grib("tests/dgov-data/od_eefo_fcmean_sfc_2024_0001_reduced_gg.grib2")
         message = grib.__next__()
         eq = Eq(message, "stream", "eefo")
-        status, msg = eq.result()
-        self.assertTrue(status)
-        self.assertEqual("stream: eefo == eefo", msg)
+        self.assertTrue(eq.status())
+        self.assertEqual("stream: eefo == eefo", eq.as_string())
 
     def test_and(self):
         grib = Grib("tests/dgov-data/od_eefo_fcmean_sfc_2024_0001_reduced_gg.grib2")
         message = grib.__next__()
         eq1 = Eq(message, "stream", "eefo")
-        status1, msg1 = eq1.result()
-
         eq2 = Eq(message, "stream", "eefo")
-        status2, msg2 = eq2.result()
 
         a = eq1 & eq2
-        status, msg = a.result()
-        self.assertTrue(status)
-        self.assertEqual(f"{msg1} and {msg2}", msg)
+        self.assertTrue(a.status())
+        self.assertEqual(f"{eq1} and {eq2}", a.as_string())
             
 if __name__ == '__main__':
     unittest.main()

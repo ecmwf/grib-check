@@ -16,10 +16,7 @@ import concurrent.futures
 
 
 def worker(filename, message, checker):
-    message_report = checker.validate(message)
-    message_report.rename(f"{filename}[{message.position()}]")
-    return message_report
-
+    return checker.validate(message)
 
 class GribCheck:
     def __init__(self, args):
@@ -54,10 +51,12 @@ class GribCheck:
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.args.num_threads) as executor:
             for filename in FileScanner(self.args.path):
-                futures = [executor.submit(worker, filename, message, checker) for message in Grib(filename)]
+                grib = Grib(filename)
+                grib_report = grib.report()
+                futures = [executor.submit(worker, filename, message, checker) for message in grib]
                 for future in concurrent.futures.as_completed(futures):
-                    message_report = future.result()
-                    print(message_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color))
+                    grib_report.add(future.result())
+                print(grib_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color))
 
 
 if __name__ == "__main__":
