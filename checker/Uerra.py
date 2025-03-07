@@ -6,14 +6,20 @@ from Report import Report
 class Uerra(TiggeBasicChecks):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
-    
+   
+    def _basic_checks(self, message, p):
+        reports = super()._basic_checks(message, p)
+        report = Report(f"{__class__.__name__}._basic_checks")
+        report.add(Le(message, "hour", 24))
+        return reports + [report]
+
     def _from_start(self, message, p):
         reports = super()._from_start(message, p)
 
         min_value, max_value = message.minmax()
         if message.get("endStep") == 0:
             checks = Report(f"{__class__.__name__}")
-            checks.add(AssertTrue(min_value == 0 and max_value == 0, "min_value == 0 and max_value == 0"))
+            checks.add(AssertTrue(bool(min_value == 0) and bool(max_value == 0), "min_value == 0 and max_value == 0"))
             return reports + [checks]
 
         return reports

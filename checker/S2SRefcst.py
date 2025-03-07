@@ -1,4 +1,4 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue, DBL_EQUAL
+from Assert import Le, Ne, Eq, Fail, AssertTrue, DBL_EQUAL, IsIn
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
 import math
@@ -7,6 +7,14 @@ import math
 class S2SRefcst(TiggeBasicChecks):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
+
+
+    def _basic_checks(self, message, p):
+        reports = super()._basic_checks(message, p)
+        report = Report(f"{__class__.__name__}._basic_checks")
+        # Only 00, 06 12 and 18 Cycle OK 
+        report.add(IsIn(message, "hour", [0, 6, 12, 18]))
+        return reports + [report]
 
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")

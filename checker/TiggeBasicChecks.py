@@ -379,25 +379,6 @@ class TiggeBasicChecks(CheckEngine):
         report.add(Ge(message, "gribMasterTablesVersionNumber", 4))
         report.add(Eq(message, "significanceOfReferenceTime", 1))
 
-        # if not cfg['is_s2s']:
-        #     # todo check for how many years back the reforecast is done? Is it coded in the grib???
-        #     # Check if the date is OK
-        #     date = get(h,"date");
-        #     # CHECK(date > 20060101);
-        #     CHECK('(date / 10000) == get(h,"year")', int(date / 10000) == get(h,"year"))
-        #     CHECK('((date % 10000) / 100) == get(h,"month")', int((date % 10000) / 100) == get(h,"month"))
-        #     CHECK('((date % 100)) == get(h,"day")', (int(date % 100)) == get(h,"day"))
-        #
-        # if cfg['is_uerra']:
-        #     CHECK('le(h,"hour",24)', le(h,"hour",24))
-        # elif cfg['is_lam']:
-        #     CHECK(
-        #         'eq(h,"hour",0) or eq(h,"hour",3) or eq(h,"hour",6) or eq(h,"hour",9) or eq(h,"hour",12) or eq(h,"hour",15) or eq(h,"hour",18) or eq(h,"hour",21))',
-        #         eq(h,"hour",0) or eq(h,"hour",3) or eq(h,"hour",6) or eq(h,"hour",9) or eq(h,"hour",12) or eq(h,"hour",15) or eq(h,"hour",18) or eq(h,"hour",21))
-        # else:
-        #     # Only 00, 06 12 and 18 Cycle OK 
-        #     CHECK('eq(h,"hour",0) or eq(h,"hour",6) or eq(h,"hour",12) or eq(h,"hour",18)', eq(h,"hour",0) or eq(h,"hour",6) or eq(h,"hour",12) or eq(h,"hour",18))
-
         report.add(Eq(message, "minute", 0))
         report.add(Eq(message, "second", 0))
         report.add(Ge(message, "startStep", 0))

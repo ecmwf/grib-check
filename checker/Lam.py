@@ -1,4 +1,4 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue
+from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
 
@@ -6,6 +6,12 @@ from checker.TiggeBasicChecks import TiggeBasicChecks
 class Lam(TiggeBasicChecks):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
+
+    def _basic_checks(self, message, p):
+        reports = super()._basic_checks(message, p)
+        report = Report(f"{__class__.__name__}._basic_checks")
+        report.add(IsIn(message, "hour", [0, 3, 6, 9, 12, 15, 18, 21]))
+        return reports + [report]
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):

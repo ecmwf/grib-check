@@ -1,5 +1,5 @@
 from checker.TiggeBasicChecks import TiggeBasicChecks
-from Assert import Le, Ne, Eq, Fail, AssertTrue
+from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn
 from Report import Report
 import logging
 
@@ -8,6 +8,14 @@ class Tigge(TiggeBasicChecks):
     def __init__( self, param_file=None, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
         super().__init__(param_file, valueflg=valueflg)
+
+    def _basic_checks(self, message, p):
+        reports = super()._basic_checks(message, p)
+        report = Report(f"{__class__.__name__}._basic_checks")
+        # Only 00, 06 12 and 18 Cycle OK 
+        report.add(IsIn(message, "hour", [0, 6, 12, 18]))
+        return reports + [report]
+
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):
