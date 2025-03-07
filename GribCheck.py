@@ -34,17 +34,17 @@ class GribCheck:
         if self.args.grib_type == "wmo":
             checker = WmoChecker(param_file=self.args.parameters)
         elif self.args.grib_type == "tigge":
-            checker = Tigge(param_file=self.args.parameters)
+            checker = Tigge(param_file=self.args.parameters, valueflg=self.args.valueflg)
         elif self.args.grib_type == "s2s":
-            checker = S2S(param_file=self.args.parameters)
+            checker = S2S(param_file=self.args.parameters, valueflg=self.args.valueflg)
         elif self.args.grib_type == "s2s_refcst":
-            checker = S2SRefcst(param_file=self.args.parameters)
+            checker = S2SRefcst(param_file=self.args.parameters, valueflg=self.args.valueflg)
         elif self.args.grib_type == "uerra":
-            checker = Uerra(param_file=self.args.parameters)
+            checker = Uerra(param_file=self.args.parameters, valueflg=self.args.valueflg)
         elif self.args.grib_type == "crra":
-            checker = Crra(param_file=self.args.parameters)
+            checker = Crra(param_file=self.args.parameters, valueflg=self.args.valueflg)
         elif self.args.grib_type == "lam":
-            checker = Lam(param_file=self.args.parameters)
+            checker = Lam(param_file=self.args.parameters, valueflg=self.args.valueflg)
         else:
             raise ValueError("Unknown data type")
 
@@ -71,7 +71,7 @@ class GribCheck:
             file_report = Report()
             for message in Grib(filename):
                 # print(f"Checking message[{message.position()}]")
-                self.logger.debug(f"Check message[{message.position()}]")
+                self.logger.debug(f"Checking message[{message.position()}]")
                 message_report = checker.validate(message)
                 message_report.rename(f"{filename}[{message.position()}]")
                 status = message_report.status()

@@ -11,7 +11,7 @@ import math
 
 
 class TiggeBasicChecks(CheckEngine):
-    def __init__(self, param_file=None):
+    def __init__(self, param_file=None, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
         self.__check_map = {
             "basic_checks": self._basic_checks,
@@ -37,8 +37,7 @@ class TiggeBasicChecks(CheckEngine):
         }
         self.last_n = 0
         self.values = None
-
-
+        self.valueflg = valueflg
 
         parameters = SimpleLookupTable(param_file if param_file is not None else"checker/TiggeParameters.json")
         super().__init__(tests=parameters)
@@ -342,60 +341,38 @@ class TiggeBasicChecks(CheckEngine):
     
 
     def _basic_checks(self, message, p):
+        reports = list()
         report = Report()
-
-        min_value = 0
-        max_value = 0
-
         report.add(Eq(message, "editionNumber", 2))
         # report.add(Missing(message, "reserved") or Eq(message, "reserved", 0))
 
+        if self.valueflg:
+            values_report = Report("Check values")
+            count = 0
+            try:
+                count = message.get_size("values")
+            except Exception as e:
+                values_report.error(Fail(f"Cannot get number of values: {e}")) 
+                return [values_report]
 
-        # if cfg['valueflg']:
-        #     count = 0
-        #     try:
-        #         count = codes_get_size(h,"values")
-        #     except Exception as e:
-        #         print("%s, field %d [%s]: cannot get number of values: %s" % (cfg['filename'], cfg['field'], cfg['param'], str(e)))
-        #         cfg['error'] += 1
-        #         return;
-        #
-        #     bitmap = not eq(h,"bitMapIndicator",255);
-        #
-        #     CHECK('eq(h,"numberOfDataPoints",count)', eq(h,"numberOfDataPoints", count));
-        #
-        #     n = count
-        #
-        #     try:
-        #         values = codes_get_double_array(h, "values")
-        #     except Exception as e:
-        #         print("%s, field %d [%s]: cannot get values: %s" % (cfg['filename'], cfg['field'], cfg['param'], str(e)))
-        #         cfg['error'] += 1
-        #         return
-        #
-        #     if n != count:
-        #         print("%s, field %d [%s]: value count changed %ld -> %ld" % (cfg['filename'], cfg['field'], cfg['param'], count, n))
-        #         cfg['error'] += 1
-        #         return
-        #
-        #     if bitmap:
-        #         missing = dget(h, "missingValue")
-        #         min_value = max_value = missing;
-        #         for value in values:
-        #             if (min_value == missing) or ((value != missing) and (min_value > value)):
-        #                 min_value = value
-        #             if (max_value == missing) or ((value != missing) and (max_value < value)):
-        #                 max_value = value
-        #     else:
-        #         min_value = max_value = values[0]
-        #         for value in values:
-        #             if min_value > value:
-        #                 min_value = value
-        #             if max_value < value:
-        #                 max_value = value;
+            values_report.add(Eq(message, "numberOfDataPoints", count))
+
+            try:
+                values = message.get_double_array("values")
+            except Exception as e:
+                values_report.error(Fail(f"Cannot get values: {e}"))
+                return [values_report]
+
+            n = count
+            count = len(values)
+            if n != count:
+                values_report.add(Fail(f"Value count changed {count} -> {n}"))
+                return [values_report]
+            
+            reports += [values_report]
         
-        # check_parameter(h, min_value, max_value);
-        packing_reports = self._check_packing(message)
+        
+        reports += self._check_packing(message)
 
         # Section 1
 
@@ -468,18 +445,17 @@ class TiggeBasicChecks(CheckEngine):
         report.add(Eq(message, "sourceOfGridDefinition", 0)) # Specified in Code table 3.1
 
         dtn = message.get("gridDefinitionTemplateNumber")
-        grid_reports = list()
 
         if dtn in [0, 1]:
             # dtn == 1: rotated latlon
-            grid_reports = self._latlon_grid(message)
+            reports += self._latlon_grid(message)
         elif dtn == 30: #Lambert conformal
             # lambert_grid(h); # TODO xxx
             # print("warning: Lambert grid - geometry checking not implemented yet!")
             # CHECK('eq(h,"scanningMode",64)', eq(h,"scanningMode",64));*/ /* M-F data used to have it wrong.. but it might depends on other projection set up as well!
             pass
         elif dtn == 40: # gaussian grid (regular or reduced)
-            grid_reports = self._gaussian_grid(message)
+            reports += self._gaussian_grid(message)
         else:
             report.add(Fail(f"Unsupported gridDefinitionTemplateNumber {dtn}"))
             # print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
@@ -498,14 +474,14 @@ class TiggeBasicChecks(CheckEngine):
         # Check values 
         report.add(Eq(message, "typeOfOriginalFieldValues", 0)) # Floating point
 
-        validity_reports = self._check_validity_datetime(message)
+        reports += self._check_validity_datetime(message)
 
         # do not store empty values e.g. fluxes at step 0
         #    todo ?? now it's allowed in the code here!
         #    if not missing(h,"typeOfStatisticalProcessing"):
         #      CHECK('ne(h,"stepRange",0)', ne(h,"stepRange",0))
         
-        return [report] + validity_reports + grid_reports + packing_reports
+        return reports + [report]
 
     def _daily_average(self, message, p):
         reports = list()

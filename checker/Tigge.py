@@ -6,9 +6,9 @@ import math
 
 
 class Tigge(TiggeBasicChecks):
-    def __init__( self, param_file=None):
+    def __init__( self, param_file=None, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
-        super().__init__(param_file)
+        super().__init__(param_file, valueflg=valueflg)
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):

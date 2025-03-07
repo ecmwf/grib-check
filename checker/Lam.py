@@ -4,8 +4,8 @@ from checker.TiggeBasicChecks import TiggeBasicChecks
 
 
 class Lam(TiggeBasicChecks):
-    def __init__(self, param_file=None):
-        super().__init__(param_file)
+    def __init__(self, param_file=None, valueflg=False):
+        super().__init__(param_file, valueflg=valueflg)
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):
