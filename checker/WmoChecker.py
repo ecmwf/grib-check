@@ -23,8 +23,14 @@ class WmoChecker(CheckEngine):
         return WmoTest(message, parameters, self.__check_map)
 
     def __basic_checks(self, message, data):
-        report = Report("Basic checks")
+        report = Report()
         report.add(Eq(message, "edition", 2))
+        # sub_report = Report() # Anonymous report
+        sub_report = Report("SUB REPORT") # Named report
+        sub_report.add(Eq(message, "centre", 98))
+        sub_report.add(Eq(message, "subCentre", 0))
+
+        report.add(sub_report)
         return report
 
     def __product_definition_template_number(self, handle, p):
