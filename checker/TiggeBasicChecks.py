@@ -41,18 +41,18 @@ class TiggeBasicChecks(CheckEngine):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):
-        report = Report()
+        report = Report(f"{__class__.__name__}.statistical_process")
 
-        topd = message.get("typeOfProcessedData")
+        topd = message.get("typeOfProcessedData", int)
 
         if topd in [0, 1]: # Analysis, Forecast
             pass
         elif topd == 2: # Analysis and forecast products
             report.add(Eq(message, "productDefinitionTemplateNumber", 8))
-        elif topd == [3, 4]: # Control forecast products
+        elif topd in [3, 4]: # Control forecast products
             pass
         else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {message.get('typeOfProcessedData')}"))
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
 
         report.add(Eq(message, "numberOfTimeRange", 1))
@@ -76,9 +76,24 @@ class TiggeBasicChecks(CheckEngine):
         return [report]
 
     # not registered in the lookup table
-    def _check_range(self, handle, p):
-        report = Report()
-        report.add(Fail("Not implemented: dummy check_range()"))
+    def _check_range(self, message, p):
+        report = Report("Range check")
+
+        # TODO:: Enable only if valueflg = 1
+        
+        # See ECC-437
+        missing = message.get("missingValue", float)
+        min_value, max_value = message.minmax()
+        if not message.get("bitMapIndicator") == 0 and min_value == missing and max_value == missing:
+            if min_value < p['min1'] or min_value > p['min2']: 
+                min1 = min_value if min_value < p['min1'] else p['min1']
+                min2 = min_value if min_value > p['min2'] else p['min2']
+                report.add(Fail(f"Missing value {min_value} is not in range [{p['min1']},{p['min2']}] => [{min1},{min2}]"))
+
+            if max_value < p['max1'] or max_value > p['max2']:
+                max1 = max_value if max_value < p['max1'] else p['max1']
+                max2 = max_value if max_value > p['max2'] else p['max2']
+                report.add(Fail(f"Missing value {max_value} is not in range [{p['max1']},{p['max2']}] => [{max1},{max2}]"))
         return [report]
 
     # not registered in the lookup table
@@ -138,7 +153,7 @@ class TiggeBasicChecks(CheckEngine):
             checks.add(Ne(message, "perturbationNumber", 0))
             checks.add(Ne(message, "numberOfForecastsInEnsemble", 0))
         else:
-            checks.add(Fail("Unsupported typeOfProcessedData %ld" % message.get("typeOfProcessedData", int)))
+            checks.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         return [checks]
 
@@ -228,34 +243,33 @@ class TiggeBasicChecks(CheckEngine):
 
     def _since_prev_pp(self, message, p):
         report = Report()
-        # statistical_process(h,p,min_value,max_value)
         report.add(Eq(message, "indicatorOfUnitForTimeRange", 1))
         report.add(AssertTrue(message.get("endStep") == message.get("startStep") + message.get("lengthOfTimeRange"), "endStep == startStep + lengthOfTimeRange"))
-        # check_range(h,p,min_value,max_value)
-        return [report]
+
+        stats_report = self._statistical_process(message, p)
+        check_report = self._check_range(message, p)
+        return [report, stats_report, check_report]
 
     def _six_hourly(self, message, p):
         report = Report()
-        # statistical_process(h,p,min_value,max_value);
-
         if message.get("indicatorOfUnitForTimeRange") == 11:
             report.add(Eq(message, "lengthOfTimeRange", 1))
         else:
             report.add(Eq(message, "lengthOfTimeRange", 6))
-
         report.add(AssertTrue(message.get("endStep") == message.get("startStep") + 6, "endStep == startStep + 6"))
-        # check_range(h,p,min_value,max_value)
-        return [report]
+
+        stats_report = self._statistical_process(message, p)
+        check_report = self._check_range(message, p)
+        return [report, stats_report, check_report]
 
     def _three_hourly(self, message, p):
         report = Report()
-        # statistical_process(h,p,min_value,max_value)
-
         if message.get("indicatorOfUnitForTimeRange") == 11:
             report.add(Eq(message, "lengthOfTimeRange", 1))
         else:
             report.add(Eq(message, "lengthOfTimeRange", 3))
-
         report.add(AssertTrue(message.get("endStep") == message.get("startStep") + 3, "endStep == startStep + 3"))
-        # check_range(h,p,min_value,max_value)
-        return [report]
+
+        stats_report = self._statistical_process(message, p)
+        check_report = self._check_range(message, p)
+        return [report, stats_report, check_report]

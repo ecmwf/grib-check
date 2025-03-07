@@ -11,16 +11,16 @@ class Tigge(TiggeBasicChecks):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):
-        report = Report("Uerra.statistical_process")
+        report = Report(f"{__class__.__name__}.statistical_process")
 
-        topd = message.get("typeOfProcessedData")
+        topd = message.get("typeOfProcessedData", int)
 
         if topd in [0, 1, 2]: # Analysis, Forecast, Analysis and forecast products
             pass
         elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
             report.add(Eq(message, "productDefinitionTemplateNumber", 11))
         else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {message.get('typeOfProcessedData')}"))
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
 
         if message.get("indicatorOfUnitOfTimeRange") == 11: # six hours
@@ -46,7 +46,7 @@ class Tigge(TiggeBasicChecks):
         super_reports = super()._point_in_time(message, p)
 
         checks = Report(__class__.__name__)
-        topd = message.get("typeOfProcessedData")
+        topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message.get("productDefinitionTemplateNumber") == 1:
                 checks.add(Ne(message, "numberOfForecastsInEnsemble", 0))
@@ -60,6 +60,8 @@ class Tigge(TiggeBasicChecks):
             pn = message.get("perturbationNumber")
             nofe = message.get("numberOfForecastsInEnsemble")
             checks.add(AssertTrue(pn < nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
+        else:
+            checks.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         return super_reports + [checks]
 
