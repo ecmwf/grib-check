@@ -58,6 +58,10 @@ class Report:
     def rename(self, name):
         self.__name = name
 
+    def rename_anonymous_report(self, name):
+        if self.__name is None:
+            self.__name = name
+
     def as_string(self, max_level=None, color=False):
         return self.__as_string(self.__entries, 0, max_level, color)
 

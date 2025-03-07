@@ -41,7 +41,7 @@ class WmoTest(Test):
         checks_report = Report("Checks")
         for check_func in data["checks"]:
             check_report = self.__check_map[check_func](self.__message, data)
-            check_report.rename(f"{check_func}")
+            check_report.rename_anonymous_report(f"{check_func}")
             checks_report.add(check_report)
 
         report = Report()
