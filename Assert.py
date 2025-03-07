@@ -3,6 +3,8 @@ import math
 import logging
 from TermColor import TermColor
 
+def DBL_EQUAL(d1, d2, tolerance) -> int:
+    return math.fabs(d1 - d2) <= tolerance
 
 class Assert:
     def __init__(self, message, key, value, msg=None):

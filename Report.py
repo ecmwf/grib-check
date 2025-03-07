@@ -85,4 +85,12 @@ class Report:
 
         self.__entries.append(entry)
 
+    def error(self, entry):
+        # TODO: Implement error handling
+        self.add(entry)
+
+    def warning(self, entry):
+        # TODO: Implement warning handling
+        self.add(entry)
+
 

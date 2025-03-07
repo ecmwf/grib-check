@@ -1,5 +1,6 @@
 from eccodes import (
     codes_grib_new_from_file,
+    codes_get_gaussian_latitudes,
 )
 from Message import Message
 
@@ -31,3 +32,7 @@ class Grib:
             return Message(handle, self.position)
         else:
             raise StopIteration
+
+
+def get_gaussian_latitudes(order):
+    return codes_get_gaussian_latitudes(order)
