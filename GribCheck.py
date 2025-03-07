@@ -11,22 +11,13 @@ from checker.S2SRefcst import S2SRefcst
 from checker.Crra import Crra
 from checker.Lam import Lam
 from Grib import Grib
-from Report import Report
-from eccodes import codes_write
 import logging
 import concurrent.futures
 
 
-def worker(filename, message, checker, fgood, fbad):
+def worker(filename, message, checker):
     message_report = checker.validate(message)
     message_report.rename(f"{filename}[{message.position()}]")
-    status = message_report.status()
-    if status:
-        if fgood:
-            codes_write(message.handle, fgood)
-    else:
-        if fbad:
-            codes_write(message.handle, fbad)
     return message_report
 
 
@@ -61,34 +52,13 @@ class GribCheck:
         else:
             raise ValueError("Unknown data type")
 
-        fgood = None
-        if self.args.good:
-            self.logger.debug(f"Good messages will be written to {self.args.good}")
-            fgood = open(self.args.good, "wb")
-            if not fgood:
-                print("Couldn't open %s" % self.args.good)
-                sys.exit(1)
-
-        fbad = None
-        if self.args.bad:
-            self.logger.debug(f"Bad messages will be written to {self.args.bad}")
-            fbad = open(self.args.bad, "wb")
-            if not fbad:
-                print("Couldn't open %s" % self.args.bad)
-                sys.exit(1)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.args.num_threads) as executor:
             for filename in FileScanner(self.args.path):
-                futures = [executor.submit(worker, filename, message, checker, fgood, fbad) for message in Grib(filename)]
+                futures = [executor.submit(worker, filename, message, checker) for message in Grib(filename)]
                 for future in concurrent.futures.as_completed(futures):
                     message_report = future.result()
                     print(message_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color))
-
-        if fgood:
-            fgood.close()
-
-        if fbad:
-            fbad.close()
 
         err = 0
         if checker.get_error_counter() != 0:
@@ -105,8 +75,6 @@ if __name__ == "__main__":
     parser.add_argument("-w", "--warnflg", help="warnings are treated as errors", action="store_true")
     parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
     parser.add_argument("-a", "--valueflg", help="check value ranges", action="store_true")
-    parser.add_argument("-g", "--good", help="write good gribs", default=None)
-    parser.add_argument("-b", "--bad", help="write bad gribs", default=None)
     parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
     parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo"], default="tigge")
     parser.add_argument("-v", "--verbosity", help="increase output verbosity", default=0)

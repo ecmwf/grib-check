@@ -25,8 +25,8 @@ class WmoChecker(CheckEngine):
     def __basic_checks(self, message, data):
         report = Report()
         report.add(Eq(message, "edition", 2))
-        # sub_report = Report() # Anonymous report
-        sub_report = Report("SUB REPORT") # Named report
+        sub_report = Report() # Anonymous report
+        # sub_report = Report("SUB REPORT") # Named report
         sub_report.add(Eq(message, "centre", 98))
         sub_report.add(Eq(message, "subCentre", 0))
 
