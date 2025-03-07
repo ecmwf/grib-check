@@ -2,7 +2,7 @@ from CheckEngine import CheckEngine
 from LookupTable import SimpleLookupTable
 from Test import Test, WmoTest
 from Report import Report
-from Assert import Fail
+from Assert import Fail, Eq
 from Message import Message
 
 
@@ -12,6 +12,7 @@ class WmoChecker(CheckEngine):
         param_file="WmoParameters.json",
     ):
         self.__check_map = {
+            "basic_checks": self.__basic_checks,
             "product_definition_template_number": self.__product_definition_template_number,
             "derived_forecast": self.__derived_forecast
         }
@@ -20,6 +21,11 @@ class WmoChecker(CheckEngine):
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
         return WmoTest(message, parameters, self.__check_map)
+
+    def __basic_checks(self, message, data):
+        report = Report("Basic checks")
+        report.add(Eq(message, "edition", 2))
+        return report
 
     def __product_definition_template_number(self, handle, p):
         report = Report()
