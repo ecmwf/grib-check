@@ -52,7 +52,6 @@ class GribCheck:
         else:
             raise ValueError("Unknown data type")
 
-
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.args.num_threads) as executor:
             for filename in FileScanner(self.args.path):
                 futures = [executor.submit(worker, filename, message, checker) for message in Grib(filename)]
@@ -60,25 +59,16 @@ class GribCheck:
                     message_report = future.result()
                     print(message_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color))
 
-        err = 0
-        if checker.get_error_counter() != 0:
-            err = 1
-        if checker.get_warning_counter() and self.args.warnflg:
-            err = 1
-
-        print(f"Zeroflg: {self.args.zeroflg}")
-        return 0 if self.args.zeroflg else err
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-w", "--warnflg", help="warnings are treated as errors", action="store_true")
-    parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
+    # parser.add_argument("-w", "--warnflg", help="warnings are treated as errors", action="store_true")
+    # parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
     parser.add_argument("-a", "--valueflg", help="check value ranges", action="store_true")
     parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
     parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo"], default="tigge")
-    parser.add_argument("-v", "--verbosity", help="increase output verbosity", default=0)
-    parser.add_argument("-l", "--report_verbosity", help="increase output verbosity", type=int, default=10)
+    parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
+    parser.add_argument("-l", "--report_verbosity", help="report depth", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
     parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
     parser.add_argument("-c", "--color", help="use color in output", action="store_true")
