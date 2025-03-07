@@ -71,7 +71,7 @@ class S2S(TiggeBasicChecks):
 
         return reports + [checks]
 
-    def _latlon_grid(self, message, p):
+    def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")
 
         tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
@@ -112,7 +112,7 @@ class S2S(TiggeBasicChecks):
         report.add(AssertTrue(area <= globe, "area <= globe"))
         report.add(AssertTrue(area >= globe*0.95, "area >= globe*0.95"))
 
-        reports = super()._latlon_grid(message, p)
+        reports = super()._latlon_grid(message)
         return reports + [report]
 
     def _pressure_level(self, message, p):
