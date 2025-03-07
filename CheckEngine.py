@@ -1,11 +1,10 @@
-# from os import writev
 import sys
 import logging
 from LookupTable import SimpleLookupTable
 from Test import Test
 from Message import Message
 from Report import Report
-from Assert import Pass, Fail
+from Assert import Fail
 
 
 class CheckEngine:
