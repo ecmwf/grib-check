@@ -8,6 +8,7 @@ from eccodes import (
     codes_get_long,
     codes_get_double,
     codes_get_string,
+    codes_set_string,
     codes_get_double_array,
     codes_get_native_type,
     codes_keys_iterator_new,
@@ -61,6 +62,9 @@ class Message:
 
     def __del__(self):
         codes_release(self.__h)
+
+    def set(self, key, value):
+        codes_set_string(self.__h, key, value)
 
     def get(self, key, datatype=None):
         try:

@@ -3,7 +3,7 @@ from LookupTable import SimpleLookupTable
 from Test import Test, TiggeTest
 from Grib import get_gaussian_latitudes
 from Message import Message
-from Assert import Le, Ne, Eq, Exists, Missing, Fail, Pass, AssertTrue, IsIn, DBL_EQUAL
+from Assert import Ge, Le, Ne, Eq, Exists, Missing, Fail, Pass, AssertTrue, IsIn, DBL_EQUAL
 from Report import Report
 import numpy as np
 import logging
@@ -14,6 +14,7 @@ class TiggeBasicChecks(CheckEngine):
     def __init__(self, param_file=None):
         self.logger = logging.getLogger(__class__.__name__)
         self.__check_map = {
+            "basic_checks": self._basic_checks,
             "daily_average": self._daily_average,
             "from_start": self._from_start,
             "given_level": self._given_level,
@@ -104,8 +105,8 @@ class TiggeBasicChecks(CheckEngine):
         return [report]
 
     # not registered in the lookup table
-    def _gaussian_grid(self, message, p):
-        report = Report()
+    def _gaussian_grid(self, message):
+        report = Report("Gaussian grid")
 
         tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
         n = message.get("numberOfParallelsBetweenAPoleAndTheEquator") # This is the key N
@@ -124,13 +125,13 @@ class TiggeBasicChecks(CheckEngine):
                 # cfg['error'] += 1
                 report.error(f"Cannot get gaussian latitudes for N{n}")
                 self.last_n = 0
-                return
+                return [report]
             self.last_n = n;
 
         # TODO
         if self.values is None:
             assert(0)
-            return
+            return [report]
 
         if self.values is not None:
             self.values[0] = np.rint(self.values[0] * 1e6) / 1e6;
@@ -156,7 +157,7 @@ class TiggeBasicChecks(CheckEngine):
             we = message.get("iDirectionIncrement")
             dwest = message.get("longitudeOfFirstGridPointInDegrees", float)
             deast = message.get("longitudeOfLastGridPointInDegrees", float)
-            dwe = message.get(h,"iDirectionIncrementInDegrees", float)
+            dwe = message.get("iDirectionIncrementInDegrees", float)
             # printf("parallel=%ld east=%ld west=%ld we=%ld",parallel,east,west,we)
 
             report.add(AssertTrue(parallel == (l_east-l_west)/we + 1, "parallel == (l_east-l_west)/we + 1"))
@@ -223,8 +224,8 @@ class TiggeBasicChecks(CheckEngine):
 
 
     # not registered in the lookup table
-    def _latlon_grid(self, message, p):
-        report = Report()
+    def _latlon_grid(self, message):
+        report = Report("Latlon grid")
 
         tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
         data_points = message.get("numberOfDataPoints")
@@ -304,10 +305,207 @@ class TiggeBasicChecks(CheckEngine):
         return [report]
 
     # not registered in the lookup table
-    def _check_validity_time(self, message, p):
-        report = Report()
-        report.add(Fail("Not implemented: dummy check_validity_time()"))
+    def _check_packing(self, message):
+        # ECC-1009: Warn if not using simple packing
+        report = Report("Check packing")
+        report.add(Eq(message, "packingType", "grid_simple"))
         return [report]
+
+    # not registered in the lookup table
+    def _check_validity_datetime(self, message):
+        # If we just set the stepRange (for non-instantaneous fields) to its
+        # current value, then this causes the validity date and validity time
+        # keys to be correctly computed.
+        # Then we can compare the previous (possibly wrongly coded) value with
+        # the newly computed one
+
+        report = Report()
+        stepType = message.get("stepType", str)
+
+        if stepType != "instant": # not instantaneous
+            # Check only applies to accumulated, max etc.
+            stepRange = message.get("stepRange", str)
+
+            saved_validityDate = message.get("validityDate")
+            saved_validityTime = message.get("validityTime")
+
+            message.set("stepRange", stepRange)
+
+            validityDate = message.get("validityDate")
+            validityTime = message.get("validityTime")
+            if validityDate!=saved_validityDate or validityTime!=saved_validityTime:
+                # print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (cfg['filename'], cfg['field'], cfg['param'], validityDate, validityTime))
+                report.add(Fail(f"Invalid validity Date/Time (Should be {validityDate} and {validityTime})"))
+                # cfg['warning'] += 1
+
+        return [report]
+    
+
+    def _basic_checks(self, message, p):
+        report = Report()
+
+        min_value = 0
+        max_value = 0
+
+        report.add(Eq(message, "editionNumber", 2))
+        # report.add(Missing(message, "reserved") or Eq(message, "reserved", 0))
+
+
+        # if cfg['valueflg']:
+        #     count = 0
+        #     try:
+        #         count = codes_get_size(h,"values")
+        #     except Exception as e:
+        #         print("%s, field %d [%s]: cannot get number of values: %s" % (cfg['filename'], cfg['field'], cfg['param'], str(e)))
+        #         cfg['error'] += 1
+        #         return;
+        #
+        #     bitmap = not eq(h,"bitMapIndicator",255);
+        #
+        #     CHECK('eq(h,"numberOfDataPoints",count)', eq(h,"numberOfDataPoints", count));
+        #
+        #     n = count
+        #
+        #     try:
+        #         values = codes_get_double_array(h, "values")
+        #     except Exception as e:
+        #         print("%s, field %d [%s]: cannot get values: %s" % (cfg['filename'], cfg['field'], cfg['param'], str(e)))
+        #         cfg['error'] += 1
+        #         return
+        #
+        #     if n != count:
+        #         print("%s, field %d [%s]: value count changed %ld -> %ld" % (cfg['filename'], cfg['field'], cfg['param'], count, n))
+        #         cfg['error'] += 1
+        #         return
+        #
+        #     if bitmap:
+        #         missing = dget(h, "missingValue")
+        #         min_value = max_value = missing;
+        #         for value in values:
+        #             if (min_value == missing) or ((value != missing) and (min_value > value)):
+        #                 min_value = value
+        #             if (max_value == missing) or ((value != missing) and (max_value < value)):
+        #                 max_value = value
+        #     else:
+        #         min_value = max_value = values[0]
+        #         for value in values:
+        #             if min_value > value:
+        #                 min_value = value
+        #             if max_value < value:
+        #                 max_value = value;
+        
+        # check_parameter(h, min_value, max_value);
+        packing_reports = self._check_packing(message)
+
+        # Section 1
+
+        # CHECK('ge(h,"gribMasterTablesVersionNumber",4)', ge(h,"gribMasterTablesVersionNumber",4))
+        report.add(Ge(message, "gribMasterTablesVersionNumber", 4))
+        report.add(Eq(message, "significanceOfReferenceTime", 1))
+
+        # if not cfg['is_s2s']:
+        #     # todo check for how many years back the reforecast is done? Is it coded in the grib???
+        #     # Check if the date is OK
+        #     date = get(h,"date");
+        #     # CHECK(date > 20060101);
+        #     CHECK('(date / 10000) == get(h,"year")', int(date / 10000) == get(h,"year"))
+        #     CHECK('((date % 10000) / 100) == get(h,"month")', int((date % 10000) / 100) == get(h,"month"))
+        #     CHECK('((date % 100)) == get(h,"day")', (int(date % 100)) == get(h,"day"))
+        #
+        # if cfg['is_uerra']:
+        #     CHECK('le(h,"hour",24)', le(h,"hour",24))
+        # elif cfg['is_lam']:
+        #     CHECK(
+        #         'eq(h,"hour",0) or eq(h,"hour",3) or eq(h,"hour",6) or eq(h,"hour",9) or eq(h,"hour",12) or eq(h,"hour",15) or eq(h,"hour",18) or eq(h,"hour",21))',
+        #         eq(h,"hour",0) or eq(h,"hour",3) or eq(h,"hour",6) or eq(h,"hour",9) or eq(h,"hour",12) or eq(h,"hour",15) or eq(h,"hour",18) or eq(h,"hour",21))
+        # else:
+        #     # Only 00, 06 12 and 18 Cycle OK 
+        #     CHECK('eq(h,"hour",0) or eq(h,"hour",6) or eq(h,"hour",12) or eq(h,"hour",18)', eq(h,"hour",0) or eq(h,"hour",6) or eq(h,"hour",12) or eq(h,"hour",18))
+
+        report.add(Eq(message, "minute", 0))
+        report.add(Eq(message, "second", 0))
+        report.add(Ge(message, "startStep", 0))
+
+        # if cfg['is_s2s']:
+        #     CHECK('eq(h,"productionStatusOfProcessedData",6) or eq(h,"productionStatusOfProcessedData",7)', eq(h,"productionStatusOfProcessedData",6) or eq(h,"productionStatusOfProcessedData",7)) #S2S prod or test
+        #     CHECK('le(h,"endStep",100*24)', le(h,"endStep",100*24))
+        # elif not cfg['is_uerra']:
+        #     CHECK('eq(h,"productionStatusOfProcessedData",4) or eq(h,"productionStatusOfProcessedData",5)', eq(h,"productionStatusOfProcessedData",4) or eq(h,"productionStatusOfProcessedData",5)) # TIGGE prod or test
+        #     CHECK('le(h,"endStep",30*24)', le(h,"endStep",30*24))
+
+        # if cfg['is_uerra']:
+        #     CHECK(
+        #         '(eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)',
+        #         (eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)
+        # elif cfg['is_lam']:
+        #     CHECK('(get(h,"step") % 3) == 0', (get(h,"step") % 3) == 0)
+        # else:
+        #     CHECK('(get(h,"step") % 6) == 0', (get(h,"step") % 6) == 0)
+
+        # if cfg['is_uerra']:
+        #     if cfg['is_crra']:
+        #         CHECK('eq(h,"productionStatusOfProcessedData",10) or eq(h,"productionStatusOfProcessedData",11)', eq(h,"productionStatusOfProcessedData",10) or eq(h,"productionStatusOfProcessedData",11)) # CRRA prodortest
+        #     else:
+        #         CHECK('eq(h,"productionStatusOfProcessedData",8) or eq(h,"productionStatusOfProcessedData",9)', eq(h,"productionStatusOfProcessedData",8) or eq(h,"productionStatusOfProcessedData",9)); #  UERRA prodortest
+        #     CHECK('le(h,"endStep",30)', le(h,"endStep",30))
+        #     # 0 = analysis , 1 = forecast
+        #     CHECK('eq(h,"typeOfProcessedData",0) or eq(h,"typeOfProcessedData",1)', eq(h,"typeOfProcessedData",0) or eq(h,"typeOfProcessedData",1))
+        #     if get(h,"typeOfProcessedData") == 0:
+        #         CHECK('eq(h,"step",0)', eq(h,"step",0))
+        #     else:
+        #         CHECK(
+        #             '(eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)',
+        #             (eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)
+        # else:
+        #     # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
+        #     CHECK('eq(h,"typeOfProcessedData",2) or eq(h,"typeOfProcessedData",3) or eq(h,"typeOfProcessedData",4)', eq(h,"typeOfProcessedData",2) or eq(h,"typeOfProcessedData",3) or eq(h,"typeOfProcessedData",4));
+
+        # TODO: validate local usage. Empty for now xxx
+        # CHECK('eq(h,"section2.sectionLength",5)', eq(h,"section2.sectionLength",5))
+
+        # Section 3
+
+        report.add(Eq(message, "sourceOfGridDefinition", 0)) # Specified in Code table 3.1
+
+        dtn = message.get("gridDefinitionTemplateNumber")
+        grid_reports = list()
+
+        if dtn in [0, 1]:
+            # dtn == 1: rotated latlon
+            grid_reports = self._latlon_grid(message)
+        elif dtn == 30: #Lambert conformal
+            # lambert_grid(h); # TODO xxx
+            # print("warning: Lambert grid - geometry checking not implemented yet!")
+            # CHECK('eq(h,"scanningMode",64)', eq(h,"scanningMode",64));*/ /* M-F data used to have it wrong.. but it might depends on other projection set up as well!
+            pass
+        elif dtn == 40: # gaussian grid (regular or reduced)
+            grid_reports = self._gaussian_grid(message)
+        else:
+            report.add(Fail(f"Unsupported gridDefinitionTemplateNumber {dtn}"))
+            # print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
+            #         (cfg['filename'], cfg['field'], cfg['param'], get(h,"gridDefinitionTemplateNumber")))
+            # cfg['error'] += 1
+            return;
+
+        # If there is no bitmap, this should be true
+        # CHECK('eq(h,"bitMapIndicator",255)', eq(h,"bitMapIndicator",255))
+
+        if message.get("bitMapIndicator") == 255:
+            report.add(AssertTrue(message.get("numberOfValues") == message.get("numberOfDataPoints"), "numberOfValues == numberOfDataPoints"))
+        else:
+            report.add(AssertTrue(message.get("numberOfValues") <= message.get("numberOfDataPoints"), "numberOfValues <= numberOfDataPoints"))
+
+        # Check values 
+        report.add(Eq(message, "typeOfOriginalFieldValues", 0)) # Floating point
+
+        validity_reports = self._check_validity_datetime(message)
+
+        # do not store empty values e.g. fluxes at step 0
+        #    todo ?? now it's allowed in the code here!
+        #    if not missing(h,"typeOfStatisticalProcessing"):
+        #      CHECK('ne(h,"stepRange",0)', ne(h,"stepRange",0))
+        
+        return [report] + validity_reports + grid_reports + packing_reports
 
     def _daily_average(self, message, p):
         reports = list()
