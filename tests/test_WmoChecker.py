@@ -1,6 +1,6 @@
 import unittest
 from Grib import Grib
-from WmoChecker import WmoChecker
+from checker.WmoChecker import WmoChecker
     
 class TestWmoChecker(unittest.TestCase):
     def test_load_data_from_file(self):
