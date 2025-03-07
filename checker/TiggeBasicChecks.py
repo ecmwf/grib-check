@@ -603,7 +603,7 @@ class TiggeBasicChecks(CheckEngine):
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
-        return [report, stats_report, check_report]
+        return [report] + stats_report + check_report
 
     def _six_hourly(self, message, p):
         report = Report()
@@ -615,7 +615,7 @@ class TiggeBasicChecks(CheckEngine):
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
-        return [report, stats_report, check_report]
+        return [report] + stats_report + check_report
 
     def _three_hourly(self, message, p):
         report = Report()
@@ -627,4 +627,4 @@ class TiggeBasicChecks(CheckEngine):
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
-        return [report, stats_report, check_report]
+        return report + stats_report + check_report
