@@ -110,8 +110,8 @@ class Missing(Assert):
 
 
 class Eq(Assert):
-    def __init__(self, h, key, value):
-        super().__init__(h, key, value)
+    def __init__(self, h, key, value, msg=None):
+        super().__init__(h, key, value, msg)
         self._status = self._actual_value == self._expected_value
 
     def as_string(self, color=False) -> str:
@@ -134,8 +134,8 @@ class Ne(Assert):
 
 
 class Ge(Assert):
-    def __init__(self, h, key, value):
-        super().__init__(h, key, value)
+    def __init__(self, h, key, value, msg=None):
+        super().__init__(h, key, value, msg)
         self._status = self._actual_value >= self._expected_value
 
     def as_string(self, color=False) -> str:
@@ -146,8 +146,8 @@ class Ge(Assert):
 
 
 class Le(Assert):
-    def __init__(self, h, key, value):
-        super().__init__(h, key, value)
+    def __init__(self, h, key, value, msg=None):
+        super().__init__(h, key, value, msg)
         self._status = self._actual_value <= self._expected_value
 
     def as_string(self, color=False) -> str:
@@ -158,8 +158,8 @@ class Le(Assert):
 
 
 class Gt(Assert):
-    def __init__(self, h, key, value, tolerance):
-        super().__init__(h, key, value)
+    def __init__(self, h, key, value, tolerance, msg=None):
+        super().__init__(h, key, value, msg)
         self.__tolerance = tolerance
         self._status = self._actual_value > self._expected_value + self.__tolerance
 

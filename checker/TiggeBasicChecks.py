@@ -40,9 +40,39 @@ class TiggeBasicChecks(CheckEngine):
         return TiggeTest(message, parameters, self.__check_map)
 
     # not registered in the lookup table
-    def _statistical_process(self, handle, p):
+    def _statistical_process(self, message, p):
         report = Report()
-        report.add(Fail("Not implemented: dummy statistical_process()"))
+
+        topd = message.get("typeOfProcessedData")
+
+        if topd in [0, 1]: # Analysis, Forecast
+            pass
+        elif topd == 2: # Analysis and forecast products
+            report.add(Eq(message, "productDefinitionTemplateNumber", 8))
+        elif topd == [3, 4]: # Control forecast products
+            pass
+        else:
+            report.add(Fail(f"Unsupported typeOfProcessedData {message.get('typeOfProcessedData')}"))
+            return [report]
+
+        report.add(Eq(message, "numberOfTimeRange", 1))
+        report.add(Eq(message, "numberOfMissingInStatisticalProcess", 0))
+        report.add(Eq(message, "typeOfTimeIncrement", 2))
+        # report.add(Eq(message, "indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed", 255))
+        report.add(Eq(message, "minuteOfEndOfOverallTimeInterval", 0))
+        report.add(Eq(message, "secondOfEndOfOverallTimeInterval", 0))
+
+        if message.get("indicatorOfUnitForTimeRange") == 11:
+            # Six hourly is OK
+            report.add(AssertTrue(message.get("lengthOfTimeRange")*6 + message.get("startStep") == message.get("endStep"), "lengthOfTimeRange*6 + startStep == endStep"))
+
+        elif message.get("indicatorOfUnitForTimeRange") == 10:
+            # Three hourly is OK
+            report.add(AssertTrue(message.get("lengthOfTimeRange")*3 + message.get("startStep") == message.get("endStep"), "lengthOfTimeRange*3 + startStep == endStep"))
+        else:
+            report.add(Eq(message, "indicatorOfUnitForTimeRange", 1))
+            report.add(AssertTrue(message.get("lengthOfTimeRange") + message.get("startStep") == message.get("endStep"), "lengthOfTimeRange + startStep == endStep"))
+
         return [report]
 
     # not registered in the lookup table

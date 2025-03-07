@@ -12,12 +12,41 @@ class Uerra(TiggeBasicChecks):
 
         min_value, max_value = message.minmax()
         if message.get("endStep") == 0:
-            checks = Report(f"{__class__.__name__}.{self._from_start.__name__}")
+            checks = Report(f"{__class__.__name__}")
             checks.add(AssertTrue(min_value == 0 and max_value == 0, "min_value == 0 and max_value == 0"))
-            report = self._make_sub_report(__class__.__name__, checks)
-            return reports + [report]
+            return reports + [checks]
 
         return reports
+
+    def _statistical_process(self, message, p):
+        report = Report("Uerra.statistical_process")
+
+        topd = message.get("typeOfProcessedData")
+        if topd in [0, 1]: # Analysis, Forecast
+            pdtn8 = Eq(message, "productDefinitionTemplateNumber", 8)
+            pdtn11 = Eq(message, "productDefinitionTemplateNumber", 11)
+            report.add(pdtn8 or pdtn11)
+        elif topd == 2: # Analysis and forecast products
+            pass
+        elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
+            report.add(Eq(message, "productDefinitionTemplateNumber", 61))
+        else:
+            report.add(Fail(f"Unsupported typeOfProcessedData {message.get('typeOfProcessedData')}"))
+            return [report]
+
+        #  forecastTime for uerra might be all steps decreased by 1 i.e 0,1,2,3,4,5,8,11...29 too many... */
+        if message.get("indicatorOfUnitOfTimeRange") == 1:
+            report.add(Le(message, "forecastTime", 30))
+
+        report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
+
+        end_step_values = IsIn(message, "endStep", [1, 2, 4, 5])
+        end_step_mod3 = AssertTrue(message.get("endStep") % 3 == 0, "endStep % 3 == 0")
+        report.add(end_step_values or end_step_mod3)
+
+        reports = super()._statistical_process(message, p)
+        return reports + [report]
+
 
     def _point_in_time(self, message, p):
         reports = super()._point_in_time(message, p)

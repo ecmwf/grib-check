@@ -9,6 +9,33 @@ class Tigge(TiggeBasicChecks):
         self.logger = logging.getLogger(__class__.__name__)
         super().__init__(param_file)
 
+    # not registered in the lookup table
+    def _statistical_process(self, message, p):
+        report = Report("Uerra.statistical_process")
+
+        topd = message.get("typeOfProcessedData")
+
+        if topd in [0, 1, 2]: # Analysis, Forecast, Analysis and forecast products
+            pass
+        elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
+            report.add(Eq(message, "productDefinitionTemplateNumber", 11))
+        else:
+            report.add(Fail(f"Unsupported typeOfProcessedData {message.get('typeOfProcessedData')}"))
+            return [report]
+
+        if message.get("indicatorOfUnitOfTimeRange") == 11: # six hours
+            # Six hourly is OK
+            pass
+        else:
+            report.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
+            report.add(AssertTrue(message.get("forecastTime") % 6 == 0, "forecastTime % 6 == 0"))
+
+        report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
+        report.add(AssertTrue(message.get("endStep") % 6 == 0, "endStep % 6 == 0")) # Every six hours
+
+        reports = super()._statistical_process(message, p)
+        return reports + [report]
+
     def _from_start(self, message, p):
         reports = super()._from_start(message, p)
         if message.get("endStep") != 0:

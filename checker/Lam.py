@@ -7,6 +7,33 @@ class Lam(TiggeBasicChecks):
     def __init__(self, param_file=None):
         super().__init__(param_file)
 
+    # not registered in the lookup table
+    def _statistical_process(self, message, p):
+        report = Report()
+
+        topd = message.get("typeOfProcessedData")
+
+        if topd in [0, 1, 2] : # Analysis, Forecast, Analysis and forecast products
+            pass
+        elif topd in [3, 4]: # Control forecast products
+            report.add(Eq(message, "productDefinitionTemplateNumber", 11))
+        else:
+            report.add(Fail(f"Unsupported typeOfProcessedData {message.get('typeOfProcessedData')}"))
+            return [report]
+
+        if message.get("indicatorOfUnitOfTimeRange") == 10: # three hours
+            # Three hourly is OK
+            pass
+        else:
+            report.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
+            report.add(AssertTrue(message.get("forecastTime") % 3 == 0, "forecastTime % 3 == 0"))
+
+        report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
+        report.add(AssertTrue(message.get("endStep") % 3 == 0, "endStep % 3 == 0")) # Every three hours
+
+        reports = super()._statistical_process(message, p)
+        return reports + [report]
+
     def _from_start(self, message, p):
         reports = super()._from_start(message, p)
         if message.get("endStep") != 0:
@@ -42,7 +69,4 @@ class Lam(TiggeBasicChecks):
             checks.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
             checks.add(AssertTrue(message.get("forecastTime") % 3 == 0, "forecastTime % 3 == 0"))
 
-        report = self._make_sub_report(__class__.__name__, checks)
-        report.add(checks)
-
-        return super_reports + [report]
+        return super_reports + [checks]
