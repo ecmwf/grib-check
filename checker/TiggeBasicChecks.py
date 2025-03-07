@@ -1,10 +1,13 @@
 from CheckEngine import CheckEngine
 from LookupTable import SimpleLookupTable
 from Test import Test, TiggeTest
+from Grib import get_gaussian_latitudes
 from Message import Message
-from Assert import Le, Ne, Eq, Exists, Missing, Fail, Pass, AssertTrue, IsIn
+from Assert import Le, Ne, Eq, Exists, Missing, Fail, Pass, AssertTrue, IsIn, DBL_EQUAL
 from Report import Report
+import numpy as np
 import logging
+import math
 
 
 class TiggeBasicChecks(CheckEngine):
@@ -31,6 +34,10 @@ class TiggeBasicChecks(CheckEngine):
             "six_hourly": self._six_hourly,
             "three_hourly": self._three_hourly,
         }
+        self.last_n = 0
+        self.values = None
+
+
 
         parameters = SimpleLookupTable(param_file if param_file is not None else"checker/TiggeParameters.json")
         super().__init__(tests=parameters)
@@ -99,13 +106,219 @@ class TiggeBasicChecks(CheckEngine):
     # not registered in the lookup table
     def _gaussian_grid(self, message, p):
         report = Report()
-        report.add(Fail("Not implemented: dummy gaussian_grid()"))
+
+        tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
+        n = message.get("numberOfParallelsBetweenAPoleAndTheEquator") # This is the key N
+
+        north = message.get("latitudeOfFirstGridPointInDegrees", float)
+        south = message.get("latitudeOfLastGridPointInDegrees", float)
+
+        west = message.get("longitudeOfFirstGridPointInDegrees", float)
+        east = message.get("longitudeOfLastGridPointInDegrees", float)
+
+        if n != self.last_n:
+            try:
+                self.values = get_gaussian_latitudes(n)
+            except:
+                # print("%s, field %d [%s]: cannot get gaussian latitudes for N%ld: %s" % (cfg['filename'], cfg['field'], cfg['param'],n, str(e)))
+                # cfg['error'] += 1
+                report.error(f"Cannot get gaussian latitudes for N{n}")
+                self.last_n = 0
+                return
+            self.last_n = n;
+
+        # TODO
+        if self.values is None:
+            assert(0)
+            return
+
+        if self.values is not None:
+            self.values[0] = np.rint(self.values[0] * 1e6) / 1e6;
+
+
+        if not DBL_EQUAL(north, self.values[0], tolerance) or not DBL_EQUAL(south, -self.values[0], tolerance):
+            report.add(Fail(f"N={n} north={north} south={south} v(=gauss_lat[0])={self.values[0]} north-v={north-self.values[0]} south-v={south+self.values[0]}"))
+
+        report.add(AssertTrue(DBL_EQUAL(north, self.values[0], tolerance), "north == self.values[0]"))
+        report.add(AssertTrue(DBL_EQUAL(south, -self.values[0], tolerance), "south == -self.values[0]"))
+
+        if(message.is_missing("numberOfPointsAlongAParallel")): # same as key Ni 
+            # If missing, this is a REDUCED gaussian grid 
+            MAXIMUM_RESOLUTION = 640;
+            report.add(Eq(message, "PLPresent", True))
+            report.add(AssertTrue(DBL_EQUAL(west, 0.0, tolerance), "west == 0.0"))
+            report.add(AssertTrue(n <= MAXIMUM_RESOLUTION, f"Gaussian number N (={n}) cannot exceed {MAXIMUM_RESOLUTION}"))
+        else:
+            # REGULAR gaussian grid 
+            l_west = message.get("longitudeOfFirstGridPoint")
+            l_east = message.get("longitudeOfLastGridPoint")
+            parallel = message.get("numberOfPointsAlongAParallel")
+            we = message.get("iDirectionIncrement")
+            dwest = message.get("longitudeOfFirstGridPointInDegrees", float)
+            deast = message.get("longitudeOfLastGridPointInDegrees", float)
+            dwe = message.get(h,"iDirectionIncrementInDegrees", float)
+            # printf("parallel=%ld east=%ld west=%ld we=%ld",parallel,east,west,we)
+
+            report.add(AssertTrue(parallel == (l_east-l_west)/we + 1, "parallel == (l_east-l_west)/we + 1"))
+            report.add(AssertTrue(abs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "abs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
+            report.add(AssertTrue(not message.get("PLPresent"), "not message.get('PLPresent')"))
+
+        report.add(Ne(message, "Nj", 0))
+
+        if message.get("PLPresent"):
+            i = 0
+            count = message.get_size("pl")
+            expected_lon2 = 0
+            total = 0
+            max_pl = 0
+            numberOfValues = message.get("numberOfValues")
+            numberOfDataPoints = message.get("numberOfDataPoints")
+
+            pl = message.get_double_array("pl")
+
+            if len(pl) != count:
+                print("len(pl)=%ld count=%ld" % (len(pl), count))
+
+            report.add(AssertTrue(len(pl) == count, "len(pl) == count"))
+            report.add(AssertTrue(len(pl) == 2*n, "len(pl) == 2*n"))
+
+            total = 0;
+            max_pl = pl[0]; #  max elem of pl array = num points at equator
+
+            for p in pl:
+                total = total + p
+                if p > max_pl:
+                    max_pl = p
+
+
+            # Do not assume maximum of pl array is 4N! not true for octahedral
+
+            expected_lon2 = 360.0 - 360.0/max_pl;
+            if not DBL_EQUAL(expected_lon2, east, tolerance):
+                report.add(Fail(f"east actual={east} expected={expected_lon2} diff={expected_lon2-east}"))
+
+            report.add(AssertTrue(DBL_EQUAL(expected_lon2, east, tolerance), "DBL_EQUAL(expected_lon2, east, tolerance)"))
+
+            if numberOfDataPoints != total:
+                print("GAUSS numberOfValues=%ld numberOfDataPoints=%ld sum(pl)=%ld" % (
+                        numberOfValues,
+                        numberOfDataPoints,
+                        total))
+
+            report.add(AssertTrue(numberOfDataPoints == total, "numberOfDataPoints == total"))
+
+            report.add(Missing(message, "iDirectionIncrement"))
+            report.add(Missing(message, "iDirectionIncrementInDegrees"))
+
+            report.add(Eq(message, "iDirectionIncrementGiven", 0))
+            report.add(Eq(message, "jDirectionIncrementGiven", 1))
+
+        report.add(Eq(message, "resolutionAndComponentFlags1", 0))
+        report.add(Eq(message, "resolutionAndComponentFlags2", 0))
+        report.add(Eq(message, "resolutionAndComponentFlags6", 0))
+        report.add(Eq(message, "resolutionAndComponentFlags7", 0))
+        report.add(Eq(message, "resolutionAndComponentFlags8", 0))
+
         return [report]
+
 
     # not registered in the lookup table
     def _latlon_grid(self, message, p):
         report = Report()
-        report.add(Fail("Not implemented: dummy latlon_grid()"))
+
+        tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
+        data_points = message.get("numberOfDataPoints")
+        meridian = message.get("numberOfPointsAlongAMeridian")
+        parallel = message.get("numberOfPointsAlongAParallel")
+
+        north = message.get("latitudeOfFirstGridPoint")
+        south = message.get("latitudeOfLastGridPoint")
+        west = message.get("longitudeOfFirstGridPoint")
+        east = message.get("longitudeOfLastGridPoint")
+
+        ns= message.get("jDirectionIncrement")
+        we= message.get("iDirectionIncrement")
+
+        dnorth = message.get("latitudeOfFirstGridPointInDegrees", float)
+        dsouth = message.get("latitudeOfLastGridPointInDegrees", float)
+        dwest = message.get("longitudeOfFirstGridPointInDegrees", float)
+        deast = message.get("longitudeOfLastGridPointInDegrees", float)
+
+        dns = message.get("jDirectionIncrementInDegrees", float)
+        dwe = message.get("iDirectionIncrementInDegrees", float)
+
+        if message.get("basicAngleOfTheInitialProductionDomain") == 0:
+            report.add(Missing(message, "subdivisionsOfBasicAngle"))    
+        else:
+            # long basic    = get(h,"basicAngleOfTheInitialProductionDomain")
+            # long division = get(h,"subdivisionsOfBasicAngle")
+            report.add(Exists(message, "subdivisionsOfBasicAngle"))
+            report.add(Ne(message, "subdivisionsOfBasicAngle", 0))
+
+        if message.is_missing("subdivisionsOfBasicAngle"):
+            report.add(Eq(message, "basicAngleOfTheInitialProductionDomain", 0))
+
+        report.add(AssertTrue(meridian*parallel == data_points, "meridian*parallel == data_points"))
+
+        report.add(Eq(message, "resolutionAndComponentFlags1", 0))
+        report.add(Eq(message, "resolutionAndComponentFlags2", 0))
+        report.add(Eq(message, "resolutionAndComponentFlags6", 0))
+        report.add(Eq(message, "resolutionAndComponentFlags7", 0))
+        report.add(Eq(message, "resolutionAndComponentFlags8", 0))
+
+        report.add(Eq(message, "iDirectionIncrementGiven", 1))
+        report.add(Eq(message, "jDirectionIncrementGiven", 1))
+
+        report.add(Eq(message, "numberOfOctectsForNumberOfPoints", 0))
+        report.add(Eq(message, "interpretationOfNumberOfPoints", 0))
+
+        if message.get("iScansNegatively") != 0:
+            tmp = east
+            dtmp = deast
+
+            east = west
+            west = tmp
+
+            deast = dwest
+            dwest = dtmp
+
+        if message.get("jScansPositively") != 0:
+            tmp = north
+            dtmp = dnorth
+
+            north = south
+            south = tmp
+
+            dnorth = dsouth
+            dsouth = dtmp
+
+        if not (cfg['is_lam'] or cfg['is_uerra']):
+            report.add(AssertTrue(north > south, "north > south"))
+            report.add(AssertTrue(east > west, "east > west"))
+
+            # Check that the grid is symmetrical */
+            report.add(AssertTrue(north == -south, "north == -south"))
+            report.add(AssertTrue(DBL_EQUAL(dnorth, -dsouth, tolerance), "DBL_EQUAL(dnorth, -dsouth, tolerance) "))
+            report.add(AssertTrue(parallel == (east-west)/we + 1, "parallel == (east-west)/we + 1"))
+            report.add(AssertTrue(math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
+            report.add(AssertTrue(meridian == (north-south)/ns + 1, "meridian == (north-south)/ns + 1"))
+            report.add(AssertTrue(math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10, "math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 "))
+
+            # Check that the field is global */
+            area = (dnorth-dsouth) * (deast-dwest)
+            globe = 360.0*180.0
+            report.add(AssertTrue(area <= globe, "area <= globe"))
+            report.add(AssertTrue(area >= globe*0.95, "area >= globe*0.95"))
+
+        # GRIB2 requires longitudes are always positive */
+        report.add(AssertTrue(east >= 0, "east >= 0"))
+        report.add(AssertTrue(west >= 0, "west >= 0"))
+
+        #printf("meridian=%ld north=%ld south=%ld ns=%ld ",meridian,north,south,ns)
+        #printf("meridian=%ld north=%f south=%f ns=%f ",meridian,dnorth,dsouth,dns)
+        #printf("parallel=%ld east=%ld west=%ld we=%ld ",parallel,east,west,we)
+        #printf("parallel=%ld east=%f west=%f we=%f ",parallel,deast,dwest,dwe)
+
         return [report]
 
     # not registered in the lookup table

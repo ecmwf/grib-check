@@ -1,7 +1,8 @@
 from checker.TiggeBasicChecks import TiggeBasicChecks
-from Assert import Le, Ne, Eq, Fail, AssertTrue
+from Assert import Le, Ne, Eq, Fail, AssertTrue, DBL_EQUAL
 from Report import Report
 import logging
+import math
 
 
 class Tigge(TiggeBasicChecks):

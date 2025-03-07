@@ -1,6 +1,7 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn
+from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, DBL_EQUAL
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
+import math
 
 
 class S2S(TiggeBasicChecks):
@@ -69,6 +70,50 @@ class S2S(TiggeBasicChecks):
             checks.add(AssertTrue(message.get("forecastTime") % 6 == 0, "forecastTime % 6 == 0"))
 
         return reports + [checks]
+
+    def _latlon_grid(self, message, p):
+        report = Report(f"{__class__.__name__}.latlon_grid")
+
+        tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
+        meridian = message.get("numberOfPointsAlongAMeridian")
+        parallel = message.get("numberOfPointsAlongAParallel")
+
+        north = message.get("latitudeOfFirstGridPoint")
+        south = message.get("latitudeOfLastGridPoint")
+        west = message.get("longitudeOfFirstGridPoint")
+        east = message.get("longitudeOfLastGridPoint")
+
+        ns= message.get("jDirectionIncrement")
+        we= message.get("iDirectionIncrement")
+
+        dnorth = message.get("latitudeOfFirstGridPointInDegrees", float)
+        dsouth = message.get("latitudeOfLastGridPointInDegrees", float)
+        dwest = message.get("longitudeOfFirstGridPointInDegrees", float)
+        deast = message.get("longitudeOfLastGridPointInDegrees", float)
+
+        dns = message.get("jDirectionIncrementInDegrees", float)
+        dwe = message.get("iDirectionIncrementInDegrees", float)
+
+
+        report.add(AssertTrue(north > south, "north > south"))
+        report.add(AssertTrue(east > west, "east > west"))
+
+        # Check that the grid is symmetrical */
+        report.add(AssertTrue(north == -south, "north == -south"))
+        report.add(AssertTrue(DBL_EQUAL(dnorth, -dsouth, tolerance), "DBL_EQUAL(dnorth, -dsouth, tolerance) "))
+        report.add(AssertTrue(parallel == (east-west)/we + 1, "parallel == (east-west)/we + 1"))
+        report.add(AssertTrue(math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
+        report.add(AssertTrue(meridian == (north-south)/ns + 1, "meridian == (north-south)/ns + 1"))
+        report.add(AssertTrue(math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10, "math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 "))
+
+        # Check that the field is global */
+        area = (dnorth-dsouth) * (deast-dwest)
+        globe = 360.0*180.0
+        report.add(AssertTrue(area <= globe, "area <= globe"))
+        report.add(AssertTrue(area >= globe*0.95, "area >= globe*0.95"))
+
+        reports = super()._latlon_grid(message, p)
+        return reports + [report]
 
     def _pressure_level(self, message, p):
         checks = Report()
