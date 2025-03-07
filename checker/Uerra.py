@@ -21,7 +21,7 @@ class Uerra(TiggeBasicChecks):
     def _statistical_process(self, message, p):
         report = Report("Uerra.statistical_process")
 
-        topd = message.get("typeOfProcessedData")
+        topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             pdtn8 = Eq(message, "productDefinitionTemplateNumber", 8)
             pdtn11 = Eq(message, "productDefinitionTemplateNumber", 11)
@@ -31,7 +31,7 @@ class Uerra(TiggeBasicChecks):
         elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
             report.add(Eq(message, "productDefinitionTemplateNumber", 61))
         else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {message.get('typeOfProcessedData')}"))
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
 
         #  forecastTime for uerra might be all steps decreased by 1 i.e 0,1,2,3,4,5,8,11...29 too many... */
@@ -69,7 +69,7 @@ class Uerra(TiggeBasicChecks):
             # Is there always cf in tigge global datasets??
             checks.add(Le(message, "perturbationNumber", message.get("numberOfForecastsInEnsemble") - 1))
         else:
-            checks.add(Fail(f"Unsupported typeOfProcessedData {message.get("typeOfProcessedData")}"))
+            checks.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         if(message.get("indicatorOfUnitOfTimeRange") == 1): #hourly
             ft1 = Eq(message, "forecastTime", 1)

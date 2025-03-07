@@ -9,16 +9,16 @@ class Lam(TiggeBasicChecks):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):
-        report = Report()
+        report = Report(f"{__class__.__name__}.statistical_process")
 
-        topd = message.get("typeOfProcessedData")
+        topd = message.get("typeOfProcessedData", int)
 
         if topd in [0, 1, 2] : # Analysis, Forecast, Analysis and forecast products
             pass
         elif topd in [3, 4]: # Control forecast products
             report.add(Eq(message, "productDefinitionTemplateNumber", 11))
         else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {message.get('typeOfProcessedData')}"))
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
 
         if message.get("indicatorOfUnitOfTimeRange") == 10: # three hours
