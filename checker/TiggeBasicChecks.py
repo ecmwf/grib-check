@@ -7,7 +7,6 @@ from Assert import Ge, Le, Ne, Eq, Exists, Missing, Fail, Pass, AssertTrue, IsIn
 from Report import Report
 import numpy as np
 import logging
-import math
 
 
 class TiggeBasicChecks(CheckEngine):

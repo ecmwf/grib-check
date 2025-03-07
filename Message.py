@@ -1,4 +1,3 @@
-from os import curdir
 import numpy as np
 from eccodes import (
     codes_release,
@@ -17,7 +16,6 @@ from eccodes import (
     KeyValueNotFoundError,
 )
 import logging
-from inspect import currentframe, getframeinfo
 from Assert import Eq
 from Report import Report
 
@@ -31,21 +29,19 @@ class Message:
         self.max = None
 
     def get_report(self):
-        report = Report("Mesage dump")
-        # report.add(f"Message[{self.__position}]")
+        report = Report("Message dump")
         iterator = codes_keys_iterator_new(self.__h, "ls") 
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
             report.add(f"{key}={self.get(key)}")
-
         report.add("")
 
         iterator = codes_keys_iterator_new(self.__h, "mars") 
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
             report.add(f"{key}={self.get(key)}")
-
         report.add("")
+
         report.add(f"model={self.get('model')}")
         report.add(f"paramId={self.get('paramId')}")
         report.add(f"discipline={self.get('discipline')}")
@@ -80,14 +76,10 @@ class Message:
             elif datatype is str:
                 return codes_get_string(self.__h, key)
             else:
-                self.logger.debug(
-                    f"key: {key}, datatype: {datatype}, frameinfo: {getframeinfo(currentframe()).lineno}"
-                )
+                self.logger.debug(f"Unknown datatype: {datatype}")
                 return None
         except Exception:
-            self.logger.debug(
-                f"key: {key}, Exception, frameinfo: {getframeinfo(currentframe()).lineno}"
-            )
+            self.logger.debug(f"KeyError: {key}")
             return None
 
     def get_size(self, key) -> int:

@@ -12,7 +12,6 @@ from checker.Crra import Crra
 from checker.Lam import Lam
 from Grib import Grib
 from Report import Report
-from Assert import Pass, Fail
 from eccodes import codes_write
 import logging
 
