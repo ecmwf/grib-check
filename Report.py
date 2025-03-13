@@ -13,7 +13,7 @@ class Report:
         self.__status = None
         self.__name = name
 
-    def __as_string(self, entries, level, max_level, color):
+    def __as_string(self, entries, level, max_level, color, failed_only):
         shift = 0
         output = ""
         if color:
@@ -29,9 +29,11 @@ class Report:
         if max_level is None or level <= max_level:
             if self.__name is not None:
                 if self.__status is None:
-                    output = "  " * level + f'{none_str}: {self.__name}\n'
+                    if failed_only:
+                        output = "  " * level + f'{none_str}: {self.__name}\n'
                 elif self.__status is True:
-                    output = "  " * level + f'{pass_str}: {self.__name}\n'
+                    if not failed_only:
+                        output = "  " * level + f'{pass_str}: {self.__name}\n'
                 elif self.__status is False:
                     output = "  " * level + f'{fail_str}: {self.__name}\n'
                 else:
@@ -43,13 +45,15 @@ class Report:
             if max_level is None or level + shift <= max_level:
                 for entry in entries:
                     if isinstance(entry, Report):
-                        output += entry.__as_string(entry.__entries, level + shift, max_level, color)
+                        output += entry.__as_string(entry.__entries, level + shift, max_level, color, failed_only)
                     elif isinstance(entry, Assert):
                         msg = entry.as_string(color)
                         status = entry.status()
-                        output += "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}\n'
+                        if not failed_only or not status:
+                            output += "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}\n'
                     elif type(entry) is str:
-                        output += "  " * (level + shift) + f"{entry}\n"
+                        if not failed_only:
+                            output += "  " * (level + shift) + f"{entry}\n"
                     else:
                         raise NotImplementedError
 
@@ -62,14 +66,14 @@ class Report:
         if self.__name is None:
             self.__name = name
 
-    def as_string(self, max_level=None, color=False):
-        return self.__as_string(self.__entries, 0, max_level, color)
+    def as_string(self, max_level=None, color=False, failed_only=False):
+        return self.__as_string(self.__entries, 0, max_level, color, failed_only)
 
     def status(self):
         return self.__status
 
     def __str__(self):
-        return self.__as_string(entries=self.__entries, level=0, max_level=None, color=False)
+        return self.__as_string(entries=self.__entries, level=0, max_level=None, color=False, failed_only=False)
 
     def add(self, entry):
         assert isinstance(entry, Assert) or type(entry) is Report or type(entry) is str

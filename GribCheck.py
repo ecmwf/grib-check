@@ -56,7 +56,7 @@ class GribCheck:
                 futures = [executor.submit(worker, filename, message, checker) for message in grib]
                 for future in concurrent.futures.as_completed(futures):
                     grib_report.add(future.result())
-                print(grib_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color))
+                print(grib_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color, failed_only=self.args.failed_only))
 
 
 if __name__ == "__main__":
@@ -72,6 +72,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
     parser.add_argument("-c", "--color", help="use color in output", action="store_true")
     parser.add_argument("-j", "--num_threads", help="number of threads", type=int, default=4)
+    parser.add_argument("-f", "--failed_only", help="show only failed checks", action="store_true")
     args = parser.parse_args()
 
     if args.debug:
