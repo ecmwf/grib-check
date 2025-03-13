@@ -11,8 +11,6 @@ class Test:
     def run(self) -> Report:
         raise NotImplementedError
 
-    def _evaluate_str(self) -> str:
-        return "PASSED" if self.run() else "FAILED"
 
 class WmoTest(Test):
     def __init__(self, message: Message, parameter: dict, check_map: dict):
@@ -20,10 +18,6 @@ class WmoTest(Test):
         self.__message = message
         self.__parameter = parameter
         self.__check_map = check_map
-
-    def _check(self, name, message, a):
-        self.logger.debug(f"_check({name}, {a})")
-        return a.evaluate()
 
     def run(self) -> Report:
         data = self.__parameter
@@ -48,7 +42,8 @@ class WmoTest(Test):
         report.add(expected_report)
         report.add(checks_report)
         return report
-    
+
+
 class TiggeTest(Test):
     def __init__(self, message: Message, parameter: dict, check_map: dict):
         self.logger = logging.getLogger(__class__.__name__)
@@ -59,11 +54,6 @@ class TiggeTest(Test):
         self.__message = message
         self.__parameter = parameter
         self.__check_map = check_map
-
-    def _check(self, name, message, a):
-        self.logger.debug(f"_check({name}, {a.status_msg()})")
-        if not a.evaluate():
-            pass
 
     def run(self) -> Report:
         data = self.__parameter
