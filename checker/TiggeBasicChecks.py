@@ -13,6 +13,7 @@ class TiggeBasicChecks(CheckEngine):
     def __init__(self, param_file=None, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
         self.__check_map = {
+            "basic_checks_2": self._basic_checks_2,
             "basic_checks": self._basic_checks,
             "daily_average": self._daily_average,
             "from_start": self._from_start,
@@ -339,11 +340,17 @@ class TiggeBasicChecks(CheckEngine):
         return [report]
     
 
+    def _basic_checks_2(self, message, p):
+        report = Report()
+        # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
+        report.add(IsIn(message, "typeOfProcessedData", [2, 3, 4]))
+        return [report]
+
     def _basic_checks(self, message, p):
         reports = list()
         report = Report()
         report.add(Eq(message, "editionNumber", 2))
-        # report.add(Missing(message, "reserved") or Eq(message, "reserved", 0))
+        report.add(Missing(message, "reserved") | Eq(message, "reserved", 0))
 
         if self.valueflg:
             values_report = Report("Check values")
@@ -375,53 +382,18 @@ class TiggeBasicChecks(CheckEngine):
 
         # Section 1
 
-        # CHECK('ge(h,"gribMasterTablesVersionNumber",4)', ge(h,"gribMasterTablesVersionNumber",4))
         report.add(Ge(message, "gribMasterTablesVersionNumber", 4))
+        report.add(Eq(message, "versionNumberOfGribLocalTables", 0))
         report.add(Eq(message, "significanceOfReferenceTime", 1))
 
         report.add(Eq(message, "minute", 0))
         report.add(Eq(message, "second", 0))
         report.add(Ge(message, "startStep", 0))
 
-        # if cfg['is_s2s']:
-        #     CHECK('eq(h,"productionStatusOfProcessedData",6) or eq(h,"productionStatusOfProcessedData",7)', eq(h,"productionStatusOfProcessedData",6) or eq(h,"productionStatusOfProcessedData",7)) #S2S prod or test
-        #     CHECK('le(h,"endStep",100*24)', le(h,"endStep",100*24))
-        # elif not cfg['is_uerra']:
-        #     CHECK('eq(h,"productionStatusOfProcessedData",4) or eq(h,"productionStatusOfProcessedData",5)', eq(h,"productionStatusOfProcessedData",4) or eq(h,"productionStatusOfProcessedData",5)) # TIGGE prod or test
-        #     CHECK('le(h,"endStep",30*24)', le(h,"endStep",30*24))
-
-        # if cfg['is_uerra']:
-        #     CHECK(
-        #         '(eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)',
-        #         (eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)
-        # elif cfg['is_lam']:
-        #     CHECK('(get(h,"step") % 3) == 0', (get(h,"step") % 3) == 0)
-        # else:
-        #     CHECK('(get(h,"step") % 6) == 0', (get(h,"step") % 6) == 0)
-
-        # if cfg['is_uerra']:
-        #     if cfg['is_crra']:
-        #         CHECK('eq(h,"productionStatusOfProcessedData",10) or eq(h,"productionStatusOfProcessedData",11)', eq(h,"productionStatusOfProcessedData",10) or eq(h,"productionStatusOfProcessedData",11)) # CRRA prodortest
-        #     else:
-        #         CHECK('eq(h,"productionStatusOfProcessedData",8) or eq(h,"productionStatusOfProcessedData",9)', eq(h,"productionStatusOfProcessedData",8) or eq(h,"productionStatusOfProcessedData",9)); #  UERRA prodortest
-        #     CHECK('le(h,"endStep",30)', le(h,"endStep",30))
-        #     # 0 = analysis , 1 = forecast
-        #     CHECK('eq(h,"typeOfProcessedData",0) or eq(h,"typeOfProcessedData",1)', eq(h,"typeOfProcessedData",0) or eq(h,"typeOfProcessedData",1))
-        #     if get(h,"typeOfProcessedData") == 0:
-        #         CHECK('eq(h,"step",0)', eq(h,"step",0))
-        #     else:
-        #         CHECK(
-        #             '(eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)',
-        #             (eq(h,"step",1) or eq(h,"step",2) or eq(h,"step",4) or eq(h,"step",5)) or (get(h,"step") % 3) == 0)
-        # else:
-        #     # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
-        #     CHECK('eq(h,"typeOfProcessedData",2) or eq(h,"typeOfProcessedData",3) or eq(h,"typeOfProcessedData",4)', eq(h,"typeOfProcessedData",2) or eq(h,"typeOfProcessedData",3) or eq(h,"typeOfProcessedData",4));
-
         # TODO: validate local usage. Empty for now xxx
-        # CHECK('eq(h,"section2.sectionLength",5)', eq(h,"section2.sectionLength",5))
+        # report.add(Eq(message, "section2.sectionLength", 5)
 
         # Section 3
-
         report.add(Eq(message, "sourceOfGridDefinition", 0)) # Specified in Code table 3.1
 
         dtn = message.get("gridDefinitionTemplateNumber")
@@ -432,7 +404,7 @@ class TiggeBasicChecks(CheckEngine):
         elif dtn == 30: #Lambert conformal
             # lambert_grid(h); # TODO xxx
             # print("warning: Lambert grid - geometry checking not implemented yet!")
-            # CHECK('eq(h,"scanningMode",64)', eq(h,"scanningMode",64));*/ /* M-F data used to have it wrong.. but it might depends on other projection set up as well!
+            # report.add(Eq(message, "scanningMode", 64)) # M-F data used to have it wrong.. but it might depends on other projection set up as well!
             pass
         elif dtn == 40: # gaussian grid (regular or reduced)
             reports += self._gaussian_grid(message)
@@ -508,9 +480,9 @@ class TiggeBasicChecks(CheckEngine):
 
     def _given_thickness(self, message, p):
         report = Report()
-        report.add(Eq(message, "typeOfSecondFixedSurface", 255))
-        report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
-        report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
+        report.add(Ne(message, "typeOfSecondFixedSurface", 255))
+        report.add(Exists(message, "scaleFactorOfSecondFixedSurface"))
+        report.add(Exists(message, "scaledValueOfSecondFixedSurface"))
 
         report.add(Ne(message, "typeOfFirstFixedSurface", 255))
         report.add(Exists(message, "scaleFactorOfFirstFixedSurface"))

@@ -6,11 +6,24 @@ from Report import Report
 class Uerra(TiggeBasicChecks):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
-   
+  
+    def _basic_checks_2(self, message, p):
+        report = Report(f"{__class__.__name__}._basic_checks_2")
+        report.add(IsIn(message, "productionStatusOfProcessedData", [8, 9]))
+        report.add(Le(message, "endStep", 30))
+        #     # 0 = analysis , 1 = forecast
+        report.add(IsIn(message, "typeOfProcessedData", [0, 1]))
+        if message.get("typeOfProcessedData") == 0:
+            report.add(Eq(message, "step", 0))
+        else:
+            report.add(IsIn(message, "step", [1, 2, 4, 5]) or AssertTrue(message.get("step") % 3 == 0, "step % 3 == 0"))
+        return [report]
+
     def _basic_checks(self, message, p):
         reports = super()._basic_checks(message, p)
         report = Report(f"{__class__.__name__}._basic_checks")
         report.add(Le(message, "hour", 24))
+        report.add(IsIn(message, "step", [1, 2, 4, 5]) or AssertTrue(message.get("step") % 3 == 0, "step % 3 == 0"))
         return reports + [report]
 
     def _from_start(self, message, p):

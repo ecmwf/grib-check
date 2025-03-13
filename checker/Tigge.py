@@ -15,6 +15,12 @@ class Tigge(TiggeBasicChecks):
         # Only 00, 06 12 and 18 Cycle OK 
         report.add(IsIn(message, "hour", [0, 6, 12, 18]))
         # return reports + [report]
+        #
+        psopd4 = Eq(message, "productionStatusOfProcessedData", 4)
+        psopd5 = Eq(message, "productionStatusOfProcessedData", 5)
+        report.add(psopd4 or psopd5)
+        report.add(Le(message, "endStep", 30*24))
+        report.add(AssertTrue(message.get("step") % 6 == 0, "step % 6 == 0"))
         return reports + [report]
 
 
