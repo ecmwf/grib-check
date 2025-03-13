@@ -20,6 +20,10 @@ class S2S(TiggeBasicChecks):
         report.add(AssertTrue(int((date % 10000) / 100) == message.get("month"), "int((date % 10000) / 100) == message.get('month')"))
         report.add(AssertTrue(int(date % 100) == message.get("day"), "int(date % 100) == message.get('day')"))
 
+        psopd6 = Eq(message, "productionStatusOfProcessedData", 6)
+        psopd7 = Eq(message, "productionStatusOfProcessedData", 7)
+        report.add(psopd6 or psopd7)
+
         return reports + [report]
 
 
