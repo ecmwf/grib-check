@@ -20,6 +20,82 @@ from Assert import Eq
 from Report import Report
 
 
+class KeyValue:
+    def __init__(self, key, value):
+        self.logger = logging.getLogger(__class__.__name__)
+        self.__key = key
+        self.__value = value
+
+    def __str__(self):
+        return f"{self.__key} = {self.__value}"
+
+    def __eq__(self, other):
+        if type(other) is KeyValue:
+            return self.__value == other.__value
+        else:
+            return self.__value == other
+
+    def __ne__(self, other):
+        if type(other) is KeyValue:
+            return self.__value != other.__value
+        else:
+            return self.__value != other
+
+    def __lt__(self, other):
+        if type(other) is KeyValue:
+            return self.__value < other.__value
+        else:
+            return self.__value < other
+
+    def __le__(self, other):
+        if type(other) is KeyValue:
+            return self.__value <= other.__value
+        else:
+            return self.__value <= other
+
+    def __gt__(self, other):
+        if type(other) is KeyValue:
+            return self.__value > other.__value
+        else:
+            return self.__value > other
+
+    def __ge__(self, other):
+        if type(other) is KeyValue:
+            return self.__value >= other.__value
+        else:
+            return self.__value >= other
+
+    def __add__(self, other):
+        if type(other) is KeyValue:
+            return KeyValue(f"{self.__key} + {other.__key}", self.__value + other.__value)
+        else:
+            return KeyValue(f"{self.__key} + {other}", self.__value + other)
+
+    def __sub__(self, other):
+        if type(other) is KeyValue:
+            return KeyValue(f"{self.__key} - {other.__key}", self.__value - other.__value)
+        else:
+            return KeyValue(f"{self.__key} - {other}", self.__value - other)
+
+    def __mul__(self, other):
+        if type(other) is KeyValue:
+            return KeyValue(f"{self.__key} * {other.__key}", self.__value * other.__value)
+        else:
+            return KeyValue(f"{self.__key} * {other}", self.__value * other)
+
+    def __mod__(self, other):
+        if type(other) is KeyValue:
+            return KeyValue(f"{self} % {other}", self.__value % other.__value)
+        else:
+            return KeyValue(f"{self} % {other}", self.__value % other)
+
+    def key(self):
+        return self.__key
+
+    def value(self):
+        return self.__value 
+
+
 class Message:
     def __init__(self, h, position=None):
         self.logger = logging.getLogger(__class__.__name__)
@@ -27,6 +103,9 @@ class Message:
         self.__position = position
         self.min = None
         self.max = None
+
+    def __getitem__(self, key):
+        return self.get(key)
 
     def get_report(self):
         report = Report("Message dump")
@@ -60,9 +139,11 @@ class Message:
         codes_release(self.__h)
 
     def set(self, key, value):
+        if type(value) is KeyValue:
+            value = value.value()
         codes_set_string(self.__h, key, value)
 
-    def get(self, key, datatype=None):
+    def get(self, key, datatype=None) -> KeyValue:
         try:
             if datatype is None:
                 datatype = codes_get_native_type(self.__h, key)
@@ -70,17 +151,17 @@ class Message:
                 assert datatype is int or datatype is float or datatype is str
 
             if datatype is int:
-                return codes_get_long(self.__h, key)
+                return KeyValue(key, codes_get_long(self.__h, key))
             elif datatype is float:
-                return codes_get_double(self.__h, key)
+                return KeyValue(key, codes_get_double(self.__h, key))
             elif datatype is str:
-                return codes_get_string(self.__h, key)
+                return KeyValue(key, codes_get_string(self.__h, key))
             else:
                 self.logger.debug(f"Unknown datatype: {datatype}")
-                return None
+                return KeyValue(key, None)
         except Exception:
             self.logger.debug(f"KeyError: {key}")
-            return None
+            return KeyValue(key, None)
 
     def get_size(self, key) -> int:
         return codes_get_size(self.__h, key)

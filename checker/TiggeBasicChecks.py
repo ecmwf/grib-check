@@ -52,33 +52,33 @@ class TiggeBasicChecks(CheckEngine):
 
         topd = message.get("typeOfProcessedData", int)
 
-        if topd in [0, 1]: # Analysis, Forecast
+        if topd.value() in [0, 1]: # Analysis, Forecast
             pass
         elif topd == 2: # Analysis and forecast products
-            report.add(Eq(message, "productDefinitionTemplateNumber", 8))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 8))
         elif topd in [3, 4]: # Control forecast products
             pass
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
 
-        report.add(Eq(message, "numberOfTimeRange", 1))
-        report.add(Eq(message, "numberOfMissingInStatisticalProcess", 0))
-        report.add(Eq(message, "typeOfTimeIncrement", 2))
-        # report.add(Eq(message, "indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed", 255))
-        report.add(Eq(message, "minuteOfEndOfOverallTimeInterval", 0))
-        report.add(Eq(message, "secondOfEndOfOverallTimeInterval", 0))
+        report.add(Eq(message["numberOfTimeRange"], 1))
+        report.add(Eq(message["numberOfMissingInStatisticalProcess"], 0))
+        report.add(Eq(message["typeOfTimeIncrement"], 2))
+        # report.add(Eq(message["indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed"], 255))
+        report.add(Eq(message["minuteOfEndOfOverallTimeInterval"], 0))
+        report.add(Eq(message["secondOfEndOfOverallTimeInterval"], 0))
 
-        if message.get("indicatorOfUnitForTimeRange") == 11:
+        if message["indicatorOfUnitForTimeRange"] == 11:
             # Six hourly is OK
-            report.add(AssertTrue(message.get("lengthOfTimeRange")*6 + message.get("startStep") == message.get("endStep"), "lengthOfTimeRange*6 + startStep == endStep"))
+            report.add(Eq(message["lengthOfTimeRange"] * 6 + message["startStep"], message["endStep"]))
 
-        elif message.get("indicatorOfUnitForTimeRange") == 10:
+        elif message["indicatorOfUnitForTimeRange"] == 10:
             # Three hourly is OK
-            report.add(AssertTrue(message.get("lengthOfTimeRange")*3 + message.get("startStep") == message.get("endStep"), "lengthOfTimeRange*3 + startStep == endStep"))
+            report.add(Eq(message["lengthOfTimeRange"] * 3 + message["startStep"], message["endStep"]))
         else:
-            report.add(Eq(message, "indicatorOfUnitForTimeRange", 1))
-            report.add(AssertTrue(message.get("lengthOfTimeRange") + message.get("startStep") == message.get("endStep"), "lengthOfTimeRange + startStep == endStep"))
+            report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
+            report.add(Eq(message["lengthOfTimeRange"] + message["startStep"], message["endStep"]))
 
         return [report]
 
@@ -91,7 +91,7 @@ class TiggeBasicChecks(CheckEngine):
         # See ECC-437
         missing = message.get("missingValue", float)
         min_value, max_value = message.minmax()
-        if not message.get("bitMapIndicator") == 0 and min_value == missing and max_value == missing:
+        if not message["bitMapIndicator"] == 0 and min_value == missing and max_value == missing:
             if min_value < p['min1'] or min_value > p['min2']: 
                 min1 = min_value if min_value < p['min1'] else p['min1']
                 min2 = min_value if min_value > p['min2'] else p['min2']
@@ -108,7 +108,7 @@ class TiggeBasicChecks(CheckEngine):
         report = Report("Gaussian grid")
 
         tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
-        n = message.get("numberOfParallelsBetweenAPoleAndTheEquator") # This is the key N
+        n = message["numberOfParallelsBetweenAPoleAndTheEquator"] # This is the key N
 
         north = message.get("latitudeOfFirstGridPointInDegrees", float)
         south = message.get("latitudeOfLastGridPointInDegrees", float)
@@ -145,15 +145,15 @@ class TiggeBasicChecks(CheckEngine):
         if(message.is_missing("numberOfPointsAlongAParallel")): # same as key Ni 
             # If missing, this is a REDUCED gaussian grid 
             MAXIMUM_RESOLUTION = 640;
-            # report.add(Eq(message, "PLPresent", True)) # TODO: check this
+            # report.add(Eq(message["PLPresent"], True)) # TODO: check this
             report.add(AssertTrue(DBL_EQUAL(west, 0.0, tolerance), "west == 0.0"))
             report.add(AssertTrue(n <= MAXIMUM_RESOLUTION, f"Gaussian number N (={n}) cannot exceed {MAXIMUM_RESOLUTION}"))
         else:
             # REGULAR gaussian grid 
-            l_west = message.get("longitudeOfFirstGridPoint")
-            l_east = message.get("longitudeOfLastGridPoint")
-            parallel = message.get("numberOfPointsAlongAParallel")
-            we = message.get("iDirectionIncrement")
+            l_west = message["longitudeOfFirstGridPoint"]
+            l_east = message["longitudeOfLastGridPoint"]
+            parallel = message["numberOfPointsAlongAParallel"]
+            we = message["iDirectionIncrement"]
             dwest = message.get("longitudeOfFirstGridPointInDegrees", float)
             deast = message.get("longitudeOfLastGridPointInDegrees", float)
             dwe = message.get("iDirectionIncrementInDegrees", float)
@@ -161,18 +161,18 @@ class TiggeBasicChecks(CheckEngine):
 
             report.add(AssertTrue(parallel == (l_east-l_west)/we + 1, "parallel == (l_east-l_west)/we + 1"))
             report.add(AssertTrue(abs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "abs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
-            report.add(AssertTrue(not message.get("PLPresent"), "not message.get('PLPresent')"))
+            report.add(AssertTrue(not message["PLPresent"], "not message.get('PLPresent')"))
 
-        report.add(Ne(message, "Nj", 0))
+        report.add(Ne(message["Nj"], 0))
 
-        if message.get("PLPresent"):
+        if message["PLPresent"]:
             i = 0
             count = message.get_size("pl")
             expected_lon2 = 0
             total = 0
             max_pl = 0
-            numberOfValues = message.get("numberOfValues")
-            numberOfDataPoints = message.get("numberOfDataPoints")
+            numberOfValues = message["numberOfValues"]
+            numberOfDataPoints = message["numberOfDataPoints"]
 
             pl = message.get_double_array("pl")
 
@@ -205,19 +205,20 @@ class TiggeBasicChecks(CheckEngine):
                         numberOfDataPoints,
                         total))
 
-            report.add(AssertTrue(numberOfDataPoints == total, "numberOfDataPoints == total"))
+            # report.add(AssertTrue(numberOfDataPoints == total, "numberOfDataPoints == total"))
+            report.add(Eq(message["numberOfDataPoints"], total))
 
             report.add(Missing(message, "iDirectionIncrement"))
             report.add(Missing(message, "iDirectionIncrementInDegrees"))
 
-            report.add(Eq(message, "iDirectionIncrementGiven", 0))
-            report.add(Eq(message, "jDirectionIncrementGiven", 1))
+            report.add(Eq(message["iDirectionIncrementGiven"], 0))
+            report.add(Eq(message["jDirectionIncrementGiven"], 1))
 
-        report.add(Eq(message, "resolutionAndComponentFlags1", 0))
-        report.add(Eq(message, "resolutionAndComponentFlags2", 0))
-        report.add(Eq(message, "resolutionAndComponentFlags6", 0))
-        report.add(Eq(message, "resolutionAndComponentFlags7", 0))
-        report.add(Eq(message, "resolutionAndComponentFlags8", 0))
+        report.add(Eq(message["resolutionAndComponentFlags1"], 0))
+        report.add(Eq(message["resolutionAndComponentFlags2"], 0))
+        report.add(Eq(message["resolutionAndComponentFlags6"], 0))
+        report.add(Eq(message["resolutionAndComponentFlags7"], 0))
+        report.add(Eq(message["resolutionAndComponentFlags8"], 0))
 
         return [report]
 
@@ -227,17 +228,17 @@ class TiggeBasicChecks(CheckEngine):
         report = Report("Latlon grid")
 
         tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
-        data_points = message.get("numberOfDataPoints")
-        meridian = message.get("numberOfPointsAlongAMeridian")
-        parallel = message.get("numberOfPointsAlongAParallel")
+        data_points = message["numberOfDataPoints"]
+        meridian = message["numberOfPointsAlongAMeridian"]
+        parallel = message["numberOfPointsAlongAParallel"]
 
-        north = message.get("latitudeOfFirstGridPoint")
-        south = message.get("latitudeOfLastGridPoint")
-        west = message.get("longitudeOfFirstGridPoint")
-        east = message.get("longitudeOfLastGridPoint")
+        north = message["latitudeOfFirstGridPoint"]
+        south = message["latitudeOfLastGridPoint"]
+        west = message["longitudeOfFirstGridPoint"]
+        east = message["longitudeOfLastGridPoint"]
 
-        ns= message.get("jDirectionIncrement")
-        we= message.get("iDirectionIncrement")
+        ns= message["jDirectionIncrement"]
+        we= message["iDirectionIncrement"]
 
         dnorth = message.get("latitudeOfFirstGridPointInDegrees", float)
         dsouth = message.get("latitudeOfLastGridPointInDegrees", float)
@@ -247,32 +248,32 @@ class TiggeBasicChecks(CheckEngine):
         dns = message.get("jDirectionIncrementInDegrees", float)
         dwe = message.get("iDirectionIncrementInDegrees", float)
 
-        if message.get("basicAngleOfTheInitialProductionDomain") == 0:
+        if message["basicAngleOfTheInitialProductionDomain"] == 0:
             report.add(Missing(message, "subdivisionsOfBasicAngle"))    
         else:
             # long basic    = get(h,"basicAngleOfTheInitialProductionDomain")
             # long division = get(h,"subdivisionsOfBasicAngle")
             report.add(Exists(message, "subdivisionsOfBasicAngle"))
-            report.add(Ne(message, "subdivisionsOfBasicAngle", 0))
+            report.add(Ne(message["subdivisionsOfBasicAngle"], 0))
 
         if message.is_missing("subdivisionsOfBasicAngle"):
-            report.add(Eq(message, "basicAngleOfTheInitialProductionDomain", 0))
+            report.add(Eq(message["basicAngleOfTheInitialProductionDomain"], 0))
 
         report.add(AssertTrue(meridian*parallel == data_points, "meridian*parallel == data_points"))
 
-        report.add(Eq(message, "resolutionAndComponentFlags1", 0))
-        report.add(Eq(message, "resolutionAndComponentFlags2", 0))
-        report.add(Eq(message, "resolutionAndComponentFlags6", 0))
-        report.add(Eq(message, "resolutionAndComponentFlags7", 0))
-        report.add(Eq(message, "resolutionAndComponentFlags8", 0))
+        report.add(Eq(message["resolutionAndComponentFlags1"], 0))
+        report.add(Eq(message["resolutionAndComponentFlags2"], 0))
+        report.add(Eq(message["resolutionAndComponentFlags6"], 0))
+        report.add(Eq(message["resolutionAndComponentFlags7"], 0))
+        report.add(Eq(message["resolutionAndComponentFlags8"], 0))
 
-        report.add(Eq(message, "iDirectionIncrementGiven", 1))
-        report.add(Eq(message, "jDirectionIncrementGiven", 1))
+        report.add(Eq(message["iDirectionIncrementGiven"], 1))
+        report.add(Eq(message["jDirectionIncrementGiven"], 1))
 
-        report.add(Eq(message, "numberOfOctectsForNumberOfPoints", 0))
-        report.add(Eq(message, "interpretationOfNumberOfPoints", 0))
+        report.add(Eq(message["numberOfOctectsForNumberOfPoints"], 0))
+        report.add(Eq(message["interpretationOfNumberOfPoints"], 0))
 
-        if message.get("iScansNegatively") != 0:
+        if message["iScansNegatively"] != 0:
             tmp = east
             dtmp = deast
 
@@ -282,7 +283,7 @@ class TiggeBasicChecks(CheckEngine):
             deast = dwest
             dwest = dtmp
 
-        if message.get("jScansPositively") != 0:
+        if message["jScansPositively"] != 0:
             tmp = north
             dtmp = dnorth
 
@@ -293,8 +294,8 @@ class TiggeBasicChecks(CheckEngine):
             dsouth = dtmp
 
         # GRIB2 requires longitudes are always positive */
-        report.add(AssertTrue(east >= 0, "east >= 0"))
-        report.add(AssertTrue(west >= 0, "west >= 0"))
+        report.add(Ge(east, 0, "east >= 0"))
+        report.add(Ge(west, 0, "west >= 0"))
 
         #printf("meridian=%ld north=%ld south=%ld ns=%ld ",meridian,north,south,ns)
         #printf("meridian=%ld north=%f south=%f ns=%f ",meridian,dnorth,dsouth,dns)
@@ -307,7 +308,7 @@ class TiggeBasicChecks(CheckEngine):
     def _check_packing(self, message):
         # ECC-1009: Warn if not using simple packing
         report = Report("Check packing")
-        report.add(Eq(message, "packingType", "grid_simple"))
+        report.add(Eq(message["packingType"], "grid_simple"))
         return [report]
 
     # not registered in the lookup table
@@ -325,13 +326,13 @@ class TiggeBasicChecks(CheckEngine):
             # Check only applies to accumulated, max etc.
             stepRange = message.get("stepRange", str)
 
-            saved_validityDate = message.get("validityDate")
-            saved_validityTime = message.get("validityTime")
+            saved_validityDate = message["validityDate"]
+            saved_validityTime = message["validityTime"]
 
             message.set("stepRange", stepRange)
 
-            validityDate = message.get("validityDate")
-            validityTime = message.get("validityTime")
+            validityDate = message["validityDate"]
+            validityTime = message["validityTime"]
             if validityDate!=saved_validityDate or validityTime!=saved_validityTime:
                 # print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (cfg['filename'], cfg['field'], cfg['param'], validityDate, validityTime))
                 report.add(Fail(f"Invalid validity Date/Time (Should be {validityDate} and {validityTime})"))
@@ -343,14 +344,14 @@ class TiggeBasicChecks(CheckEngine):
     def _basic_checks_2(self, message, p):
         report = Report()
         # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
-        report.add(IsIn(message, "typeOfProcessedData", [2, 3, 4]))
+        report.add(IsIn(message["typeOfProcessedData"], [2, 3, 4]))
         return [report]
 
     def _basic_checks(self, message, p):
         reports = list()
         report = Report()
-        report.add(Eq(message, "editionNumber", 2))
-        report.add(Missing(message, "reserved") | Eq(message, "reserved", 0))
+        report.add(Eq(message["editionNumber"], 2))
+        report.add(Missing(message, "reserved") | Eq(message["reserved"], 0))
 
         if self.valueflg:
             values_report = Report("Check values")
@@ -361,7 +362,7 @@ class TiggeBasicChecks(CheckEngine):
                 values_report.error(Fail(f"Cannot get number of values: {e}")) 
                 return [values_report]
 
-            values_report.add(Eq(message, "numberOfDataPoints", count))
+            values_report.add(Eq(message["numberOfDataPoints"], count))
 
             try:
                 values = message.get_double_array("values")
@@ -382,34 +383,32 @@ class TiggeBasicChecks(CheckEngine):
 
         # Section 1
 
-        report.add(Ge(message, "gribMasterTablesVersionNumber", 4))
-        report.add(Eq(message, "versionNumberOfGribLocalTables", 0))
-        report.add(Eq(message, "significanceOfReferenceTime", 1))
+        report.add(Ge(message["gribMasterTablesVersionNumber"], 4))
+        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
+        report.add(Eq(message["significanceOfReferenceTime"], 1))
 
-        report.add(Eq(message, "minute", 0))
-        report.add(Eq(message, "second", 0))
-        report.add(Ge(message, "startStep", 0))
+        report.add(Eq(message["minute"], 0))
+        report.add(Eq(message["second"], 0))
+        report.add(Ge(message["startStep"], 0))
 
         # TODO: validate local usage. Empty for now xxx
         # report.add(Eq(message, "section2.sectionLength", 5)
 
         # Section 3
-        report.add(Eq(message, "sourceOfGridDefinition", 0)) # Specified in Code table 3.1
+        report.add(Eq(message["sourceOfGridDefinition"], 0)) # Specified in Code table 3.1
 
-        dtn = message.get("gridDefinitionTemplateNumber")
+        dtn = message["gridDefinitionTemplateNumber"]
 
         if dtn in [0, 1]:
             # dtn == 1: rotated latlon
-            # reports += self._latlon_grid(message)
-            pass
+            reports += self._latlon_grid(message)
         elif dtn == 30: #Lambert conformal
             # lambert_grid(h); # TODO xxx
             # print("warning: Lambert grid - geometry checking not implemented yet!")
-            # report.add(Eq(message, "scanningMode", 64)) # M-F data used to have it wrong.. but it might depends on other projection set up as well!
+            # report.add(Eq(message["scanningMode"], 64)) # M-F data used to have it wrong.. but it might depends on other projection set up as well!
             pass
         elif dtn == 40: # gaussian grid (regular or reduced)
-            # reports += self._gaussian_grid(message)
-            pass
+            reports += self._gaussian_grid(message)
         else:
             report.add(Fail(f"Unsupported gridDefinitionTemplateNumber {dtn}"))
             # print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
@@ -420,15 +419,15 @@ class TiggeBasicChecks(CheckEngine):
         # If there is no bitmap, this should be true
         # CHECK('eq(h,"bitMapIndicator",255)', eq(h,"bitMapIndicator",255))
 
-        if message.get("bitMapIndicator") == 255:
-            report.add(AssertTrue(message.get("numberOfValues") == message.get("numberOfDataPoints"), "numberOfValues == numberOfDataPoints"))
+        if message["bitMapIndicator"] == 255:
+            report.add(Eq(message["numberOfValues"], message["numberOfDataPoints"]))
         else:
-            report.add(AssertTrue(message.get("numberOfValues") <= message.get("numberOfDataPoints"), "numberOfValues <= numberOfDataPoints"))
+            report.add(Le(message["numberOfValues"], message["numberOfDataPoints"]))
 
         # Check values 
-        report.add(Eq(message, "typeOfOriginalFieldValues", 0)) # Floating point
+        report.add(Eq(message["typeOfOriginalFieldValues"], 0)) # Floating point
 
-        # reports += self._check_validity_datetime(message)
+        reports += self._check_validity_datetime(message)
 
         # do not store empty values e.g. fluxes at step 0
         #    todo ?? now it's allowed in the code here!
@@ -440,8 +439,8 @@ class TiggeBasicChecks(CheckEngine):
     def _daily_average(self, message, p):
         reports = list()
         report = Report()
-        start_step = message.get("startStep")
-        end_step = message.get("endStep")
+        start_step = message["startStep"]
+        end_step = message["endStep"]
         report.add(AssertTrue(start_step == end_step - 24, "startStep == endStep - 24"))
         min_value, max_value = message.minmax()
         if end_step == 0:
@@ -457,55 +456,55 @@ class TiggeBasicChecks(CheckEngine):
 
     def _from_start(self, message, p):
         reports = list()
-        checks = Report()
-        checks.add(Eq(message, "startStep", 0))
+        report = Report()
+        report.add(Eq(message["startStep"], 0))
 
         reports += self._statistical_process(message, p)
-        reports = [checks] + reports
+        reports = [report] + reports
 
         return reports
 
     def _point_in_time(self, message, p):
-        checks = Report(__class__.__name__)
+        report = Report(__class__.__name__)
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             pass
         elif topd == 2: # Analysis and forecast products
-            checks.add(Eq(message, "productDefinitionTemplateNumber", 0))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 0))
         elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
-            checks.add(Ne(message, "perturbationNumber", 0))
-            checks.add(Ne(message, "numberOfForecastsInEnsemble", 0))
+            report.add(Ne(message["perturbationNumber"], 0))
+            report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
         else:
-            checks.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
-        return [checks]
+        return [report]
 
     def _given_thickness(self, message, p):
         report = Report()
-        report.add(Ne(message, "typeOfSecondFixedSurface", 255))
+        report.add(Ne(message["typeOfSecondFixedSurface"], 255))
         report.add(Exists(message, "scaleFactorOfSecondFixedSurface"))
         report.add(Exists(message, "scaledValueOfSecondFixedSurface"))
 
-        report.add(Ne(message, "typeOfFirstFixedSurface", 255))
+        report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Exists(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Exists(message, "scaledValueOfFirstFixedSurface"))
         return [report]
 
     def _has_bitmap(self, message, p):
         report = Report()
-        report.add(Eq(message, "bitMapIndicator", 0))
+        report.add(Eq(message["bitMapIndicator"], 0))
         return [report]
 
     def _has_soil_layer(self, message, p):
         report = Report()
-        report.add(AssertTrue(message.get("topLevel") == message.get("bottomLevel") - 1, "topLevel == bottomLevel - 1"))
-        report.add(Le(message, "level", 14)) # max in UERRA
+        report.add(AssertTrue(message["topLevel"] == message["bottomLevel"] - 1, "topLevel == bottomLevel - 1"))
+        report.add(Le(message["level"], 14)) # max in UERRA
         return [report]
 
     def _has_soil_level(self, message, p):
         report = Report()
-        report.add(AssertTrue(message.get("topLevel") == message.get("bottomLevel"), "topLevel == bottomLevel"))
-        report.add(Le(message, "level", 14)) # max in UERRA
+        report.add(AssertTrue(message["topLevel"] == message["bottomLevel"], "topLevel == bottomLevel"))
+        report.add(Le(message["level"], 14)) # max in UERRA
         return [report]
 
     def _height_level(self, message, p):
@@ -514,66 +513,66 @@ class TiggeBasicChecks(CheckEngine):
 
     def _given_level(self, message, p):
         report = Report()
-        report.add(Ne(message, "typeOfFirstFixedSurface", 255))
+        report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Exists(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Exists(message, "scaledValueOfFirstFixedSurface"))
-        report.add(Eq(message, "typeOfSecondFixedSurface", 255))
+        report.add(Eq(message["typeOfSecondFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
         report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
         return [report]
 
     def _potential_temperature_level(self, message, p):
         report = Report()
-        report.add(Eq(message, 'level', 320, f'invalid potential temperature level {message.get("level")}' ))
+        report.add(Eq(message["level"], 320, f'invalid potential temperature level {message["level"]}' ))
         return [report]
 
     def _potential_vorticity_level(self, message, p):
         report = Report()
-        report.add(Eq(message, 'level', 2, f'invalid potential vorticity level {message.get("level")}'))
+        report.add(Eq(message["level"], 2, f'invalid potential vorticity level {message["level"]}'))
         return [report]
 
     def _predefined_level(self, message, p):
         report = Report()
-        report.add(Ne(message, "typeOfFirstFixedSurface", 255))
+        report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
-        report.add(Eq(message, "typeOfSecondFixedSurface", 255))
+        report.add(Eq(message["typeOfSecondFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
         report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
         return [report]
 
     def _predefined_thickness(self, message, p):
         report = Report()
-        report.add(Ne(message, "typeOfFirstFixedSurface", 255))
+        report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
-        report.add(Ne(message, "typeOfSecondFixedSurface", 255))
+        report.add(Ne(message["typeOfSecondFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
         report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
         return [report]
 
     def _pressure_level(self, message, p):
-        checks = Report()
+        report = Report()
         levels = [1000, 200, 250, 300, 500, 700, 850, 925, 50]
-        checks.add(IsIn(message, 'level', levels, 'invalid pressure level'))
-        return [checks]
+        report.add(IsIn(message["level"], levels, 'invalid pressure level'))
+        return [report]
 
     def _resolution_s2s(self, message, p):
         report = Report()
-        report.add(Eq(message, "iDirectionIncrement", 1500000))
-        report.add(Eq(message, "jDirectionIncrement", 1500000))
+        report.add(Eq(message["iDirectionIncrement"], 1500000))
+        report.add(Eq(message["jDirectionIncrement"], 1500000))
         return [report]
 
     def _resolution_s2s_ocean(self, message, p):
         report = Report()
-        report.add(Eq(message, "iDirectionIncrement", 1000000))
-        report.add(Eq(message, "jDirectionIncrement", 1000000))
+        report.add(Eq(message["iDirectionIncrement"], 1000000))
+        report.add(Eq(message["jDirectionIncrement"], 1000000))
         return [report]
 
     def _since_prev_pp(self, message, p):
         report = Report()
-        report.add(Eq(message, "indicatorOfUnitForTimeRange", 1))
-        report.add(AssertTrue(message.get("endStep") == message.get("startStep") + message.get("lengthOfTimeRange"), "endStep == startStep + lengthOfTimeRange"))
+        report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
+        report.add(AssertTrue(message["endStep"] == message["startStep"] + message["lengthOfTimeRange"], "endStep == startStep + lengthOfTimeRange"))
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
@@ -581,11 +580,11 @@ class TiggeBasicChecks(CheckEngine):
 
     def _six_hourly(self, message, p):
         report = Report()
-        if message.get("indicatorOfUnitForTimeRange") == 11:
-            report.add(Eq(message, "lengthOfTimeRange", 1))
+        if message["indicatorOfUnitForTimeRange"] == 11:
+            report.add(Eq(message["lengthOfTimeRange"], 1))
         else:
-            report.add(Eq(message, "lengthOfTimeRange", 6))
-        report.add(AssertTrue(message.get("endStep") == message.get("startStep") + 6, "endStep == startStep + 6"))
+            report.add(Eq(message["lengthOfTimeRange"], 6))
+        report.add(AssertTrue(message["endStep"] == message["startStep"] + 6, "endStep == startStep + 6"))
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
@@ -593,11 +592,11 @@ class TiggeBasicChecks(CheckEngine):
 
     def _three_hourly(self, message, p):
         report = Report()
-        if message.get("indicatorOfUnitForTimeRange") == 11:
-            report.add(Eq(message, "lengthOfTimeRange", 1))
+        if message["indicatorOfUnitForTimeRange"] == 11:
+            report.add(Eq(message["lengthOfTimeRange"], 1))
         else:
-            report.add(Eq(message, "lengthOfTimeRange", 3))
-        report.add(AssertTrue(message.get("endStep") == message.get("startStep") + 3, "endStep == startStep + 3"))
+            report.add(Eq(message["lengthOfTimeRange"], 3))
+        report.add(AssertTrue(message["endStep"] == message["startStep"] + 3, "endStep == startStep + 3"))
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
