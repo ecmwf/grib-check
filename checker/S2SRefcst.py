@@ -13,26 +13,26 @@ class S2SRefcst(TiggeBasicChecks):
         reports = super()._basic_checks(message, p)
         report = Report(f"{__class__.__name__}._basic_checks")
         # Only 00, 06 12 and 18 Cycle OK 
-        report.add(IsIn(message, "hour", [0, 6, 12, 18]))
-        report.add(IsIn(message, "productionStatusOfProcessedData", [4, 5]))
-        report.add(Le(message, "endStep", 30*24))
-        report.add(IsMultipleOf(message, "step", 6))
+        report.add(IsIn(message["hour"], [0, 6, 12, 18]))
+        report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
+        report.add(Le(message["endStep"], 30*24))
+        report.add(IsMultipleOf(message["step"], 6))
         return reports + [report]
 
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")
 
         tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
-        meridian = message.get("numberOfPointsAlongAMeridian")
-        parallel = message.get("numberOfPointsAlongAParallel")
+        meridian = message["numberOfPointsAlongAMeridian"]
+        parallel = message["numberOfPointsAlongAParallel"]
 
-        north = message.get("latitudeOfFirstGridPoint")
-        south = message.get("latitudeOfLastGridPoint")
-        west = message.get("longitudeOfFirstGridPoint")
-        east = message.get("longitudeOfLastGridPoint")
+        north = message["latitudeOfFirstGridPoint"]
+        south = message["latitudeOfLastGridPoint"]
+        west = message["longitudeOfFirstGridPoint"]
+        east = message["longitudeOfLastGridPoint"]
 
-        ns= message.get("jDirectionIncrement")
-        we= message.get("iDirectionIncrement")
+        ns= message["jDirectionIncrement"]
+        we= message["iDirectionIncrement"]
 
         dnorth = message.get("latitudeOfFirstGridPointInDegrees", float)
         dsouth = message.get("latitudeOfLastGridPointInDegrees", float)
@@ -72,56 +72,56 @@ class S2SRefcst(TiggeBasicChecks):
         if topd in [0, 1, 2]: # Analysis, Forecast, Analysis and forecast products
             pass
         elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
-            report.add(Eq(message, "productDefinitionTemplateNumber", 61))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 61))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
 
-        if message.get("indicatorOfUnitOfTimeRange") == 11: # six hours
+        if message["indicatorOfUnitOfTimeRange"] == 11: # six hours
             # Six hourly is OK
             pass
         else:
-            report.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
-            report.add(IsMultipleOf(message, "forecastTime", 6))
+            report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
+            report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
-        report.add(IsMultipleOf(message, "step", 6))
+        report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
+        report.add(IsMultipleOf(message["step"], 6))
 
         reports = super()._statistical_process(message, p)
         return reports + [report]
 
     def _from_start(self, message, p):
         reports = super()._from_start(message, p)
-        if message.get("endStep") != 0:
+        if message["endStep"] != 0:
             reports += self._check_range(message, p)
         return reports
 
     def _point_in_time(self, message, p):
         reports = super()._point_in_time(message, p)
 
-        checks = Report()
-        topd = message.get("typeOfProcessedData")
+        report = Report()
+        topd = message["typeOfProcessedData"]
         if topd in [0, 1]: # Analysis, Forecast
-            if message.get("productDefinitionTemplateNumber") == 1:
-                checks.add(Ne(message, "numberOfForecastsInEnsemble", 0))
-                checks.add(Le(message, "perturbationNumber", message.get("numberOfForecastsInEnsemble")))
+            if message["productDefinitionTemplateNumber"] == 1:
+                report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
+                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
-            checks.add(Eq(message, "productDefinitionTemplateNumber", 60))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 60))
         elif topd == 4: # Perturbed forecast products
-            checks.add(Eq(message, "productDefinitionTemplateNumber", 60))
-            pn = message.get("perturbationNumber")
-            nofe = message.get("numberOfForecastsInEnsemble")
-            checks.add(AssertTrue(pn < nofe, "perturbationNumber < numberOfForecastsInEnsemble"))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 60))
+            pn = message["perturbationNumber"]
+            nofe = message["numberOfForecastsInEnsemble"]
+            report.add(AssertTrue(pn < nofe, "perturbationNumber < numberOfForecastsInEnsemble"))
         else:
-            checks.add(Fail("Unsupported typeOfProcessedData %ld" % message.get("typeOfProcessedData")))
+            report.add(Fail("Unsupported typeOfProcessedData %ld" % message["typeOfProcessedData"]))
 
-        if message.get("indicatorOfUnitOfTimeRange") == 11:
+        if message["indicatorOfUnitOfTimeRange"] == 11:
             # Six hourly is OK
             pass
         else:
-            checks.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
-            checks.add(IsMultipleOf(message, "forecastTime", 6))
+            report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
+            report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        return reports + [checks]
+        return reports + [report]

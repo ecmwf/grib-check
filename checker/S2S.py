@@ -14,13 +14,13 @@ class S2S(TiggeBasicChecks):
 
         # todo check for how many years back the reforecast is done? Is it coded in the grib???
         # Check if the date is OK
-        date = message.get("date")
-        # report.add(Ge(message, "date", 20060101))
-        report.add(AssertTrue(int(date / 10000) == message.get("year"), "int(date / 10000) == message.get('year')"))
-        report.add(AssertTrue(int((date % 10000) / 100) == message.get("month"), "int((date % 10000) / 100) == message.get('month')"))
-        report.add(AssertTrue(int(date % 100) == message.get("day"), "int(date % 100) == message.get('day')"))
-        report.add(IsIn(message, "productionStatusOfProcessedData", [6, 7]))
-        report.add(IsMultipleOf(message, "step", 6))
+        date = message["date"]
+        # report.add(Ge(message["date"], 20060101))
+        report.add(AssertTrue(int(date / 10000) == message["year"], "int(date / 10000) == message.get('year')"))
+        report.add(AssertTrue(int((date % 10000) / 100) == message["month"], "int((date % 10000) / 100) == message.get('month')"))
+        report.add(AssertTrue(int(date % 100) == message["day"], "int(date % 100) == message.get('day')"))
+        report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
+        report.add(IsMultipleOf(message["step"], 6))
 
         return reports + [report]
 
@@ -34,76 +34,76 @@ class S2S(TiggeBasicChecks):
         if topd in [0, 1, 2]: # Analysis, Forecast, Analysis and forecast products
             pass
         elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
-            report.add(Eq(message, "productDefinitionTemplateNumber", 11))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 11))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
 
-        if message.get("indicatorOfUnitOfTimeRange") == 11: # six hours
+        if message["indicatorOfUnitOfTimeRange"] == 11: # six hours
             # Six hourly is OK
             pass
         else:
-            report.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
-            report.add(IsMultipleOf(message, "forecastTime", 6))
+            report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
+            report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
-        report.add(IsMultipleOf(message, "endStep", 6))
+        report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
+        report.add(IsMultipleOf(message["endStep"], 6))
 
         reports = super()._statistical_process(message, p)
         return reports + [report]
 
     def _from_start(self, message, p):
         reports = super()._from_start(message, p)
-        if message.get("endStep") != 0:
+        if message["endStep"] != 0:
             reports += self._check_range(message, p)
         return reports
 
     def _point_in_time(self, message, p):
         reports = super()._point_in_time(message, p)
 
-        checks = Report()
-        topd = message.get("typeOfProcessedData")
+        report = Report()
+        topd = message["typeOfProcessedData"]
         if topd in [0, 1]: # Analysis, Forecast
-            if message.get("productDefinitionTemplateNumber") == 1:
-                checks.add(Ne(message, "numberOfForecastsInEnsemble", 0))
-                checks.add(Le(message, "perturbationNumber", message.get("numberOfForecastsInEnsemble")))
+            if message["productDefinitionTemplateNumber"] == 1:
+                report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
+                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
-            # check.add(IsIn(message, "productDefinitionTemplateNumber", [60, 11, 1]))
-            checks.add(Eq(message, "productDefinitionTemplateNumber", 1))
+            # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1))
         elif topd == 4: # Perturbed forecast products
-            # check.add(IsIn(message, "productDefinitionTemplateNumber", [60, 11, 1]))
-            checks.add(Eq(message, "productDefinitionTemplateNumber", 1))
-            pn = message.get("perturbationNumber")
-            nofe = message.get("numberOfForecastsInEnsemble")
-            checks.add(AssertTrue(pn == nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
+            # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1))
+            pn = message["perturbationNumber"]
+            nofe = message["numberOfForecastsInEnsemble"]
+            report.add(AssertTrue(pn == nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
         else:
-            checks.add(Fail(f'Unsupported typeOfProcessedData {message.get("typeOfProcessedData")}'))
+            report.add(Fail(f'Unsupported typeOfProcessedData {message["typeOfProcessedData"]}'))
 
-        if message.get("indicatorOfUnitOfTimeRange") == 11:
+        if message["indicatorOfUnitOfTimeRange"] == 11:
             # Six hourly is OK
             pass
         else:
-            checks.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
-            checks.add(IsMultipleOf(message, "forecastTime", 6))
+            report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
+            report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        return reports + [checks]
+        return reports + [report]
 
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")
 
         tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
-        meridian = message.get("numberOfPointsAlongAMeridian")
-        parallel = message.get("numberOfPointsAlongAParallel")
+        meridian = message["numberOfPointsAlongAMeridian"]
+        parallel = message["numberOfPointsAlongAParallel"]
 
-        north = message.get("latitudeOfFirstGridPoint")
-        south = message.get("latitudeOfLastGridPoint")
-        west = message.get("longitudeOfFirstGridPoint")
-        east = message.get("longitudeOfLastGridPoint")
+        north = message["latitudeOfFirstGridPoint"]
+        south = message["latitudeOfLastGridPoint"]
+        west = message["longitudeOfFirstGridPoint"]
+        east = message["longitudeOfLastGridPoint"]
 
-        ns= message.get("jDirectionIncrement")
-        we= message.get("iDirectionIncrement")
+        ns= message["jDirectionIncrement"]
+        we= message["iDirectionIncrement"]
 
         dnorth = message.get("latitudeOfFirstGridPointInDegrees", float)
         dsouth = message.get("latitudeOfLastGridPointInDegrees", float)
@@ -135,7 +135,7 @@ class S2S(TiggeBasicChecks):
         return reports + [report]
 
     def _pressure_level(self, message, p):
-        checks = Report()
+        report = Report()
         levels = [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]
-        checks.add(IsIn(message, 'level', levels, 'invalid pressure level'))
-        return [checks]
+        report.add(IsIn(message["level"], levels, 'invalid pressure level'))
+        return [report]

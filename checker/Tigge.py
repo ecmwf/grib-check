@@ -13,10 +13,10 @@ class Tigge(TiggeBasicChecks):
         reports = super()._basic_checks(message, p)
         report = Report(f"{__class__.__name__}._basic_checks")
         # Only 00, 06 12 and 18 Cycle OK 
-        report.add(IsIn(message, "hour", [0, 6, 12, 18]))
-        report.add(IsIn(message, "productionStatusOfProcessedData", [4, 5]))
-        report.add(Le(message, "endStep", 30*24))
-        report.add(IsMultipleOf(message, "step", 6))
+        report.add(IsIn(message["hour"], [0, 6, 12, 18]))
+        report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
+        report.add(Le(message["endStep"], 30*24))
+        report.add(IsMultipleOf(message["step"], 6))
         return reports + [report]
 
 
@@ -29,7 +29,7 @@ class Tigge(TiggeBasicChecks):
         if topd in [0, 1, 2]: # Analysis, Forecast, Analysis and forecast products
             pass
         elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
-            report.add(Eq(message, "productDefinitionTemplateNumber", 11))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 11))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
@@ -38,11 +38,11 @@ class Tigge(TiggeBasicChecks):
             # Six hourly is OK
             pass
         else:
-            report.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
-            report.add(IsMultipleOf(message, "forecastTime", 6))
+            report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
+            report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
-        report.add(IsMultipleOf(message, "endStep", 6))
+        report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
+        report.add(IsMultipleOf(message["endStep"], 6))
 
         reports = super()._statistical_process(message, p)
         return reports + [report]
@@ -56,27 +56,27 @@ class Tigge(TiggeBasicChecks):
     def _point_in_time(self, message, p):
         reports = super()._point_in_time(message, p)
 
-        checks = Report(__class__.__name__)
+        report = Report(__class__.__name__)
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message.get("productDefinitionTemplateNumber") == 1:
-                checks.add(Ne(message, "numberOfForecastsInEnsemble", 0))
-                checks.add(Le(message, "perturbationNumber", message.get("numberOfForecastsInEnsemble")))
+                report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
+                report.add(Le(message["perturbationNumber"], message.get("numberOfForecastsInEnsemble")))
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
-            checks.add(Eq(message, "productDefinitionTemplateNumber", 1))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1))
         elif topd == 4: # Perturbed forecast products
-            checks.add(Eq(message, "productDefinitionTemplateNumber", 1))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1))
             pn = message.get("perturbationNumber")
             nofe = message.get("numberOfForecastsInEnsemble")
-            checks.add(AssertTrue(pn < nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
+            report.add(AssertTrue(pn < nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
         else:
-            checks.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
-        return reports + [checks]
+        return reports + [report]
 
     def _height_level(self, message, p):
-        checks = Report()
-        checks.add(Fail("Not implemented: dummy height_level()"))
-        return [checks]
+        report = Report()
+        report.add(Fail("Not implemented: dummy height_level()"))
+        return [report]
