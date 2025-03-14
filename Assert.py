@@ -3,8 +3,11 @@ import math
 import logging
 from TermColor import TermColor
 
-def DBL_EQUAL(d1, d2, tolerance) -> int:
-    return math.fabs(d1 - d2) <= tolerance
+# def DBL_EQUAL(d1, d2, tolerance) -> int:
+#     if type(KeyValue) is type(d1) and type(KeyValue) is type(d2):
+#         v1 = d1.value()
+#         v2 = d2.value()
+#     return math.fabs(d1 - d2) <= tolerance
 
 class Assert:
     def __init__(self, msg=None):
@@ -139,6 +142,20 @@ class Eq(Assert):
             return f"{self.__lsh} == {self.__rhs}"
 
 
+class EqDbl(Assert):
+    def __init__(self, lsh, rhs, tolerance, msg=None):
+        self.__lsh = lsh
+        self.__rhs = rhs
+        self.__tolerance = tolerance
+        self._status = math.fabs(self.__lsh.value() - self.__rhs.value()) <= self.__tolerance
+
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.__lsh} == {self.__rhs} within {self.__tolerance}"
+        else:
+            return f"{self.__lsh} == {self.__rhs} within {self.__tolerance}"
+
+
 class Ne(Assert):
     def __init__(self, lsh, rhs, msg=None):
         self.__lsh = lsh
@@ -189,6 +206,18 @@ class Gt(Assert):
             return f"{self.__lsh} > {self.__rhs}"
         else:
             return f"{self.__lsh} > {self.__rhs}"
+
+class Lt(Assert):
+    def __init__(self, lsh, rhs, msg=None):
+        self.__lsh = lsh
+        self.__rhs = rhs
+        self._status = self.__lsh < self.__rhs
+
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.__lsh} < {self.__rhs}"
+        else:
+            return f"{self.__lsh} < {self.__rhs}"
 
 
 class Fail(Assert):

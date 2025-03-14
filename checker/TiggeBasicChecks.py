@@ -3,7 +3,7 @@ from LookupTable import SimpleLookupTable
 from Test import Test, TiggeTest
 from Grib import get_gaussian_latitudes
 from Message import Message
-from Assert import Ge, Le, Ne, Eq, Exists, Missing, Fail, AssertTrue, IsIn, DBL_EQUAL
+from Assert import Ge, Le, Ne, Eq, Exists, Missing, Fail, AssertTrue, IsIn, EqDbl
 from Report import Report
 import numpy as np
 import logging
@@ -136,17 +136,18 @@ class TiggeBasicChecks(CheckEngine):
             self.values[0] = np.rint(self.values[0] * 1e6) / 1e6;
 
 
-        if not DBL_EQUAL(north, self.values[0], tolerance) or not DBL_EQUAL(south, -self.values[0], tolerance):
+        # if not DBL_EQUAL(north, self.values[0], tolerance) or not DBL_EQUAL(south, -self.values[0], tolerance):
+        if (EqDbl(north, self.values[0], tolerance) | EqDbl(south, -self.values[0], tolerance)).status():
             report.add(Fail(f"N={n} north={north} south={south} v(=gauss_lat[0])={self.values[0]} north-v={north-self.values[0]} south-v={south+self.values[0]}"))
 
-        report.add(AssertTrue(DBL_EQUAL(north, self.values[0], tolerance), "north == self.values[0]"))
-        report.add(AssertTrue(DBL_EQUAL(south, -self.values[0], tolerance), "south == -self.values[0]"))
+        report.add(EqDbl(north, self.values[0], tolerance, "north == self.values[0]"))
+        report.add(EqDbl(south, -self.values[0], tolerance, "south == -self.values[0]"))
 
         if(message.is_missing("numberOfPointsAlongAParallel")): # same as key Ni 
             # If missing, this is a REDUCED gaussian grid 
             MAXIMUM_RESOLUTION = 640;
             # report.add(Eq(message["PLPresent"], True)) # TODO: check this
-            report.add(AssertTrue(DBL_EQUAL(west, 0.0, tolerance), "west == 0.0"))
+            report.add(EqDbl(west, 0.0, tolerance, "west == 0.0"))
             report.add(AssertTrue(n <= MAXIMUM_RESOLUTION, f"Gaussian number N (={n}) cannot exceed {MAXIMUM_RESOLUTION}"))
         else:
             # REGULAR gaussian grid 
@@ -194,10 +195,11 @@ class TiggeBasicChecks(CheckEngine):
             # Do not assume maximum of pl array is 4N! not true for octahedral
 
             expected_lon2 = 360.0 - 360.0/max_pl;
-            if not DBL_EQUAL(expected_lon2, east, tolerance):
+            # if not DBL_EQUAL(expected_lon2, east, tolerance):
+            if not EqDbl(expected_lon2, east, tolerance).status():
                 report.add(Fail(f"east actual={east} expected={expected_lon2} diff={expected_lon2-east}"))
 
-            report.add(AssertTrue(DBL_EQUAL(expected_lon2, east, tolerance), "DBL_EQUAL(expected_lon2, east, tolerance)"))
+            report.add(EqDbl(expected_lon2, east, tolerance, "expected_lon2 == east"))
 
             if numberOfDataPoints != total:
                 print("GAUSS numberOfValues=%ld numberOfDataPoints=%ld sum(pl)=%ld" % (
@@ -259,7 +261,7 @@ class TiggeBasicChecks(CheckEngine):
         if message.is_missing("subdivisionsOfBasicAngle"):
             report.add(Eq(message["basicAngleOfTheInitialProductionDomain"], 0))
 
-        report.add(AssertTrue(meridian*parallel == data_points, "meridian*parallel == data_points"))
+        report.add(Eq(meridian * parallel, data_points, "meridian * parallel == data_points"))
 
         report.add(Eq(message["resolutionAndComponentFlags1"], 0))
         report.add(Eq(message["resolutionAndComponentFlags2"], 0))
