@@ -1,4 +1,4 @@
-from Assert import IsIn, Eq, AssertTrue
+from Assert import IsIn, Eq, IsMultipleOf
 from Report import Report
 from checker.Uerra import Uerra
 
@@ -10,12 +10,11 @@ class Crra(Uerra):
     def basic_checks_2(self, message, p):
         report = Report()
         report.add(IsIn(message, "productionStatusOfProcessedData", [10, 11]))
-         # 0 = analysis , 1 = forecast
-        report.add(IsIn(message, "typeOfProcessedData", [0, 1]))
+        report.add(IsIn(message, "typeOfProcessedData", [0, 1])) # 0 = analysis , 1 = forecast
         if message.get("typeOfProcessedData") == 0:
             report.add(Eq(message, "step", 0))
         else:
-            report.add(IsIn(message, "step", [1, 2, 4, 5]) or AssertTrue(message.get("step") % 3 == 0, "step % 3 == 0"))
+            report.add(IsIn(message, "step", [1, 2, 4, 5]) | IsMultipleOf(message, "step", 3))
         return [report]
 
     def _pressure_level(self, message, p):
