@@ -1,4 +1,4 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn
+from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, IsMultipleOf
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
 
@@ -11,12 +11,9 @@ class Lam(TiggeBasicChecks):
         reports = super()._basic_checks(message, p)
         report = Report(f"{__class__.__name__}._basic_checks")
         report.add(IsIn(message, "hour", [0, 3, 6, 9, 12, 15, 18, 21]))
-
-        psopd4 = Eq(message, "productionStatusOfProcessedData", 4)
-        psopd5 = Eq(message, "productionStatusOfProcessedData", 5)
-        report.add(psopd4 or psopd5)
-        report.add(Le(message, "endStep", 30*24))
-        report.add(AssertTrue(message.get("step") % 3 == 0, "step % 3 == 0"))
+        report.add(IsIn(message, "productionStatusOfProcessedData", [4, 5]))
+        report.add(Le(message, "endStep", 30 * 24))
+        report.add(IsMultipleOf(message, "step", 3))
         return reports + [report]
 
     # not registered in the lookup table

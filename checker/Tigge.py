@@ -1,5 +1,5 @@
 from checker.TiggeBasicChecks import TiggeBasicChecks
-from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn
+from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, IsMultipleOf
 from Report import Report
 import logging
 
@@ -14,13 +14,9 @@ class Tigge(TiggeBasicChecks):
         report = Report(f"{__class__.__name__}._basic_checks")
         # Only 00, 06 12 and 18 Cycle OK 
         report.add(IsIn(message, "hour", [0, 6, 12, 18]))
-        # return reports + [report]
-        #
-        psopd4 = Eq(message, "productionStatusOfProcessedData", 4)
-        psopd5 = Eq(message, "productionStatusOfProcessedData", 5)
-        report.add(psopd4 or psopd5)
+        report.add(IsIn(message, "productionStatusOfProcessedData", [4, 5]))
         report.add(Le(message, "endStep", 30*24))
-        report.add(AssertTrue(message.get("step") % 6 == 0, "step % 6 == 0"))
+        report.add(IsMultipleOf(message, "step", 6))
         return reports + [report]
 
 
@@ -58,7 +54,7 @@ class Tigge(TiggeBasicChecks):
         return reports
 
     def _point_in_time(self, message, p):
-        super_reports = super()._point_in_time(message, p)
+        reports = super()._point_in_time(message, p)
 
         checks = Report(__class__.__name__)
         topd = message.get("typeOfProcessedData", int)
@@ -78,7 +74,7 @@ class Tigge(TiggeBasicChecks):
         else:
             checks.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
-        return super_reports + [checks]
+        return reports + [checks]
 
     def _height_level(self, message, p):
         checks = Report()
