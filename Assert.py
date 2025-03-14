@@ -87,6 +87,20 @@ class IsIn(Assert):
             return f"{self.__key}: {self.__actual_value} in {self.__expected_values}"
 
 
+class IsMultipleOf(Assert):
+    def __init__(self, message, key, multiplier, msg=None):
+        self.__actual_value = message.get(key)
+        self.__key = key
+        self.__multiplier = multiplier
+        self._status = self.__actual_value % self.__multiplier == 0
+
+    def as_string(self, color=False) -> str:
+        if color:
+            return f"{self.__key}: {self.__actual_value} % {self.__multiplier} == 0"
+        else:
+            return f"{self.__key}: {self.__actual_value} % {self.__multiplier} == 0"
+
+
 class Exists(Assert):
     def __init__(self, message, key, msg=None):
         self.__is_missing = message.is_missing(key)

@@ -1,5 +1,5 @@
 from checker.TiggeBasicChecks import TiggeBasicChecks
-from Assert import Le, Eq, Fail, IsIn, AssertTrue
+from Assert import Le, Eq, Fail, IsIn, AssertTrue, IsMultipleOf
 from Report import Report
 
 
@@ -16,14 +16,14 @@ class Uerra(TiggeBasicChecks):
         if message.get("typeOfProcessedData") == 0:
             report.add(Eq(message, "step", 0))
         else:
-            report.add(IsIn(message, "step", [1, 2, 4, 5]) or AssertTrue(message.get("step") % 3 == 0, "step % 3 == 0"))
+            report.add(IsIn(message, "step", [1, 2, 4, 5]) | IsMultipleOf(message, "step", 3))
         return [report]
 
     def _basic_checks(self, message, p):
         reports = super()._basic_checks(message, p)
         report = Report(f"{__class__.__name__}._basic_checks")
         report.add(Le(message, "hour", 24))
-        report.add(IsIn(message, "step", [1, 2, 4, 5]) or AssertTrue(message.get("step") % 3 == 0, "step % 3 == 0"))
+        report.add(IsIn(message, "step", [1, 2, 4, 5]) | IsMultipleOf(message, "step", 3))
         return reports + [report]
 
     def _from_start(self, message, p):
@@ -42,9 +42,7 @@ class Uerra(TiggeBasicChecks):
 
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
-            pdtn8 = Eq(message, "productDefinitionTemplateNumber", 8)
-            pdtn11 = Eq(message, "productDefinitionTemplateNumber", 11)
-            report.add(pdtn8 or pdtn11)
+            report.add(IsIn(message, "productDefinitionTemplateNumber", [8, 11]))
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
@@ -58,10 +56,7 @@ class Uerra(TiggeBasicChecks):
             report.add(Le(message, "forecastTime", 30))
 
         report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
-
-        end_step_values = IsIn(message, "endStep", [1, 2, 4, 5])
-        end_step_mod3 = AssertTrue(message.get("endStep") % 3 == 0, "endStep % 3 == 0")
-        report.add(end_step_values or end_step_mod3)
+        report.add(IsIn(message, "endStep", [1, 2, 4, 5]) | IsMultipleOf(message, "endStep", 3))
 
         reports = super()._statistical_process(message, p)
         return reports + [report]
@@ -75,11 +70,11 @@ class Uerra(TiggeBasicChecks):
         if topd == 0: # Analysis
             pdtn0 = Eq(message, "productDefinitionTemplateNumber", 0)
             pdtn1 = Eq(message, "productDefinitionTemplateNumber", 1)
-            checks.add(pdtn0 or pdtn1)
+            checks.add(pdtn0 | pdtn1)
         elif topd == 1: # Forecast
             pdtn0 = Eq(message, "productDefinitionTemplateNumber", 0)
             pdtn1 = Eq(message, "productDefinitionTemplateNumber", 1)
-            checks.add(pdtn0 or pdtn1)
+            checks.add(pdtn0 | pdtn1)
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
@@ -91,12 +86,7 @@ class Uerra(TiggeBasicChecks):
             checks.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         if(message.get("indicatorOfUnitOfTimeRange") == 1): #hourly
-            ft1 = Eq(message, "forecastTime", 1)
-            ft2 = Eq(message, "forecastTime", 2)
-            ft4 = Eq(message, "forecastTime", 4)
-            ft5 = Eq(message, "forecastTime", 5)
-            ft3 = (message.get("forecastTime") % 3) == 0
-            checks.add(ft1 or ft2 or ft4 or ft5 or ft3)
+            checks.add(IsIn(message, "forecastTime", [1, 2, 4, 5]) | IsMultipleOf(message, "forecastTime", 3))
 
         return reports + [checks]
 

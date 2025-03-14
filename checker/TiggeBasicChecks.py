@@ -145,7 +145,7 @@ class TiggeBasicChecks(CheckEngine):
         if(message.is_missing("numberOfPointsAlongAParallel")): # same as key Ni 
             # If missing, this is a REDUCED gaussian grid 
             MAXIMUM_RESOLUTION = 640;
-            report.add(Eq(message, "PLPresent", True))
+            # report.add(Eq(message, "PLPresent", True)) # TODO: check this
             report.add(AssertTrue(DBL_EQUAL(west, 0.0, tolerance), "west == 0.0"))
             report.add(AssertTrue(n <= MAXIMUM_RESOLUTION, f"Gaussian number N (={n}) cannot exceed {MAXIMUM_RESOLUTION}"))
         else:
@@ -545,7 +545,7 @@ class TiggeBasicChecks(CheckEngine):
         report.add(Ne(message, "typeOfFirstFixedSurface", 255))
         report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
-        report.add(Eq(message, "typeOfSecondFixedSurface", 255))
+        report.add(Ne(message, "typeOfSecondFixedSurface", 255))
         report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
         report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
         return [report]

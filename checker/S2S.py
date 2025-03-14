@@ -1,4 +1,4 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, DBL_EQUAL
+from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, DBL_EQUAL, IsMultipleOf
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
 import math
@@ -19,10 +19,8 @@ class S2S(TiggeBasicChecks):
         report.add(AssertTrue(int(date / 10000) == message.get("year"), "int(date / 10000) == message.get('year')"))
         report.add(AssertTrue(int((date % 10000) / 100) == message.get("month"), "int((date % 10000) / 100) == message.get('month')"))
         report.add(AssertTrue(int(date % 100) == message.get("day"), "int(date % 100) == message.get('day')"))
-
-        psopd6 = Eq(message, "productionStatusOfProcessedData", 6)
-        psopd7 = Eq(message, "productionStatusOfProcessedData", 7)
-        report.add(psopd6 or psopd7)
+        report.add(IsIn(message, "productionStatusOfProcessedData", [6, 7]))
+        report.add(IsMultipleOf(message, "step", 6))
 
         return reports + [report]
 
@@ -72,14 +70,16 @@ class S2S(TiggeBasicChecks):
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
+            # check.add(IsIn(message, "productDefinitionTemplateNumber", [60, 11, 1]))
             checks.add(Eq(message, "productDefinitionTemplateNumber", 1))
         elif topd == 4: # Perturbed forecast products
+            # check.add(IsIn(message, "productDefinitionTemplateNumber", [60, 11, 1]))
             checks.add(Eq(message, "productDefinitionTemplateNumber", 1))
             pn = message.get("perturbationNumber")
             nofe = message.get("numberOfForecastsInEnsemble")
             checks.add(AssertTrue(pn == nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
         else:
-            checks.add(Fail("Unsupported typeOfProcessedData %ld" % message.get("typeOfProcessedData")))
+            checks.add(Fail(f'Unsupported typeOfProcessedData {message.get("typeOfProcessedData")}'))
 
         if message.get("indicatorOfUnitOfTimeRange") == 11:
             # Six hourly is OK
