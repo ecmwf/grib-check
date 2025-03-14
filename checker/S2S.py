@@ -1,4 +1,4 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, DBL_EQUAL, IsMultipleOf
+from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, IsMultipleOf, EqDbl
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
 import math
@@ -119,7 +119,7 @@ class S2S(TiggeBasicChecks):
 
         # Check that the grid is symmetrical */
         report.add(AssertTrue(north == -south, "north == -south"))
-        report.add(AssertTrue(DBL_EQUAL(dnorth, -dsouth, tolerance), "DBL_EQUAL(dnorth, -dsouth, tolerance) "))
+        report.add(EqDbl(dnorth, -dsouth, tolerance, "dnorth == -dsouth"))
         report.add(AssertTrue(parallel == (east-west)/we + 1, "parallel == (east-west)/we + 1"))
         report.add(AssertTrue(math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
         report.add(AssertTrue(meridian == (north-south)/ns + 1, "meridian == (north-south)/ns + 1"))

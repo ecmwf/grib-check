@@ -1,4 +1,4 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue, DBL_EQUAL, IsIn, IsMultipleOf
+from Assert import Le, Ne, Eq, Fail, Lt, AssertTrue, EqDbl, IsIn, IsMultipleOf
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
 import math
@@ -11,7 +11,7 @@ class S2SRefcst(TiggeBasicChecks):
 
     def _basic_checks(self, message, p):
         reports = super()._basic_checks(message, p)
-        report = Report(f"{__class__.__name__}._basic_checks")
+        report = Report(f"{__class__.__name__}.{self._basic_checks.__name__}")
         # Only 00, 06 12 and 18 Cycle OK 
         report.add(IsIn(message["hour"], [0, 6, 12, 18]))
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
@@ -48,11 +48,11 @@ class S2SRefcst(TiggeBasicChecks):
 
         # Check that the grid is symmetrical */
         report.add(AssertTrue(north == -south, "north == -south"))
-        report.add(AssertTrue(DBL_EQUAL(dnorth, -dsouth, tolerance), "DBL_EQUAL(dnorth, -dsouth, tolerance) "))
+        report.add(EqDbl(dnorth, -dsouth, tolerance, "dnorth == -dsouth"))
         report.add(AssertTrue(parallel == (east-west)/we + 1, "parallel == (east-west)/we + 1"))
-        report.add(AssertTrue(math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
+        report.add(AssertTrue(math.fabs(((deast - dwest) / dwe + 1 - parallel).value()) < 1e-10, "math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
         report.add(AssertTrue(meridian == (north-south)/ns + 1, "meridian == (north-south)/ns + 1"))
-        report.add(AssertTrue(math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10, "math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 "))
+        report.add(AssertTrue(math.fabs(((dnorth-dsouth)/dns + 1 - meridian).value()) < 1e-10, "math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 "))
 
         # Check that the field is global */
         area = (dnorth-dsouth) * (deast-dwest)
@@ -65,7 +65,7 @@ class S2SRefcst(TiggeBasicChecks):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):
-        report = Report(f"{__class__.__name__}.statistical_process")
+        report = Report(f"{__class__.__name__}.{self._statistical_process.__name__}")
 
         topd = message.get("typeOfProcessedData", int)
 
@@ -99,7 +99,7 @@ class S2SRefcst(TiggeBasicChecks):
     def _point_in_time(self, message, p):
         reports = super()._point_in_time(message, p)
 
-        report = Report()
+        report = Report(f"{__class__.__name__}.{self._point_in_time.__name__}")
         topd = message["typeOfProcessedData"]
         if topd in [0, 1]: # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
@@ -111,11 +111,9 @@ class S2SRefcst(TiggeBasicChecks):
             report.add(Eq(message["productDefinitionTemplateNumber"], 60))
         elif topd == 4: # Perturbed forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 60))
-            pn = message["perturbationNumber"]
-            nofe = message["numberOfForecastsInEnsemble"]
-            report.add(AssertTrue(pn < nofe, "perturbationNumber < numberOfForecastsInEnsemble"))
+            report.add(Lt(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
         else:
-            report.add(Fail("Unsupported typeOfProcessedData %ld" % message["typeOfProcessedData"]))
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         if message["indicatorOfUnitOfTimeRange"] == 11:
             # Six hourly is OK

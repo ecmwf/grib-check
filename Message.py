@@ -83,11 +83,20 @@ class KeyValue:
         else:
             return KeyValue(f"{self.__key} * {other}", self.__value * other)
 
+    def __truediv__(self, other):
+        if type(other) is KeyValue:
+            return KeyValue(f"{self.__key} / {other.__key}", self.__value / other.__value)
+        else:
+            return KeyValue(f"{self.__key} / {other}", self.__value / other)
+
     def __mod__(self, other):
         if type(other) is KeyValue:
             return KeyValue(f"{self} % {other}", self.__value % other.__value)
         else:
             return KeyValue(f"{self} % {other}", self.__value % other)
+
+    def __neg__(self):
+        return KeyValue(f"-{self.__key}", -self.__value)
 
     def key(self):
         return self.__key
