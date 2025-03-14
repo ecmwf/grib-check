@@ -39,10 +39,10 @@ class Tigge(TiggeBasicChecks):
             pass
         else:
             report.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
-            report.add(AssertTrue(message.get("forecastTime") % 6 == 0, "forecastTime % 6 == 0"))
+            report.add(IsMultipleOf(message, "forecastTime", 6))
 
         report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
-        report.add(AssertTrue(message.get("endStep") % 6 == 0, "endStep % 6 == 0")) # Every six hours
+        report.add(IsMultipleOf(message, "endStep", 6))
 
         reports = super()._statistical_process(message, p)
         return reports + [report]

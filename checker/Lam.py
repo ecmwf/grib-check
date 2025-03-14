@@ -35,10 +35,11 @@ class Lam(TiggeBasicChecks):
             pass
         else:
             report.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
-            report.add(AssertTrue(message.get("forecastTime") % 3 == 0, "forecastTime % 3 == 0"))
+            report.add(IsMultipleOf(message, "forecastTime", 3))
 
         report.add(Eq(message, "timeIncrementBetweenSuccessiveFields", 0))
-        report.add(AssertTrue(message.get("endStep") % 3 == 0, "endStep % 3 == 0")) # Every three hours
+        report.add(IsMultipleOf(message, "endStep", 3)) # Every three hours
+
 
         reports = super()._statistical_process(message, p)
         return reports + [report]
@@ -69,13 +70,13 @@ class Lam(TiggeBasicChecks):
             nofe = message.get("numberOfForecastsInEnsemble")
             checks.add(AssertTrue(pn == nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
         else:
-            checks.add(Fail("Unsupported typeOfProcessedData %ld" % message.get("typeOfProcessedData")))
+            checks.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         if message.get("indicatorOfUnitOfTimeRange") == 10:
             # Three hourly is OK
             pass
         else:
             checks.add(Eq(message, "indicatorOfUnitOfTimeRange", 1))
-            checks.add(AssertTrue(message.get("forecastTime") % 3 == 0, "forecastTime % 3 == 0"))
+            checks.add(IsMultipleOf(message, "forecastTime", 3))
 
         return super_reports + [checks]

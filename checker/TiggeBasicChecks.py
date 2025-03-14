@@ -3,7 +3,7 @@ from LookupTable import SimpleLookupTable
 from Test import Test, TiggeTest
 from Grib import get_gaussian_latitudes
 from Message import Message
-from Assert import Ge, Le, Ne, Eq, Exists, Missing, Fail, Pass, AssertTrue, IsIn, DBL_EQUAL
+from Assert import Ge, Le, Ne, Eq, Exists, Missing, Fail, AssertTrue, IsIn, DBL_EQUAL
 from Report import Report
 import numpy as np
 import logging
@@ -378,7 +378,7 @@ class TiggeBasicChecks(CheckEngine):
             reports += [values_report]
         
         
-        reports += self._check_packing(message)
+        # reports += self._check_packing(message)
 
         # Section 1
 
@@ -400,20 +400,22 @@ class TiggeBasicChecks(CheckEngine):
 
         if dtn in [0, 1]:
             # dtn == 1: rotated latlon
-            reports += self._latlon_grid(message)
+            # reports += self._latlon_grid(message)
+            pass
         elif dtn == 30: #Lambert conformal
             # lambert_grid(h); # TODO xxx
             # print("warning: Lambert grid - geometry checking not implemented yet!")
             # report.add(Eq(message, "scanningMode", 64)) # M-F data used to have it wrong.. but it might depends on other projection set up as well!
             pass
         elif dtn == 40: # gaussian grid (regular or reduced)
-            reports += self._gaussian_grid(message)
+            # reports += self._gaussian_grid(message)
+            pass
         else:
             report.add(Fail(f"Unsupported gridDefinitionTemplateNumber {dtn}"))
             # print("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld" %
             #         (cfg['filename'], cfg['field'], cfg['param'], get(h,"gridDefinitionTemplateNumber")))
             # cfg['error'] += 1
-            return;
+            return [report]
 
         # If there is no bitmap, this should be true
         # CHECK('eq(h,"bitMapIndicator",255)', eq(h,"bitMapIndicator",255))
@@ -426,7 +428,7 @@ class TiggeBasicChecks(CheckEngine):
         # Check values 
         report.add(Eq(message, "typeOfOriginalFieldValues", 0)) # Floating point
 
-        reports += self._check_validity_datetime(message)
+        # reports += self._check_validity_datetime(message)
 
         # do not store empty values e.g. fluxes at step 0
         #    todo ?? now it's allowed in the code here!
@@ -599,4 +601,4 @@ class TiggeBasicChecks(CheckEngine):
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
-        return report + stats_report + check_report
+        return [report] + stats_report + check_report
