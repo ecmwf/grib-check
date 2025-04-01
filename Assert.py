@@ -1,6 +1,7 @@
 # from Message import Message
 import math
 import logging
+import numpy as np
 from TermColor import TermColor
 
 # def DBL_EQUAL(d1, d2, tolerance) -> int:
@@ -33,7 +34,7 @@ class Assert:
         return And(self, other)
 
     def status(self) -> bool:
-        assert type(self._status) is bool
+        assert type(self._status) is bool or type(self._status) is np.bool_
         return self._status
 
 
@@ -147,7 +148,7 @@ class EqDbl(Assert):
         self.__lsh = lsh
         self.__rhs = rhs
         self.__tolerance = tolerance
-        self._status = math.fabs(self.__lsh.value() - self.__rhs.value()) <= self.__tolerance
+        self._status = math.fabs((self.__lsh - self.__rhs).value()) <= self.__tolerance
 
     def as_string(self, color=False) -> str:
         if color:

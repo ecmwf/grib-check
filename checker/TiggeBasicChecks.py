@@ -107,7 +107,7 @@ class TiggeBasicChecks(CheckEngine):
     def _gaussian_grid(self, message):
         report = Report("Gaussian grid")
 
-        tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
+        tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
         n = message["numberOfParallelsBetweenAPoleAndTheEquator"] # This is the key N
 
         north = message.get("latitudeOfFirstGridPointInDegrees", float)
@@ -116,16 +116,19 @@ class TiggeBasicChecks(CheckEngine):
         west = message.get("longitudeOfFirstGridPointInDegrees", float)
         east = message.get("longitudeOfLastGridPointInDegrees", float)
 
-        if n != self.last_n:
+        if n.value() != self.last_n:
             try:
-                self.values = get_gaussian_latitudes(n)
-            except:
+                self.values = get_gaussian_latitudes(n.value())
+            except TypeError as e:
+                raise e
+            except Exception as e:
                 # print("%s, field %d [%s]: cannot get gaussian latitudes for N%ld: %s" % (cfg['filename'], cfg['field'], cfg['param'],n, str(e)))
                 # cfg['error'] += 1
-                report.error(f"Cannot get gaussian latitudes for N{n}")
+                # report.error(f"Cannot get gaussian latitudes for N{n}")
+                report.add(Fail(f"Error: Cannot get gaussian latitudes for N{n.value()}, {str(e)}"))
                 self.last_n = 0
                 return [report]
-            self.last_n = n;
+            self.last_n = n
 
         # TODO
         if self.values is None:
@@ -133,19 +136,20 @@ class TiggeBasicChecks(CheckEngine):
             return [report]
 
         if self.values is not None:
-            self.values[0] = np.rint(self.values[0] * 1e6) / 1e6;
+            self.values[0] = np.rint(self.values[0] * 1e6) / 1e6
 
 
         # if not DBL_EQUAL(north, self.values[0], tolerance) or not DBL_EQUAL(south, -self.values[0], tolerance):
-        if (EqDbl(north, self.values[0], tolerance) | EqDbl(south, -self.values[0], tolerance)).status():
-            report.add(Fail(f"N={n} north={north} south={south} v(=gauss_lat[0])={self.values[0]} north-v={north-self.values[0]} south-v={south+self.values[0]}"))
+        # if (EqDbl(north, self.values[0], tolerance) | EqDbl(south, -self.values[0], tolerance)).status():
+        #     report.add(Fail(f"N={n} north={north} south={south} v(=gauss_lat[0])={self.values[0]} north-v={north-self.values[0]} south-v={south+self.values[0]}"))
+        report.add(EqDbl(north, self.values[0], tolerance) | EqDbl(south, -self.values[0], tolerance))
 
         report.add(EqDbl(north, self.values[0], tolerance, "north == self.values[0]"))
         report.add(EqDbl(south, -self.values[0], tolerance, "south == -self.values[0]"))
 
         if(message.is_missing("numberOfPointsAlongAParallel")): # same as key Ni 
             # If missing, this is a REDUCED gaussian grid 
-            MAXIMUM_RESOLUTION = 640;
+            MAXIMUM_RESOLUTION = 640
             # report.add(Eq(message["PLPresent"], True)) # TODO: check this
             report.add(EqDbl(west, 0.0, tolerance, "west == 0.0"))
             report.add(AssertTrue(n <= MAXIMUM_RESOLUTION, f"Gaussian number N (={n}) cannot exceed {MAXIMUM_RESOLUTION}"))
@@ -181,7 +185,7 @@ class TiggeBasicChecks(CheckEngine):
                 print("len(pl)=%ld count=%ld" % (len(pl), count))
 
             report.add(AssertTrue(len(pl) == count, "len(pl) == count"))
-            report.add(AssertTrue(len(pl) == 2*n, "len(pl) == 2*n"))
+            report.add(AssertTrue(len(pl) == n * 2, "len(pl) == 2*n"))
 
             total = 0;
             max_pl = pl[0]; #  max elem of pl array = num points at equator
@@ -196,10 +200,10 @@ class TiggeBasicChecks(CheckEngine):
 
             expected_lon2 = 360.0 - 360.0/max_pl;
             # if not DBL_EQUAL(expected_lon2, east, tolerance):
-            if not EqDbl(expected_lon2, east, tolerance).status():
+            if not EqDbl(east, expected_lon2, tolerance).status():
                 report.add(Fail(f"east actual={east} expected={expected_lon2} diff={expected_lon2-east}"))
 
-            report.add(EqDbl(expected_lon2, east, tolerance, "expected_lon2 == east"))
+            report.add(EqDbl(east, expected_lon2, tolerance, "expected_lon2 == east"))
 
             if numberOfDataPoints != total:
                 print("GAUSS numberOfValues=%ld numberOfDataPoints=%ld sum(pl)=%ld" % (
@@ -473,7 +477,10 @@ class TiggeBasicChecks(CheckEngine):
             pass
         elif topd == 2: # Analysis and forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 0))
-        elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
+        elif topd == 3: # Control forecast products
+            report.add(Eq(message["perturbationNumber"], 0))
+            report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
+        elif topd == 4: #Perturbed forecast products
             report.add(Ne(message["perturbationNumber"], 0))
             report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
         else:
