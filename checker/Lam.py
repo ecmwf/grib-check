@@ -30,7 +30,7 @@ class Lam(TiggeBasicChecks):
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return [report]
 
-        if message.get("indicatorOfUnitOfTimeRange") == 10: # three hours
+        if message["indicatorOfUnitOfTimeRange"] == 10: # three hours
             # Three hourly is OK
             pass
         else:
@@ -54,24 +54,22 @@ class Lam(TiggeBasicChecks):
         reports = super()._point_in_time(message, p)
 
         report = Report()
-        topd = message["typeOfProcessedData"]
+        topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
-            if message.get("productDefinitionTemplateNumber") == 1:
+            if message["productDefinitionTemplateNumber"] == 1:
                 report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
-                report.add(Le(message["perturbationNumber"], message.get("numberOfForecastsInEnsemble")))
+                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
             report.add(Eq(message["productDefinitionTemplateNumber"], 1))
         elif topd == 4: # Perturbed forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 1))
-            pn = message.get("perturbationNumber")
-            nofe = message.get("numberOfForecastsInEnsemble")
-            report.add(AssertTrue(pn == nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
+            report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
-        if message.get("indicatorOfUnitOfTimeRange") == 10:
+        if message["indicatorOfUnitOfTimeRange"] == 10:
             # Three hourly is OK
             pass
         else:

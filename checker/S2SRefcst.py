@@ -100,7 +100,7 @@ class S2SRefcst(TiggeBasicChecks):
         reports = super()._point_in_time(message, p)
 
         report = Report(f"{__class__.__name__}.{self._point_in_time.__name__}")
-        topd = message["typeOfProcessedData"]
+        topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
                 report.add(Ne(message["numberOfForecastsInEnsemble"], 0))

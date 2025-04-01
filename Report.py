@@ -1,6 +1,22 @@
 import logging
 from Assert import Assert
 from TermColor import TermColor
+import numpy as np
+
+class RWarning:
+    def __init__(self, msg):
+        self.__msg = msg
+
+    def __str__(self):
+        return self.__msg
+
+
+class RError:
+    def __init__(self, msg):
+        self.__msg = msg
+
+    def __str__(self):
+        return self.__msg
 
 
 class Report:
@@ -51,6 +67,12 @@ class Report:
                         status = entry.status()
                         if not failed_only or not status:
                             output += "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}\n'
+                    elif isinstance(entry, RWarning):
+                        if not failed_only:
+                            output += "  " * (level + shift) + f"{entry}\n"
+                    elif isinstance(entry, RError):
+                        if not failed_only:
+                            output += "  " * (level + shift) + f"{entry}\n"
                     elif type(entry) is str:
                         if not failed_only:
                             output += "  " * (level + shift) + f"{entry}\n"
@@ -89,19 +111,23 @@ class Report:
             else:
                 if entry.status() is not None:
                     self.__status = self.__status and entry.status()
+        elif type(entry) is RWarning:
+            self.__status = self.__status or None
+        elif type(entry) is RError:
+            self.__status = self.__status or False
         elif type(entry) is str:
             self.__status = None
             pass
 
-        assert type(self.__status) is bool or self.__status is None
+        assert type(self.__status) is bool or type(self.__status) is np.bool_ or self.__status is None
         self.__entries.append(entry)
 
-    def error(self, entry):
+    def error(self, msg):
         # TODO: Implement error handling
-        self.add(entry)
+        self.add(RError(msg))
 
     def warning(self, entry):
         # TODO: Implement warning handling
-        self.add(entry)
+        self.add(RWarning(entry))
 
 

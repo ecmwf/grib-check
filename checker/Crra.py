@@ -11,7 +11,7 @@ class Crra(Uerra):
         report = Report()
         report.add(IsIn(message["productionStatusOfProcessedData"], [10, 11]))
         report.add(IsIn(message["typeOfProcessedData"], [0, 1])) # 0 = analysis , 1 = forecast
-        if message.get("typeOfProcessedData") == 0:
+        if message["typeOfProcessedData"] == 0:
             report.add(Eq(message["step"], 0))
         else:
             report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
