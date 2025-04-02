@@ -45,7 +45,7 @@ class Report:
         if max_level is None or level <= max_level:
             if self.__name is not None:
                 if self.__status is None:
-                    if failed_only:
+                    if not failed_only:
                         output = "  " * level + f'{none_str}: {self.__name}\n'
                 elif self.__status is True:
                     if not failed_only:
