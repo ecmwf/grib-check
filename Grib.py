@@ -37,7 +37,7 @@ class Grib:
 
         if handle is not None:
             self.__position += 1
-            return Message(handle, self.__position)
+            return Message(handle=handle, position=self.__position)
         else:
             raise StopIteration
 

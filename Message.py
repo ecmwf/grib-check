@@ -13,6 +13,7 @@ from eccodes import (
     codes_keys_iterator_new,
     codes_keys_iterator_next,
     codes_keys_iterator_get_name,
+    codes_new_from_message,
     KeyValueNotFoundError,
 )
 import logging
@@ -106,9 +107,17 @@ class KeyValue:
 
 
 class Message:
-    def __init__(self, h, position=None):
+    def __init__(self, handle=None, message_buffer=None, position=None):
+        assert handle is not None or message_buffer is not None
+        assert (handle is not None and message_buffer is not None) is not True
         self.logger = logging.getLogger(__class__.__name__)
-        self.__h = h
+
+        self.__h = None
+        if handle is not None:
+            self.__h = handle
+        elif message_buffer is not None:
+            self.__h = codes_new_from_message(message_buffer)
+
         self.__position = position
         self.min = None
         self.max = None
@@ -178,7 +187,7 @@ class Message:
     def get_double_array(self, key) -> np.ndarray:
         return codes_get_double_array(self.__h, key)
 
-    def get_buffer(self, key) -> bytes:
+    def get_buffer(self) -> bytes:
         return codes_get_message(self.__h)
 
     def is_missing(self, key) -> bool:

@@ -12,11 +12,18 @@ from checker.Crra import Crra
 from checker.Lam import Lam
 from Grib import Grib
 import logging
+from Report import Report
 import concurrent.futures
+import multiprocessing
+from Message import Message
 
 
-def worker(filename, message, checker):
-    return checker.validate(message)
+def worker(filename, message_buffer, pos, checker):
+    message = Message(message_buffer=message_buffer, position=pos)
+    report = Report(f"{filename} {message.position()}")
+    report.add(checker.validate(message))
+    return report
+
 
 class GribCheck:
     def __init__(self, args):
@@ -49,14 +56,15 @@ class GribCheck:
         else:
             raise ValueError("Unknown data type")
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.args.num_threads) as executor:
+        results = []
+        with multiprocessing.Pool(processes=self.args.num_threads) as pool:
             for filename in FileScanner(self.args.path):
                 grib = Grib(filename)
-                grib_report = grib.report()
-                futures = [executor.submit(worker, filename, message, checker) for message in grib]
-                for future in concurrent.futures.as_completed(futures):
-                    grib_report.add(future.result())
-                print(grib_report.as_string(max_level=int(self.args.report_verbosity), color=self.args.color, failed_only=self.args.failed_only))
+                for pos, message in enumerate(grib):
+                    results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos, checker)))
+
+            for result in results:
+                print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only))
 
 
 if __name__ == "__main__":
@@ -88,5 +96,6 @@ if __name__ == "__main__":
     logger.info('Started')
 
     grib_check = GribCheck(args)
-    sys.exit(grib_check.run())
+    grib_check.run()
+    # sys.exit(grib_check.run())
 
