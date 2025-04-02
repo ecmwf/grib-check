@@ -64,7 +64,7 @@ class GribCheck:
                     results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos, checker)))
 
             for result in results:
-                print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only))
+                print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only), end="")
 
 
 if __name__ == "__main__":
