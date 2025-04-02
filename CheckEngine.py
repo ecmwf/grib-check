@@ -17,7 +17,8 @@ class CheckEngine:
         raise NotImplementedError
 
     def validate(self, message) -> Report:
-        report = Report(f"Message[{message.position()}]")
+        # report = Report(f"Message[{message.position()}]")
+        report = Report()
         kv = self._test_store.get_element(message)
         if kv is not None:
             test = self._create_test(message, kv)
