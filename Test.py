@@ -57,7 +57,7 @@ class TiggeTest(Test):
 
     def run(self) -> Report:
         data = self.__parameter
-        report = Report("Checks")
+        report = Report(f'Checks defined in parameter "{data['name']}"')
         for check_func in data["checks"]:
             check_reports = self.__check_map[check_func](self.__message, data)
             merged_report = Report(f'{check_func}')
