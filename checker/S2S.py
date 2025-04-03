@@ -1,7 +1,6 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, IsMultipleOf, EqDbl
+from Assert import Le, Lt, Gt, Ge, Ne, Eq, Fail, AssertTrue, IsIn, IsMultipleOf, EqDbl
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
-import math
 
 
 class S2S(TiggeBasicChecks):
@@ -16,9 +15,10 @@ class S2S(TiggeBasicChecks):
         # Check if the date is OK
         date = message["date"]
         # report.add(Ge(message["date"], 20060101))
-        report.add(AssertTrue(int(date / 10000) == message["year"], "int(date / 10000) == message.get('year')"))
-        report.add(AssertTrue(int((date % 10000) / 100) == message["month"], "int((date % 10000) / 100) == message.get('month')"))
-        report.add(AssertTrue(int(date % 100) == message["day"], "int(date % 100) == message.get('day')"))
+        
+        report.add(Eq((date / 10000).to_int(), message["year"], "int(date / 10000) == message.get('year')"))
+        report.add(Eq(((date % 10000) / 100).to_int(), message["month"], "int((date % 10000) / 100) == message.get('month')"))
+        report.add(Eq((date % 100).to_int(), message["day"], "int(date % 100) == message.get('day')"))
         report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
         report.add(IsMultipleOf(message["step"], 6))
 
@@ -62,7 +62,7 @@ class S2S(TiggeBasicChecks):
         reports = super()._point_in_time(message, p)
 
         report = Report()
-        topd = message["typeOfProcessedData"]
+        topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
                 report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
@@ -75,9 +75,7 @@ class S2S(TiggeBasicChecks):
         elif topd == 4: # Perturbed forecast products
             # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
             report.add(Eq(message["productDefinitionTemplateNumber"], 1))
-            pn = message["perturbationNumber"]
-            nofe = message["numberOfForecastsInEnsemble"]
-            report.add(AssertTrue(pn == nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
+            report.add(Eq(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]- 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
         else:
             report.add(Fail(f'Unsupported typeOfProcessedData {message["typeOfProcessedData"]}'))
 
@@ -114,22 +112,22 @@ class S2S(TiggeBasicChecks):
         dwe = message.get("iDirectionIncrementInDegrees", float)
 
 
-        report.add(AssertTrue(north > south, "north > south"))
-        report.add(AssertTrue(east > west, "east > west"))
+        report.add(Gt(north, south, "north > south"))
+        report.add(Gt(east, west, "east > west"))
 
         # Check that the grid is symmetrical */
-        report.add(AssertTrue(north == -south, "north == -south"))
+        report.add(Eq(north, -south, "north == -south"))
         report.add(EqDbl(dnorth, -dsouth, tolerance, "dnorth == -dsouth"))
-        report.add(AssertTrue(parallel == (east-west)/we + 1, "parallel == (east-west)/we + 1"))
-        report.add(AssertTrue(math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "math.fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
-        report.add(AssertTrue(meridian == (north-south)/ns + 1, "meridian == (north-south)/ns + 1"))
-        report.add(AssertTrue(math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10, "math.fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 "))
+        report.add(Eq(parallel, (east-west) / we + 1, "parallel == (east - west) / we + 1"))
+        report.add(Lt(((deast - dwest) / dwe + 1 - parallel).abs(), 1e-10, "math.fabs((deast - dwest) / dwe + 1 - parallel) < 1e-10"))
+        report.add(Eq(meridian, (north - south) / ns + 1, "meridian == (north - south) / ns + 1"))
+        report.add(Lt(((dnorth - dsouth) / dns + 1 - meridian).abs(), 1e-10, "math.fabs((dnorth - dsouth) / dns + 1 - meridian) < 1e-10 "))
 
         # Check that the field is global */
-        area = (dnorth-dsouth) * (deast-dwest)
-        globe = 360.0*180.0
-        report.add(AssertTrue(area <= globe, "area <= globe"))
-        report.add(AssertTrue(area >= globe*0.95, "area >= globe*0.95"))
+        area = (dnorth - dsouth) * (deast - dwest)
+        globe = 360.0 * 180.0
+        report.add(Le(area, globe, "area <= globe"))
+        report.add(Ge(area, globe * 0.95, "area >= globe*0.95"))
 
         reports = super()._latlon_grid(message)
         return reports + [report]
