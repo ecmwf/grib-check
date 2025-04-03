@@ -1,6 +1,6 @@
 from CheckEngine import CheckEngine
 from LookupTable import SimpleLookupTable
-from Test import Test, TiggeTest
+from Test import Test
 from Grib import get_gaussian_latitudes
 from Message import Message
 from Assert import Ge, Le, Ne, Eq, Exists, Missing, Fail, AssertTrue, IsIn, EqDbl
@@ -10,6 +10,32 @@ import logging
 
 
 class TiggeBasicChecks(CheckEngine):
+    class TiggeTest(Test):
+        def __init__(self, message: Message, parameter: dict, check_map: dict):
+            self.logger = logging.getLogger(__class__.__name__)
+            assert parameter is not None
+            assert message is not None
+            assert check_map is not None
+
+            self.__message = message
+            self.__parameter = parameter
+            self.__check_map = check_map
+
+        def run(self) -> Report:
+            data = self.__parameter
+            report = Report(f'Checks defined in parameter "{data['name']}"')
+            for check_func in data["checks"]:
+                check_reports = self.__check_map[check_func](self.__message, data)
+                merged_report = Report(f'{check_func}')
+                for check_report in check_reports:
+                    merged_report.add(check_report)
+
+
+                report.add(merged_report)
+
+            return report
+
+
     def __init__(self, param_file=None, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
         self.__check_map = {
@@ -44,7 +70,7 @@ class TiggeBasicChecks(CheckEngine):
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
         assert parameters is not None
-        return TiggeTest(message, parameters, self.__check_map)
+        return self.TiggeTest(message, parameters, self.__check_map)
 
     # not registered in the lookup table
     def _statistical_process(self, message, p):

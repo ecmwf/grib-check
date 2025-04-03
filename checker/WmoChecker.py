@@ -1,16 +1,46 @@
 from CheckEngine import CheckEngine
 from LookupTable import SimpleLookupTable
-from Test import Test, WmoTest
+from Test import Test
 from Report import Report
 from Assert import Fail, Eq
 from Message import Message
+import logging
 
 
 class WmoChecker(CheckEngine):
-    def __init__(
-        self,
-        param_file="WmoParameters.json",
-    ):
+    class WmoTest(Test):
+        def __init__(self, message: Message, parameter: dict, check_map: dict):
+            self.logger = logging.getLogger(__class__.__name__)
+            self.__message = message
+            self.__parameter = parameter
+            self.__check_map = check_map
+
+        def run(self) -> Report:
+            data = self.__parameter
+            expected_report = Report("Check expected values")
+            for kv in data["expected"]:
+                key = kv["key"]
+                value = kv["value"]
+                try:
+                    expected_report.add(Eq(self.__message, key, value))
+                except NotImplementedError:
+                    raise NotImplementedError("Not implemented")
+                except FloatingPointError as e:
+                    pass
+
+            checks_report = Report("Checks")
+            for check_func in data["checks"]:
+                check_report = self.__check_map[check_func](self.__message, data)
+                check_report.rename_anonymous_report(f"{check_func}")
+                checks_report.add(check_report)
+
+            report = Report()
+            report.add(expected_report)
+            report.add(checks_report)
+            return report
+
+
+    def __init__(self, param_file="WmoParameters.json"):
         self.__check_map = {
             "basic_checks": self.__basic_checks,
             "product_definition_template_number": self.__product_definition_template_number,
@@ -20,7 +50,7 @@ class WmoChecker(CheckEngine):
         super().__init__(tests=parameters)
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
-        return WmoTest(message, parameters, self.__check_map)
+        return self.WmoTest(message, parameters, self.__check_map)
 
     def __basic_checks(self, message, data):
         report = Report()
