@@ -4,25 +4,19 @@ import logging
 import numpy as np
 from TermColor import TermColor
 
-# def DBL_EQUAL(d1, d2, tolerance) -> int:
-#     if type(KeyValue) is type(d1) and type(KeyValue) is type(d2):
-#         v1 = d1.value()
-#         v2 = d2.value()
-#     return math.fabs(d1 - d2) <= tolerance
-
 class Assert:
-    def __init__(self, msg=None):
+    def __init__(self, comment=None):
         self._logger = logging.getLogger(__class__.__name__)
-        # self._datatype = type(value)
-        # self._actual_value = message.get(key, self._datatype)
-        # self._key = key
-        # self._expected_value = value
-        # if self._actual_value is not None:
-        #     assert type(self._actual_value) is self._datatype
         self._status = True
+        self._comment = comment
+        raise NotImplementedError("Assert class is abstract and should not be instantiated directly")
 
     def as_string(self, color=False) -> str:
-        raise NotImplementedError
+        comment = f" : {self._comment}" if self._comment is not None else ""
+        if color:
+            return f"{self._as_string(color)}{TermColor.OKBLUE}{comment}{TermColor.ENDC}"
+        else:
+            return f"{self._as_string(color)}{comment}"
 
     def __str__(self) -> str:
         return self.as_string(color=False)
@@ -33,31 +27,35 @@ class Assert:
     def __and__(self, other):
         return And(self, other)
 
+    def _as_string(self, color=False) -> str:
+        raise NotImplementedError
+
     def status(self) -> bool:
         assert type(self._status) is bool or type(self._status) is np.bool_
         return self._status
 
 
 class AssertTrue(Assert):
-    def __init__(self, status, msg):
+    def __init__(self, status, comment):
         self._status = bool(status)
-        self.__msg = msg
+        self.__comment = comment
 
     def status(self) -> bool:
         assert type(self._status) is bool
         return self._status
 
-    def as_string(self, color=False) -> str:
-        return f"{self.__msg}"
+    def _as_string(self, color=False) -> str:
+        return f"{self.__comment}"
 
 
 class And(Assert):
-    def __init__(self, lhs:Assert, rhs:Assert):
+    def __init__(self, lhs:Assert, rhs:Assert, comment=None):
         self.__lsh = lhs
         self.__rsh = rhs
+        self._comment = comment
         self._status = self.__lsh.status() and self.__rsh.status()
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lsh.as_string(color)} {TermColor.OKCYAN}and{TermColor.ENDC} {self.__rsh.as_string(color)}"
         else:
@@ -65,12 +63,13 @@ class And(Assert):
 
 
 class Or(Assert):
-    def __init__(self, lhs:Assert, rhs:Assert):
+    def __init__(self, lhs:Assert, rhs:Assert, comment=None):
         self.__lhs = lhs
         self.__rhs = rhs
         self._status = self.__lhs.status() or self.__rhs.status()
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lhs.as_string(color)} {TermColor.OKCYAN}or{TermColor.ENDC} {self.__rhs.as_string(color)}"
         else:
@@ -78,12 +77,13 @@ class Or(Assert):
 
 
 class IsIn(Assert):
-    def __init__(self, actual, expected, msg=None):
+    def __init__(self, actual, expected, comment=None):
         self.__actual = actual
         self.__expected = expected
         self._status = self.__actual.value() in self.__expected
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__actual} in {self.__expected}"
         else:
@@ -91,13 +91,14 @@ class IsIn(Assert):
 
 
 class IsMultipleOf(Assert):
-    def __init__(self, actual, multiplier, msg=None):
+    def __init__(self, actual, multiplier, comment=None):
         self.__actual = actual
         self.__multiplier = multiplier
         self.__mod_value = self.__actual % self.__multiplier
         self._status = self.__mod_value == 0
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__mod_value} == 0"
         else:
@@ -105,38 +106,41 @@ class IsMultipleOf(Assert):
 
 
 class Exists(Assert):
-    def __init__(self, message, key, msg=None):
+    def __init__(self, message, key, comment=None):
         self.__is_missing = message.is_missing(key)
         self.__key = key
         self._status = not self.__is_missing
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
-            return f"{self.__key} exists: {not self.__is_missing}"
+            return f"{self.__key} exists({not self.__is_missing})"
         else:
-            return f"{self.__key} exists: {not self.__is_missing}"
+            return f"{self.__key} exists({not self.__is_missing})"
 
 
 class Missing(Assert):
-    def __init__(self, message, key, msg=None):
+    def __init__(self, message, key, comment=None):
         self.__is_missing = message.is_missing(key)
         self.__key = key
         self._status = self.__is_missing
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
-            return f"{self.__key} is missing: {self.__is_missing}"
+            return f"{self.__key} is missing({self.__is_missing})"
         else:
-            return f"{self.__key} is missing: {self.__is_missing}"
+            return f"{self.__key} is missing({self.__is_missing})"
 
 
 class Eq(Assert):
-    def __init__(self, lsh, rhs, msg=None):
+    def __init__(self, lsh, rhs, comment=None):
         self.__lsh = lsh
         self.__rhs = rhs
         self._status = self.__lsh == self.__rhs
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lsh} == {self.__rhs}"
         else:
@@ -144,13 +148,14 @@ class Eq(Assert):
 
 
 class EqDbl(Assert):
-    def __init__(self, lsh, rhs, tolerance, msg=None):
+    def __init__(self, lsh, rhs, tolerance, comment=None):
         self.__lsh = lsh
         self.__rhs = rhs
         self.__tolerance = tolerance
         self._status = math.fabs((self.__lsh - self.__rhs).value()) <= self.__tolerance
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lsh} == {self.__rhs} within {self.__tolerance}"
         else:
@@ -158,12 +163,13 @@ class EqDbl(Assert):
 
 
 class Ne(Assert):
-    def __init__(self, lsh, rhs, msg=None):
+    def __init__(self, lsh, rhs, comment=None):
         self.__lsh = lsh
         self.__rhs = rhs
         self._status = self.__lsh != self.__rhs
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lsh} != {self.__rhs}"
         else:
@@ -171,12 +177,13 @@ class Ne(Assert):
 
 
 class Ge(Assert):
-    def __init__(self, lsh, rhs, msg=None):
+    def __init__(self, lsh, rhs, comment=None):
         self.__lsh = lsh
         self.__rhs = rhs
         self._status = self.__lsh >= self.__rhs
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lsh} >= {self.__rhs}"
         else:
@@ -184,12 +191,13 @@ class Ge(Assert):
 
 
 class Le(Assert):
-    def __init__(self, lsh, rhs, msg=None):
+    def __init__(self, lsh, rhs, comment=None):
         self.__lsh = lsh
         self.__rhs = rhs
         self._status = self.__lsh <= self.__rhs
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lsh} <= {self.__rhs}"
         else:
@@ -197,24 +205,26 @@ class Le(Assert):
 
 
 class Gt(Assert):
-    def __init__(self, lsh, rhs, msg=None):
+    def __init__(self, lsh, rhs, comment=None):
         self.__lsh = lsh
         self.__rhs = rhs
         self._status = self.__lsh > self.__rhs
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lsh} > {self.__rhs}"
         else:
             return f"{self.__lsh} > {self.__rhs}"
 
 class Lt(Assert):
-    def __init__(self, lsh, rhs, msg=None):
+    def __init__(self, lsh, rhs, comment=None):
         self.__lsh = lsh
         self.__rhs = rhs
         self._status = self.__lsh < self.__rhs
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
+    def _as_string(self, color=False) -> str:
         if color:
             return f"{self.__lsh} < {self.__rhs}"
         else:
@@ -222,18 +232,18 @@ class Lt(Assert):
 
 
 class Fail(Assert):
-    def __init__(self, msg):
-        self.__msg = msg
+    def __init__(self, comment):
         self._status = False
+        self._comment = comment
 
-    def as_string(self, color=False) -> str:
-        return f"{self.__msg}"
+    def _as_string(self, color=False) -> str:
+        return f"{self._comment}"
 
 
 class Pass(Assert):
-    def __init__(self, msg):
-        self.__msg = msg
+    def __init__(self, comment):
+        self._comment = comment
         self._status = True
 
-    def as_string(self, color=False) -> str:
-        return f"{self.__msg}"
+    def _as_string(self, color=False) -> str:
+        return f"{self._comment}"
