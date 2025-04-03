@@ -135,5 +135,5 @@ class S2S(TiggeBasicChecks):
     def _pressure_level(self, message, p):
         report = Report()
         levels = [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]
-        report.add(IsIn(message["level"], levels, 'invalid pressure level'))
+        report.add(IsIn(message["level"], levels, 'check pressure level'))
         return [report]
