@@ -102,9 +102,7 @@ class KeyValue:
         return KeyValue(k, v, self.__level + 1)
 
     def __int__(self):
-        k = f"int({self})"
-        v = int(self.__value)
-        return KeyValue(k, v, self.__level + 1)
+        return int(self.__value)
 
     def abs(self):
         k = f"|{self}|"
