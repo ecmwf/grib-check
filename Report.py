@@ -66,7 +66,10 @@ class Report:
                         msg = entry.as_string(color)
                         status = entry.status()
                         if not failed_only or not status:
-                            output += "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}\n'
+                            # output += "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}\n'
+                            tmp = "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}'
+                            tmp = tmp.replace("\n", f'\n      {"  " * (level + shift)}')
+                            output += f"{tmp}\n"
                     elif isinstance(entry, RWarning):
                         if not failed_only:
                             output += "  " * (level + shift) + f"{entry}\n"
