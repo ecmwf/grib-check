@@ -27,12 +27,11 @@ class TiggeBasicChecks(CheckEngine):
             for check_func in data["checks"]:
                 check_reports = self.__check_map[check_func](self.__message, data)
                 merged_report = Report(f'{check_func}')
+
                 for check_report in check_reports:
                     merged_report.add(check_report)
 
-
                 report.add(merged_report)
-
             return report
 
 

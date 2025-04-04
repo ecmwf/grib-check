@@ -2,7 +2,7 @@ from CheckEngine import CheckEngine
 from LookupTable import SimpleLookupTable
 from Test import Test
 from Report import Report
-from Assert import Fail, Eq
+from Assert import Fail, Eq, Le, Ge, Gt, Lt
 from Message import Message
 import logging
 
@@ -19,10 +19,27 @@ class WmoChecker(CheckEngine):
             data = self.__parameter
             expected_report = Report("Check expected values")
             for kv in data["expected"]:
+                op = kv.get("op", None)
                 key = kv["key"]
+                key_type = type(kv["key"])
                 value = kv["value"]
+                comment = kv.get("comment", None)
                 try:
-                    expected_report.add(Eq(self.__message, key, value))
+                    if op is None:
+                        expected_report.add(Eq(self.__message.get(key, key_type), value, comment))
+                    elif op == "eq":
+                        expected_report.add(Eq(self.__message.get(key, key_type), value, comment))
+                    elif op == "lt":
+                        expected_report.add(Lt(self.__message.get(key, key_type), value, comment))
+                    elif op == "le":
+                        expected_report.add(Le(self.__message.get(key, key_type), value, comment))
+                    elif op == "gt":
+                        expected_report.add(Gt(self.__message.get(key, key_type), value, comment))
+                    elif op == "ge":
+                        expected_report.add(Ge(self.__message.get(key, key_type), value, comment))
+                    else:
+                        raise NotImplementedError(f"Operation {op} not implemented")
+
                 except NotImplementedError:
                     raise NotImplementedError("Not implemented")
                 except FloatingPointError as e:

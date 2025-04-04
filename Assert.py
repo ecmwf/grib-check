@@ -36,16 +36,17 @@ class Assert:
 
 
 class AssertTrue(Assert):
-    def __init__(self, status, comment):
+    def __init__(self, status, msg, comment=None):
         self._status = bool(status)
-        self.__comment = comment
+        self._comment = comment
+        self.__msg = msg
 
     def status(self) -> bool:
         assert type(self._status) is bool
         return self._status
 
     def _as_string(self, color=False) -> str:
-        return f"{self.__comment}"
+        return f"{self.__msg}"
 
 
 class And(Assert):
@@ -232,18 +233,20 @@ class Lt(Assert):
 
 
 class Fail(Assert):
-    def __init__(self, comment):
+    def __init__(self, msg, comment=None):
         self._status = False
+        self.__msg = msg
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
-        return f"{self._comment}"
+        return f"{self.__msg}"
 
 
 class Pass(Assert):
-    def __init__(self, comment):
+    def __init__(self, msg, comment=None):
         self._comment = comment
+        self.__msg = msg
         self._status = True
 
     def _as_string(self, color=False) -> str:
-        return f"{self._comment}"
+        return f"{self.__msg}"
