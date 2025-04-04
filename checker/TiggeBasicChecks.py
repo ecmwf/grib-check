@@ -196,7 +196,6 @@ class TiggeBasicChecks(CheckEngine):
         report.add(Ne(message["Nj"], 0))
 
         if message["PLPresent"]:
-            i = 0
             count = message.get_size("pl")
             expected_lon2 = 0
             total = 0
@@ -212,8 +211,8 @@ class TiggeBasicChecks(CheckEngine):
             report.add(AssertTrue(len(pl) == count, "len(pl) == count"))
             report.add(AssertTrue(len(pl) == n * 2, "len(pl) == 2*n"))
 
-            total = 0;
-            max_pl = pl[0]; #  max elem of pl array = num points at equator
+            total = 0
+            max_pl = pl[0] #  max elem of pl array = num points at equator
 
             for p in pl:
                 total = total + p
@@ -223,7 +222,7 @@ class TiggeBasicChecks(CheckEngine):
 
             # Do not assume maximum of pl array is 4N! not true for octahedral
 
-            expected_lon2 = 360.0 - 360.0/max_pl;
+            expected_lon2 = 360.0 - 360.0/max_pl
             # if not DBL_EQUAL(expected_lon2, east, tolerance):
             if not EqDbl(east, expected_lon2, tolerance).status():
                 report.add(Fail(f"east actual={east} expected={expected_lon2} diff={expected_lon2-east}"))
@@ -258,7 +257,7 @@ class TiggeBasicChecks(CheckEngine):
     def _latlon_grid(self, message):
         report = Report("Latlon grid")
 
-        tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
+        # tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
         data_points = message["numberOfDataPoints"]
         meridian = message["numberOfPointsAlongAMeridian"]
         parallel = message["numberOfPointsAlongAParallel"]
@@ -268,16 +267,16 @@ class TiggeBasicChecks(CheckEngine):
         west = message["longitudeOfFirstGridPoint"]
         east = message["longitudeOfLastGridPoint"]
 
-        ns= message["jDirectionIncrement"]
-        we= message["iDirectionIncrement"]
+        # ns= message["jDirectionIncrement"]
+        # we= message["iDirectionIncrement"]
 
         dnorth = message.get("latitudeOfFirstGridPointInDegrees", float)
         dsouth = message.get("latitudeOfLastGridPointInDegrees", float)
         dwest = message.get("longitudeOfFirstGridPointInDegrees", float)
         deast = message.get("longitudeOfLastGridPointInDegrees", float)
 
-        dns = message.get("jDirectionIncrementInDegrees", float)
-        dwe = message.get("iDirectionIncrementInDegrees", float)
+        # dns = message.get("jDirectionIncrementInDegrees", float)
+        # dwe = message.get("iDirectionIncrementInDegrees", float)
 
         if message["basicAngleOfTheInitialProductionDomain"] == 0:
             report.add(Missing(message, "subdivisionsOfBasicAngle"))    

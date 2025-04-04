@@ -1,6 +1,5 @@
 import unittest
 from Grib import Grib
-from Message import Message
 from Assert import Eq
 
 class TestAssert(unittest.TestCase):

@@ -42,7 +42,7 @@ class WmoChecker(CheckEngine):
 
                 except NotImplementedError:
                     raise NotImplementedError("Not implemented")
-                except FloatingPointError as e:
+                except FloatingPointError:
                     pass
 
             checks_report = Report("Checks")
