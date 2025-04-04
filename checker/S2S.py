@@ -1,4 +1,4 @@
-from Assert import Le, Lt, Gt, Ge, Ne, Eq, Fail, AssertTrue, IsIn, IsMultipleOf, EqDbl
+from Assert import Le, Lt, Gt, Ge, Ne, Eq, Fail, IsIn, IsMultipleOf, EqDbl
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
 
@@ -91,7 +91,7 @@ class S2S(TiggeBasicChecks):
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")
 
-        tolerance = 1.0/1000000.0; # angular tolerance for grib2: micro degrees
+        tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
         meridian = message["numberOfPointsAlongAMeridian"]
         parallel = message["numberOfPointsAlongAParallel"]
 

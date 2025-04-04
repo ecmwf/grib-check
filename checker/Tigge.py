@@ -1,5 +1,5 @@
 from checker.TiggeBasicChecks import TiggeBasicChecks
-from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, IsMultipleOf
+from Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
 from Report import Report
 import logging
 
@@ -68,9 +68,7 @@ class Tigge(TiggeBasicChecks):
             report.add(Eq(message["productDefinitionTemplateNumber"], 1))
         elif topd == 4: # Perturbed forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 1))
-            pn = message.get("perturbationNumber")
-            nofe = message.get("numberOfForecastsInEnsemble")
-            report.add(AssertTrue(pn < nofe - 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
+            report.add(Lt(message["perturbationNumber"], message["numberOfForecastsInEnsemble"] - 1))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
