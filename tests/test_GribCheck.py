@@ -11,9 +11,13 @@ class Config:
         self.good = None
         self.bad = None
         self.report_verbosity = 3
+        self.parameters = None
+        self.num_threads = 1
+        self.color = False
         # self.path = ["./tests/tigge_small/tigge_all.grib2"]
         self.path = ["./tests/tigge_small/tigge_cf_ecmwf.grib2"]
         self.debug = True
+        self.failed_only = False
         
 
 class TestGribCheck(unittest.TestCase):

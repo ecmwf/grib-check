@@ -4,7 +4,7 @@ from checker.WmoChecker import WmoChecker
     
 class TestWmoChecker(unittest.TestCase):
     def test_load_data_from_file(self):
-        checker = WmoChecker()
+        checker = WmoChecker(param_file="./tests/WmoParameters.json")
 
         for message in Grib("./tests/dgov-data/od_eefo_taes_sfc_2024_0001_reduced_gg.grib2"):
             checker.validate(message)
