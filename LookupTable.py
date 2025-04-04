@@ -11,6 +11,9 @@ class LookupTable:
 
 
 class SimpleLookupTable(LookupTable):
+    '''
+    A simple lookup table that uses a JSON file to store the data.
+    '''
     def __init__(self, filename: str):
         assert filename is not None
         self.df = pd.read_json(filename, orient='records')
@@ -33,6 +36,12 @@ class SimpleLookupTable(LookupTable):
 
 
 class IndexedLookupTable(LookupTable):
+    '''
+    A lookup table that uses a dictionary to store the data.
+    The dictionary is indexed by the keys in the data.
+
+    TODO: Implement and replace SimpleLookupTable with this class.
+    '''
     def __init__(self, filename: str):
         raise NotImplementedError
 
