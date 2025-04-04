@@ -1,4 +1,4 @@
-from Assert import Le, Ne, Eq, Fail, AssertTrue, IsIn, IsMultipleOf
+from Assert import Le, Ne, Eq, Fail, IsIn, IsMultipleOf
 from Report import Report
 from checker.TiggeBasicChecks import TiggeBasicChecks
 

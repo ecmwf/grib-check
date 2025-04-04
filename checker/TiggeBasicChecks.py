@@ -3,7 +3,7 @@ from LookupTable import SimpleLookupTable
 from Test import Test
 from Grib import get_gaussian_latitudes
 from Message import Message
-from Assert import Ge, Le, Ne, Eq, Exists, Missing, Fail, AssertTrue, IsIn, EqDbl
+from Assert import Ge, Le, Lt, Ne, Eq, Exists, Missing, Fail, IsIn, EqDbl, AssertTrue
 from Report import Report
 import numpy as np
 import logging
@@ -141,15 +141,12 @@ class TiggeBasicChecks(CheckEngine):
         west = message.get("longitudeOfFirstGridPointInDegrees", float)
         east = message.get("longitudeOfLastGridPointInDegrees", float)
 
-        if n.value() != self.last_n:
+        if Ne(n, self.last_n).status():
             try:
                 self.values = get_gaussian_latitudes(n.value())
             except TypeError as e:
                 raise e
             except Exception as e:
-                # print("%s, field %d [%s]: cannot get gaussian latitudes for N%ld: %s" % (cfg['filename'], cfg['field'], cfg['param'],n, str(e)))
-                # cfg['error'] += 1
-                # report.error(f"Cannot get gaussian latitudes for N{n}")
                 report.add(Fail(f"Error: Cannot get gaussian latitudes for N{n.value()}, {str(e)}"))
                 self.last_n = 0
                 return [report]
@@ -163,21 +160,16 @@ class TiggeBasicChecks(CheckEngine):
         if self.values is not None:
             self.values[0] = np.rint(self.values[0] * 1e6) / 1e6
 
-
-        # if not DBL_EQUAL(north, self.values[0], tolerance) or not DBL_EQUAL(south, -self.values[0], tolerance):
-        # if (EqDbl(north, self.values[0], tolerance) | EqDbl(south, -self.values[0], tolerance)).status():
-        #     report.add(Fail(f"N={n} north={north} south={south} v(=gauss_lat[0])={self.values[0]} north-v={north-self.values[0]} south-v={south+self.values[0]}"))
         report.add(EqDbl(north, self.values[0], tolerance) | EqDbl(south, -self.values[0], tolerance))
-
         report.add(EqDbl(north, self.values[0], tolerance, "north == self.values[0]"))
         report.add(EqDbl(south, -self.values[0], tolerance, "south == -self.values[0]"))
 
         if(message.is_missing("numberOfPointsAlongAParallel")): # same as key Ni 
             # If missing, this is a REDUCED gaussian grid 
             MAXIMUM_RESOLUTION = 640
-            # report.add(Eq(message["PLPresent"], True)) # TODO: check this
+            report.add(Ne(message["PLPresent"], 0)) # TODO: check this
             report.add(EqDbl(west, 0.0, tolerance, "west == 0.0"))
-            report.add(AssertTrue(n <= MAXIMUM_RESOLUTION, f"Gaussian number N (={n}) cannot exceed {MAXIMUM_RESOLUTION}"))
+            report.add(Le(n, MAXIMUM_RESOLUTION, f"Gaussian number N (={n}) cannot exceed {MAXIMUM_RESOLUTION}"))
         else:
             # REGULAR gaussian grid 
             l_west = message["longitudeOfFirstGridPoint"]
@@ -189,9 +181,9 @@ class TiggeBasicChecks(CheckEngine):
             dwe = message.get("iDirectionIncrementInDegrees", float)
             # printf("parallel=%ld east=%ld west=%ld we=%ld",parallel,east,west,we)
 
-            report.add(AssertTrue(parallel == (l_east-l_west)/we + 1, "parallel == (l_east-l_west)/we + 1"))
-            report.add(AssertTrue(abs((deast-dwest)/dwe + 1 - parallel) < 1e-10, "abs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
-            report.add(AssertTrue(not message["PLPresent"], "not message.get('PLPresent')"))
+            report.add(Eq(parallel, (l_east - l_west) / we + 1, "parallel == (l_east - l_west) / we + 1"))
+            report.add(Lt(((deast - dwest) / dwe + 1 - parallel).abs(), 1e-10, "abs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
+            report.add(Eq(message["PLPresent"], "0", "not message.get('PLPresent')"))
 
         report.add(Ne(message["Nj"], 0))
 
@@ -209,7 +201,7 @@ class TiggeBasicChecks(CheckEngine):
                 print("len(pl)=%ld count=%ld" % (len(pl), count))
 
             report.add(AssertTrue(len(pl) == count, "len(pl) == count"))
-            report.add(AssertTrue(len(pl) == n * 2, "len(pl) == 2*n"))
+            report.add(AssertTrue(len(pl) == n * 2, "len(pl) == 2 * n"))
 
             total = 0
             max_pl = pl[0] #  max elem of pl array = num points at equator
@@ -235,7 +227,6 @@ class TiggeBasicChecks(CheckEngine):
                         numberOfDataPoints,
                         total))
 
-            # report.add(AssertTrue(numberOfDataPoints == total, "numberOfDataPoints == total"))
             report.add(Eq(message["numberOfDataPoints"], total))
 
             report.add(Missing(message, "iDirectionIncrement"))
@@ -471,7 +462,7 @@ class TiggeBasicChecks(CheckEngine):
         report = Report()
         start_step = message["startStep"]
         end_step = message["endStep"]
-        report.add(AssertTrue(start_step == end_step - 24, "startStep == endStep - 24"))
+        report.add(Eq(start_step, end_step - 24))
         min_value, max_value = message.minmax()
         if end_step == 0:
             report.add(AssertTrue(min_value == 0 and max_value() == 0, "min_value == 0 and max_value == 0"))
@@ -530,13 +521,13 @@ class TiggeBasicChecks(CheckEngine):
 
     def _has_soil_layer(self, message, p):
         report = Report()
-        report.add(AssertTrue(message["topLevel"] == message["bottomLevel"] - 1, "topLevel == bottomLevel - 1"))
+        report.add(Eq(message["topLevel"], message["bottomLevel"] - 1))
         report.add(Le(message["level"], 14)) # max in UERRA
         return [report]
 
     def _has_soil_level(self, message, p):
         report = Report()
-        report.add(AssertTrue(message["topLevel"] == message["bottomLevel"], "topLevel == bottomLevel"))
+        report.add(Eq(message["topLevel"], message["bottomLevel"]))
         report.add(Le(message["level"], 14)) # max in UERRA
         return [report]
 
@@ -605,7 +596,7 @@ class TiggeBasicChecks(CheckEngine):
     def _since_prev_pp(self, message, p):
         report = Report()
         report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
-        report.add(AssertTrue(message["endStep"] == message["startStep"] + message["lengthOfTimeRange"], "endStep == startStep + lengthOfTimeRange"))
+        report.add(Eq(message["endStep"], message["startStep"] + message["lengthOfTimeRange"]))
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
@@ -617,7 +608,7 @@ class TiggeBasicChecks(CheckEngine):
             report.add(Eq(message["lengthOfTimeRange"], 1))
         else:
             report.add(Eq(message["lengthOfTimeRange"], 6))
-        report.add(AssertTrue(message["endStep"] == message["startStep"] + 6, "endStep == startStep + 6"))
+        report.add(Eq(message["endStep"], message["startStep"] + 6))
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
@@ -629,7 +620,7 @@ class TiggeBasicChecks(CheckEngine):
             report.add(Eq(message["lengthOfTimeRange"], 1))
         else:
             report.add(Eq(message["lengthOfTimeRange"], 3))
-        report.add(AssertTrue(message["endStep"] == message["startStep"] + 3, "endStep == startStep + 3"))
+        report.add(Eq(message["endStep"], message["startStep"] + 3))
 
         stats_report = self._statistical_process(message, p)
         check_report = self._check_range(message, p)
