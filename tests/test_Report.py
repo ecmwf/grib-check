@@ -1,6 +1,6 @@
 import unittest
 from Report import Report
-from Assert import Le, Ne, Eq, Exists, Missing, Fail, Pass
+from Assert import Fail, Pass
 
 class TestAssert(unittest.TestCase):
 
