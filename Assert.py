@@ -12,7 +12,7 @@ class Assert:
         raise NotImplementedError("Assert class is abstract and should not be instantiated directly")
 
     def as_string(self, color=False) -> str:
-        comment = f" : {self._comment}" if self._comment is not None else ""
+        comment = f"\n{self._comment}" if self._comment is not None else ""
         if color:
             return f"{self._as_string(color)}{TermColor.OKBLUE}{comment}{TermColor.ENDC}"
         else:
