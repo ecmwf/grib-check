@@ -70,12 +70,6 @@ class Report:
                             tmp = "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}'
                             tmp = tmp.replace("\n", f'\n      {"  " * (level + shift)}')
                             output += f"{tmp}\n"
-                    elif isinstance(entry, RWarning):
-                        if not failed_only:
-                            output += "  " * (level + shift) + f"{entry}\n"
-                    elif isinstance(entry, RError):
-                        if not failed_only:
-                            output += "  " * (level + shift) + f"{entry}\n"
                     elif type(entry) is str:
                         if not failed_only:
                             output += "  " * (level + shift) + f"{entry}\n"
@@ -84,6 +78,31 @@ class Report:
 
         return output
 
+
+    def __as_string_long(self, entries, color, failed_only, path):
+        output = ""
+        sep = " <- "
+
+        for entry in entries:
+            if isinstance(entry, Report):
+                if entry.__name is not None:
+                    if color:
+                        path += f"{TermColor.SEP}{sep}{TermColor.ENDC}{TermColor.SEP}{TermColor.OKCYAN}{entry.__name}{TermColor.ENDC}"
+                    else:
+                        path += f"{sep}{entry.__name}"
+                    # path += f"{sep}{entry.__name}"
+                output += self.__as_string_long(entry.__entries, color, failed_only, path)
+            elif isinstance(entry, Assert):
+                if color:
+                    output += f"{path}{TermColor.SEP}{sep}{TermColor.ENDC}{entry.as_string(color)}\n"
+                elif entry.status() is True:
+                    output += f"{path}{sep}{entry.as_string(color)}\n"
+            else:
+                raise NotImplementedError
+
+        return output
+
+
     def rename(self, name):
         self.__name = name
 
@@ -91,8 +110,46 @@ class Report:
         if self.__name is None:
             self.__name = name
 
-    def as_string(self, max_level=None, color=False, failed_only=False):
-        return self.__as_string(self.__entries, 0, max_level, color, failed_only)
+    def as_string(self, max_level=None, color=False, failed_only=False, format=None):
+        if format == "short":
+            path = ""
+            if color:
+                pass_str = f"{TermColor.OKGREEN}{self.__pass_str}{TermColor.ENDC}"
+                fail_str = f"{TermColor.FAIL}{self.__fail_str}{TermColor.ENDC}"
+                none_str = f"{TermColor.OKCYAN}{self.__none_str}{TermColor.ENDC}"
+            else:
+                pass_str = self.__pass_str
+                fail_str = self.__fail_str
+                none_str = self.__none_str
+
+            if self.__name is not None:
+                if self.__status is None:
+                    if not failed_only:
+                        if color:
+                            path = f'{none_str}: {TermColor.OKCYAN}{self.__name}{TermColor.ENDC}'
+                        else:
+                            path = f'{none_str}: {self.__name}'
+                elif self.__status is True:
+                    if not failed_only:
+                        if color:
+                            path = f'{pass_str}: {TermColor.OKCYAN}{self.__name}{TermColor.ENDC}'
+                        else:
+                            path = f'{pass_str}: {self.__name}'
+                elif self.__status is False:
+                    if color:
+                        path = f'{fail_str}: {TermColor.OKCYAN}{self.__name}{TermColor.ENDC}'
+                    else:
+                        path = f'{fail_str}: {self.__name}'
+                else:
+                    print(f"self.__status={self.__status}, type={type(self.__status)}")
+                    raise NotImplementedError
+
+
+            return self.__as_string_long(self.__entries, color, failed_only, path)
+        elif format == "tree":
+            return self.__as_string(self.__entries, 0, max_level, color, failed_only)
+        else:
+            raise NotImplementedError(f"Unknown format: {format}")
 
     def status(self):
         return self.__status
