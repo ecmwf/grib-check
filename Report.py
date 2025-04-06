@@ -97,6 +97,11 @@ class Report:
                     output += f"{path}{TermColor.SEP}{sep}{TermColor.ENDC}{entry.as_string(color)}\n"
                 elif entry.status() is True:
                     output += f"{path}{sep}{entry.as_string(color)}\n"
+            elif type(entry) is str:
+                if color:
+                    output += f"{path}{TermColor.SEP}{sep}{TermColor.ENDC}{entry}\n"
+                else:
+                    output += f"{path}{sep}{entry}\n"
             else:
                 raise NotImplementedError
 
