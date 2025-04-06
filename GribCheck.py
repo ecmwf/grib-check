@@ -20,8 +20,13 @@ from Message import Message
 
 def worker(filename, message_buffer, pos, checker):
     message = Message(message_buffer=message_buffer, position=pos)
-    report = Report(f"{filename} {message.position()}")
-    report.add(checker.validate(message))
+
+    sub_report = Report(f"field {message.position()}")
+    sub_report.add(checker.validate(message))
+
+    report = Report(f"{filename}")
+    report.add(sub_report)
+
     return report
 
 
@@ -64,7 +69,7 @@ class GribCheck:
                     results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos, checker)))
 
             for result in results:
-                print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only), end="")
+                print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only, format=self.args.format), end="")
 
 
 if __name__ == "__main__":
@@ -80,7 +85,8 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
     parser.add_argument("-c", "--color", help="use color in output", action="store_true")
     parser.add_argument("-j", "--num_threads", help="number of threads", type=int, default=4)
-    parser.add_argument("-f", "--failed_only", help="show only failed checks", action="store_true")
+    parser.add_argument("-b", "--failed_only", help="show only failed checks", action="store_true")
+    parser.add_argument("-f", "--format", help="output format", choices=["short", "tree"], default="tree")
     args = parser.parse_args()
 
     if args.debug:

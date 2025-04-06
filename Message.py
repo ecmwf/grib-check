@@ -120,7 +120,7 @@ class Message:
 
             try:
                 self.__values = self.get_double_array("values")
-            except Exception as e:
+            except Exception:
                 return
 
             if bitmap:
