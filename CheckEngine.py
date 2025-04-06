@@ -18,9 +18,10 @@ class CheckEngine:
 
     def validate(self, message) -> Report:
         report = Report()
-        kv = self._test_store.get_element(message)
+        kv, store_report = self._test_store.get_element(message)
         if kv is not None:
             test = self._create_test(message, kv)
+            report.add(store_report)
             report.add(test.run())
         else:
             self.logger.debug(f"Could not find parameter for: {message}")

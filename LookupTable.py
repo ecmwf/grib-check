@@ -1,5 +1,7 @@
 import pandas as pd
 from Message import Message
+from Report import Report
+import json
 
 
 class LookupTable:
@@ -19,6 +21,7 @@ class SimpleLookupTable(LookupTable):
         self.df = pd.read_json(filename, orient='records')
 
     def get_element(self, message: Message):
+        report = Report('Matched parameter')
         params = list()
         for _, row in self.df.iterrows():
             count = 0
@@ -30,9 +33,13 @@ class SimpleLookupTable(LookupTable):
                 # return row.to_dict()
         if len(params) > 0:
             params.sort(key=lambda x: x[0], reverse=True)
-            return params[0][1].to_dict()
+            # json_str = str(json.dumps(params[0][1].to_dict()['pairs'], indent=4))
+            report.rename(f"Matched parameter: {params[0][1]["name"]}")
+            for pair in params[0][1].to_dict()['pairs']:
+                report.add(pair['key'] + ": " + str(pair['value']))
+            return params[0][1].to_dict(), report
        
-        return None
+        return (None, report)
 
 
 class IndexedLookupTable(LookupTable):
