@@ -60,15 +60,15 @@ class Tigge(TiggeBasicChecks):
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message.get("productDefinitionTemplateNumber") == 1:
-                report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
-                report.add(Le(message["perturbationNumber"], message.get("numberOfForecastsInEnsemble")))
+                report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd = {topd}"))
+                report.add(Le(message["perturbationNumber"], message.get("numberOfForecastsInEnsemble"), f"topd = {topd}"))
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
-            report.add(Eq(message["productDefinitionTemplateNumber"], 1))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}"))
         elif topd == 4: # Perturbed forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 1))
-            report.add(Lt(message["perturbationNumber"], message["numberOfForecastsInEnsemble"] - 1))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}"))
+            report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"] - 1, f"topd = {topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 

@@ -16,9 +16,9 @@ class S2S(TiggeBasicChecks):
         date = message["date"]
         # report.add(Ge(message["date"], 20060101))
         
-        report.add(Eq((date / 10000).to_int(), message["year"], "int(date / 10000) == message.get('year')"))
-        report.add(Eq(((date % 10000) / 100).to_int(), message["month"], "int((date % 10000) / 100) == message.get('month')"))
-        report.add(Eq((date % 100).to_int(), message["day"], "int(date % 100) == message.get('day')"))
+        report.add(Eq((date / 10000).to_int(), message["year"]))
+        report.add(Eq(((date % 10000) / 100).to_int(), message["month"]))
+        report.add(Eq((date % 100).to_int(), message["day"]))
         report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
         report.add(IsMultipleOf(message["step"], 6))
 
@@ -75,7 +75,7 @@ class S2S(TiggeBasicChecks):
         elif topd == 4: # Perturbed forecast products
             # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
             report.add(Eq(message["productDefinitionTemplateNumber"], 1))
-            report.add(Eq(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]- 1, "perturbationNumber == numberOfForecastsInEnsemble - 1"))
+            report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]- 1))
         else:
             report.add(Fail(f'Unsupported typeOfProcessedData {message["typeOfProcessedData"]}'))
 
