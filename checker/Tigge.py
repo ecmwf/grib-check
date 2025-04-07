@@ -10,19 +10,17 @@ class Tigge(TiggeBasicChecks):
         super().__init__(param_file, valueflg=valueflg)
 
     def _basic_checks(self, message, p):
-        reports = super()._basic_checks(message, p)
-        report = Report(f"{__class__.__name__}._basic_checks")
+        report = Report("Tigge Basic Checks")
         # Only 00, 06 12 and 18 Cycle OK 
         report.add(IsIn(message["hour"], [0, 6, 12, 18]))
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
         report.add(Le(message["endStep"], 30*24))
         report.add(IsMultipleOf(message["step"], 6))
-        return reports + [report]
-
+        return report
 
     # not registered in the lookup table
-    def _statistical_process(self, message, p):
-        report = Report(f"{__class__.__name__}.statistical_process")
+    def _statistical_process(self, message, p) -> Report:
+        report = Report("Tigge Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
 
@@ -32,7 +30,7 @@ class Tigge(TiggeBasicChecks):
             report.add(Eq(message["productDefinitionTemplateNumber"], 11))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-            return [report]
+            return report
 
         if message.get("indicatorOfUnitOfTimeRange") == 11: # six hours
             # Six hourly is OK
@@ -44,19 +42,18 @@ class Tigge(TiggeBasicChecks):
         report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
         report.add(IsMultipleOf(message["endStep"], 6))
 
-        reports = super()._statistical_process(message, p)
-        return reports + [report]
+        return super()._statistical_process(message, p).add(report)
 
-    def _from_start(self, message, p):
-        reports = super()._from_start(message, p)
+    def _from_start(self, message, p) -> Report:
+        report = Report("Tigge From Start")
         if message.get("endStep") != 0:
-            reports += self._check_range(message, p)
-        return reports
+            report.add(self._check_range(message, p))
 
-    def _point_in_time(self, message, p):
-        reports = super()._point_in_time(message, p)
+        return super()._statistical_process(message, p).add(report)
 
-        report = Report(__class__.__name__)
+    def _point_in_time(self, message, p) -> Report:
+        report = Report("Tigge Point in Time")
+
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message.get("productDefinitionTemplateNumber") == 1:
@@ -72,9 +69,9 @@ class Tigge(TiggeBasicChecks):
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
-        return reports + [report]
+        return super()._statistical_process(message, p).add(report)
 
-    def _height_level(self, message, p):
-        report = Report()
+    def _height_level(self, message, p) -> Report:
+        report = Report("Tigge Height Level")
         report.add(Fail("Not implemented: dummy height_level()"))
-        return [report]
+        return report

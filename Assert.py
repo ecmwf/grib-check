@@ -11,15 +11,21 @@ class Assert:
         self._comment = comment
         raise NotImplementedError("Assert class is abstract and should not be instantiated directly")
 
-    def as_string(self, color=False) -> str:
-        comment = f"\n{self._comment}" if self._comment is not None else ""
+    def as_string(self, color=False, comment_position = "below") -> str:
+        if comment_position == "right":
+            comment = f" : ({self._comment})" if self._comment is not None else ""
+        elif comment_position == "below":
+            comment = f"\n{self._comment}" if self._comment is not None else ""
+        else:
+            raise ValueError("comment_position must be either 'right' or 'below'")
+
         if color:
             return f"{self._as_string(color)}{TermColor.OKBLUE}{comment}{TermColor.ENDC}"
         else:
             return f"{self._as_string(color)}{comment}"
 
     def __str__(self) -> str:
-        return self.as_string(color=False)
+        return self.as_string(color=False, comment_position="right")
     
     def __or__(self, other):
         return Or(self, other)

@@ -1,7 +1,6 @@
 import pandas as pd
 from Message import Message
 from Report import Report
-import json
 
 
 class LookupTable:

@@ -63,37 +63,37 @@ class KeyValue:
 
     def __add__(self, other):
         k = f"{self} + {other}"
-        v = self.__value + other.__value if type(other) is KeyValue else self.__value + other
+        v = None if self.__value is None else self.__value + other.__value if type(other) is KeyValue and other.__value is None  else self.__value + other
         return KeyValue(k, v, self.__level + 1)
 
     def __radd__(self, other):
         k = f"{other} + {self}"
-        v = self.__value + other.__value if type(other) is KeyValue else self.__value + other
+        v = None if self.__value is None else self.__value + other.__value if type(other) is KeyValue and other.__value is None  else self.__value + other
         return KeyValue(k, v, self.__level + 1)
 
     def __sub__(self, other):
         k = f"{self} - {other}"
-        v = self.__value - other.__value if type(other) is KeyValue else self.__value - other
+        v = None if self.__value is None else self.__value - other.__value if type(other) is KeyValue and other.__value is None  else self.__value - other
         return KeyValue(k, v, self.__level + 1)
 
     def __mul__(self, other):
         k = f"{self} * {other}"
-        v = self.__value * other.__value if type(other) is KeyValue else self.__value * other
+        v = None if self.__value is None else self.__value * other.__value if type(other) is KeyValue and other.__value is None  else self.__value * other
         return KeyValue(k, v, self.__level + 1)
 
     def __truediv__(self, other):
         k = f"{self} / {other}"
-        v = self.__value / other.__value if type(other) is KeyValue else self.__value / other
+        v = None if self.__value is None else self.__value / other.__value if type(other) is KeyValue and other.__value is None else self.__value / other
         return KeyValue(k, v, self.__level + 1)
 
     def __mod__(self, other):
         k = f"{self} % {other}"
-        v = self.__value % other.__value if type(other) is KeyValue else self.__value % other
+        v = None if self.__value is None else self.__value % other.__value if type(other) is KeyValue else self.__value % other
         return KeyValue(k, v, self.__level + 1)
 
     def __neg__(self):
         k = f"-{self}"
-        v = -self.__value
+        v = None if self.__value is None else -self.__value
         return KeyValue(k, v, self.__level + 1)
 
     def __rcontains__(self, other):
@@ -106,10 +106,10 @@ class KeyValue:
 
     def abs(self):
         k = f"|{self}|"
-        v = abs(self.__value)
+        v = None if self.__value is None else abs(self.__value)
         return KeyValue(k, v, self.__level + 1)
 
     def to_int(self):
         k = f"int({self})"
-        v = int(self.__value)
+        v = None if self.__value is None else int(self.__value)
         return KeyValue(k, v, self.__level + 1)
