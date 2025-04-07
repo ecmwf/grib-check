@@ -8,17 +8,16 @@ class S2SRefcst(TiggeBasicChecks):
         super().__init__(param_file, valueflg=valueflg)
 
 
-    def _basic_checks(self, message, p):
-        reports = super()._basic_checks(message, p)
-        report = Report(f"{__class__.__name__}.{self._basic_checks.__name__}")
+    def _basic_checks(self, message, p) -> Report:
+        report = Report("S2SRefcst Basic Checks")
         # Only 00, 06 12 and 18 Cycle OK 
         report.add(IsIn(message["hour"], [0, 6, 12, 18]))
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
         report.add(Le(message["endStep"], 30*24))
         report.add(IsMultipleOf(message["step"], 6))
-        return reports + [report]
+        return super()._basic_checks(message, p).add(report)
 
-    def _latlon_grid(self, message):
+    def _latlon_grid(self, message) -> Report:
         report = Report(f"{__class__.__name__}.latlon_grid")
 
         tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
@@ -41,7 +40,6 @@ class S2SRefcst(TiggeBasicChecks):
         dns = message.get("jDirectionIncrementInDegrees", float)
         dwe = message.get("iDirectionIncrementInDegrees", float)
 
-
         report.add(Gt(north, south, "north > south"))
         report.add(Gt(east, west, "east > west"))
 
@@ -59,12 +57,11 @@ class S2SRefcst(TiggeBasicChecks):
         report.add(Le(area, globe, "area <= globe"))
         report.add(Ge(area, globe * 0.95, "area >= globe*0.95"))
 
-        reports = super()._latlon_grid(message)
-        return reports + [report]
+        return super()._latlon_grid(message).add(report)
 
     # not registered in the lookup table
-    def _statistical_process(self, message, p):
-        report = Report(f"{__class__.__name__}.{self._statistical_process.__name__}")
+    def _statistical_process(self, message, p) -> Report:
+        report = Report("S2SRefcst Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
 
@@ -74,7 +71,7 @@ class S2SRefcst(TiggeBasicChecks):
             report.add(Eq(message["productDefinitionTemplateNumber"], 61))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-            return [report]
+            return report
 
         if message["indicatorOfUnitOfTimeRange"] == 11: # six hours
             # Six hourly is OK
@@ -86,31 +83,28 @@ class S2SRefcst(TiggeBasicChecks):
         report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
         report.add(IsMultipleOf(message["step"], 6))
 
-        reports = super()._statistical_process(message, p)
-        return reports + [report]
+        return super()._statistical_process(message, p).add(report)
 
-    def _from_start(self, message, p):
-        reports = super()._from_start(message, p)
+    def _from_start(self, message, p) -> Report:
+        report = Report("S2SRefcst From Start")
         if message["endStep"] != 0:
-            reports += self._check_range(message, p)
-        return reports
+            report.add(self._check_range(message, p))
+        return super()._from_start(message, p).add(report)
 
-    def _point_in_time(self, message, p):
-        reports = super()._point_in_time(message, p)
-
-        report = Report(f"{__class__.__name__}.{self._point_in_time.__name__}")
+    def _point_in_time(self, message, p) -> Report:
+        report = Report("S2SRefcst Point In Time")
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
-                report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
-                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
+                report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
+                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"], f"topd={topd}"))
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
-            report.add(Eq(message["productDefinitionTemplateNumber"], 60))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 60, f"topd={topd}"))
         elif topd == 4: # Perturbed forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 60))
-            report.add(Lt(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 60, f"topd={topd}"))
+            report.add(Lt(message["perturbationNumber"], message["numberOfForecastsInEnsemble"], f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
@@ -121,4 +115,4 @@ class S2SRefcst(TiggeBasicChecks):
             report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
             report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        return reports + [report]
+        return super()._point_in_time(message, p).add(report)

@@ -1,4 +1,3 @@
-import sys
 import logging
 from LookupTable import SimpleLookupTable
 from Test import Test

@@ -7,18 +7,18 @@ class Lam(TiggeBasicChecks):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
 
-    def _basic_checks(self, message, p):
-        reports = super()._basic_checks(message, p)
-        report = Report(f"{__class__.__name__}._basic_checks")
+    def _basic_checks(self, message, p) -> Report:
+        report = Report("Lam Basic Checks")
         report.add(IsIn(message["hour"], [0, 3, 6, 9, 12, 15, 18, 21]))
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
         report.add(Le(message["endStep"], 30 * 24))
         report.add(IsMultipleOf(message["step"], 3))
-        return reports + [report]
+
+        return super()._basic_checks(message, p).add(report)
 
     # not registered in the lookup table
-    def _statistical_process(self, message, p):
-        report = Report(f"{__class__.__name__}.statistical_process")
+    def _statistical_process(self, message, p) -> Report:
+        report = Report("Lam Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
 
@@ -28,7 +28,7 @@ class Lam(TiggeBasicChecks):
             report.add(Eq(message["productDefinitionTemplateNumber"], 11))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-            return [report]
+            return report
 
         if message["indicatorOfUnitOfTimeRange"] == 10: # three hours
             # Three hourly is OK
@@ -40,20 +40,17 @@ class Lam(TiggeBasicChecks):
         report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
         report.add(IsMultipleOf(message["endStep"], 3)) # Every three hours
 
-        reports = super()._statistical_process(message, p)
-        return reports + [report]
+        return super()._statistical_process(message, p).add(report)
 
-    def _from_start(self, message, p):
-        reports = super()._from_start(message, p)
+    def _from_start(self, message, p) -> Report:
+        report = Report("Lam From Start")
         if message["endStep"] != 0:
-            reports += self._check_range(message, p)
+            report.add(self._check_range(message, p))
 
-        return reports
+        return super()._from_start(message, p).add(report)
 
-    def _point_in_time(self, message, p):
-        reports = super()._point_in_time(message, p)
-
-        report = Report()
+    def _point_in_time(self, message, p) -> Report:
+        report = Report("Lam Point In Time")
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
@@ -76,4 +73,4 @@ class Lam(TiggeBasicChecks):
             report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
             report.add(IsMultipleOf(message["forecastTime"], 3))
 
-        return reports + [report]
+        return super()._point_in_time(message, p).add(report)

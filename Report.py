@@ -29,7 +29,7 @@ class Report:
         self.__status = None
         self.__name = name
 
-    def __as_string(self, entries, level, max_level, color, failed_only):
+    def __as_string_tree(self, entries, level, max_level, color, failed_only):
         shift = 0
         output = ""
         if color:
@@ -61,7 +61,7 @@ class Report:
             if max_level is None or level + shift <= max_level:
                 for entry in entries:
                     if isinstance(entry, Report):
-                        output += entry.__as_string(entry.__entries, level + shift, max_level, color, failed_only)
+                        output += entry.__as_string_tree(entry.__entries, level + shift, max_level, color, failed_only)
                     elif isinstance(entry, Assert):
                         msg = entry.as_string(color)
                         status = entry.status()
@@ -79,7 +79,7 @@ class Report:
         return output
 
 
-    def __as_string_long(self, report, color, failed_only, path):
+    def __as_string_short(self, report, color, failed_only, path):
         output = ""
         sep = " <- "
 
@@ -100,12 +100,25 @@ class Report:
 
         for entry in report.__entries:
             if isinstance(entry, Report):
-                print("PATH:" , entry.__name)
-                output += self.__as_string_long(entry, color, failed_only, path)
+                output += self.__as_string_short(entry, color, failed_only, path)
             elif isinstance(entry, Assert):
-                output += f"{path}{entry.as_string(color)}\n"
+                status = entry.status()
+                if not failed_only or not status:
+                    if status is True:
+                        if color:
+                            output += f"{pass_str}: {path}{sep}{entry.as_string(color)}\n"
+                        else:
+                            output += f"{pass_str}: {path}{sep}{entry.as_string(color)}\n"
+                    elif status is False:
+                        if color:
+                            output += f"{fail_str}: {path}{sep}{entry.as_string(color)}\n"
+                        else:
+                            output += f"{fail_str}: {path}{sep}{entry.as_string(color)}\n"
+                    else:
+                        raise NotImplementedError
+                # output += f"{path}{entry.as_string(color, comment_position="right")}\n"
             elif type(entry) is str:
-                output += f"{path}{entry}\n"
+                output += f"{none_str}: {path}{entry}\n"
             else:
                 raise NotImplementedError
 
@@ -121,9 +134,9 @@ class Report:
 
     def as_string(self, max_level=None, color=False, failed_only=False, format=None):
         if format == "short":
-            return self.__as_string_long(self, color, failed_only, "")
+            return self.__as_string_short(self, color, failed_only, "")
         elif format == "tree":
-            return self.__as_string(self.__entries, 0, max_level, color, failed_only)
+            return self.__as_string_tree(self.__entries, 0, max_level, color, failed_only)
         else:
             raise NotImplementedError(f"Unknown format: {format}")
 
@@ -131,7 +144,7 @@ class Report:
         return self.__status
 
     def __str__(self):
-        return self.__as_string(entries=self.__entries, level=0, max_level=None, color=False, failed_only=False)
+        return self.__as_string_tree(entries=self.__entries, level=0, max_level=None, color=False, failed_only=False)
 
     def add(self, entry):
         assert isinstance(entry, Assert) or type(entry) is Report or type(entry) is str
@@ -157,6 +170,8 @@ class Report:
 
         assert type(self.__status) is bool or type(self.__status) is np.bool_ or self.__status is None
         self.__entries.append(entry)
+
+        return self
 
     def error(self, msg):
         # TODO: Implement error handling

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import argparse
 from FileScanner import FileScanner
 from checker.WmoChecker import WmoChecker

@@ -7,9 +7,8 @@ class S2S(TiggeBasicChecks):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
 
-    def _basic_checks(self, message, p):
-        reports = super()._basic_checks(message, p)
-        report = Report(f"{__class__.__name__}._basic_checks")
+    def _basic_checks(self, message, p) -> Report:
+        report = Report("S2S Basic Checks")
 
         # todo check for how many years back the reforecast is done? Is it coded in the grib???
         # Check if the date is OK
@@ -22,22 +21,22 @@ class S2S(TiggeBasicChecks):
         report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
         report.add(IsMultipleOf(message["step"], 6))
 
-        return reports + [report]
+        return super()._basic_checks(message, p).add(report)
 
 
     # not registered in the lookup table
-    def _statistical_process(self, message, p):
-        report = Report(f"{__class__.__name__}.statistical_process")
+    def _statistical_process(self, message, p) -> Report:
+        report = Report("S2S Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
 
         if topd in [0, 1, 2]: # Analysis, Forecast, Analysis and forecast products
             pass
         elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 11))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-            return [report]
+            return report
 
         if message["indicatorOfUnitOfTimeRange"] == 11: # six hours
             # Six hourly is OK
@@ -49,33 +48,30 @@ class S2S(TiggeBasicChecks):
         report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
         report.add(IsMultipleOf(message["endStep"], 6))
 
-        reports = super()._statistical_process(message, p)
-        return reports + [report]
+        return super()._statistical_process(message, p).add(report)
 
-    def _from_start(self, message, p):
-        reports = super()._from_start(message, p)
+    def _from_start(self, message, p) -> Report:
+        report = Report("S2S From Start")
         if message["endStep"] != 0:
-            reports += self._check_range(message, p)
-        return reports
+            report.add(self._check_range(message, p))
+        return super()._from_start(message, p).add(report)
 
-    def _point_in_time(self, message, p):
-        reports = super()._point_in_time(message, p)
-
-        report = Report()
+    def _point_in_time(self, message, p) -> Report:
+        report = Report("S2S Point In Time")
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
-                report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
-                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
+                report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
+                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"], f"topd={topd}"))
         elif topd == 2: # Analysis and forecast products
             pass
         elif topd == 3: # Control forecast products 
             # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
-            report.add(Eq(message["productDefinitionTemplateNumber"], 1))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}"))
         elif topd == 4: # Perturbed forecast products
             # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
-            report.add(Eq(message["productDefinitionTemplateNumber"], 1))
-            report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]- 1))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}"))
+            report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"] - 1, f"topd={topd}"))
         else:
             report.add(Fail(f'Unsupported typeOfProcessedData {message["typeOfProcessedData"]}'))
 
@@ -86,7 +82,7 @@ class S2S(TiggeBasicChecks):
             report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
             report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        return reports + [report]
+        return super()._point_in_time(message, p).add(report)
 
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")
@@ -129,11 +125,10 @@ class S2S(TiggeBasicChecks):
         report.add(Le(area, globe, "area <= globe"))
         report.add(Ge(area, globe * 0.95, "area >= globe*0.95"))
 
-        reports = super()._latlon_grid(message)
-        return reports + [report]
+        return super()._latlon_grid(message).add(report)
 
-    def _pressure_level(self, message, p):
-        report = Report()
+    def _pressure_level(self, message, p) -> Report:
+        report = Report("S2S Pressure Level")
         levels = [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]
         report.add(IsIn(message["level"], levels, 'check pressure level'))
-        return [report]
+        return report
