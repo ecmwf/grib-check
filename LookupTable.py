@@ -33,7 +33,8 @@ class SimpleLookupTable(LookupTable):
         if len(params) > 0:
             params.sort(key=lambda x: x[0], reverse=True)
             # json_str = str(json.dumps(params[0][1].to_dict()['pairs'], indent=4))
-            report.rename(f"Matched parameter: {params[0][1]["name"]}")
+            if "name" in params[0][1].to_dict():
+                report.rename(f"Matched parameter: {params[0][1]["name"]}")
             for pair in params[0][1].to_dict()['pairs']:
                 report.add(pair['key'] + ": " + str(pair['value']))
             return params[0][1].to_dict(), report

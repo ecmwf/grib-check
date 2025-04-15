@@ -1,9 +1,9 @@
 from Assert import Le, Gt, Ge, Ne, Eq, Fail, Lt, EqDbl, IsIn, IsMultipleOf
 from Report import Report
-from checker.TiggeBasicChecks import TiggeBasicChecks
+from checker.Wmo import Wmo
 
 
-class S2SRefcst(TiggeBasicChecks):
+class S2SRefcst(Wmo):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
 
