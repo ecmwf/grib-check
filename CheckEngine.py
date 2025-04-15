@@ -7,13 +7,37 @@ from Assert import Fail
 
 
 class CheckEngine:
+    class DefaultTest(Test):
+        def __init__(self, message: Message, parameter: dict, check_map: dict):
+            self.logger = logging.getLogger(__class__.__name__)
+            assert parameter is not None
+            assert message is not None
+            assert check_map is not None
+
+            self.__message = message
+            self.__parameter = parameter
+            self.__check_map = check_map
+
+        def run(self) -> Report:
+            data = self.__parameter
+            report = Report(f'{data['name']}')
+            for check_func in data["checks"]:
+                report.add(self.__check_map[check_func](self.__message, data))
+            return report
+
     def __init__(self, tests: SimpleLookupTable):
         self.logger = logging.getLogger(__class__.__name__)
         assert tests is not None
         self._test_store = tests 
+        self.__check_map = None
 
-    def _create_test(self, message:Message, parameters:dict) -> Test:
-        raise NotImplementedError
+    def _create_test(self, message: Message, parameters: dict) -> Test:
+        assert parameters is not None
+        return self.DefaultTest(message, parameters, self._check_map)
+
+    def set_checks(self, check_map: dict):
+        assert check_map is not None
+        self._check_map = check_map
 
     def validate(self, message) -> Report:
         report = Report()

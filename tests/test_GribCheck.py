@@ -18,6 +18,7 @@ class Config:
         self.path = ["./tests/tigge_small/tigge_cf_ecmwf.grib2"]
         self.debug = True
         self.failed_only = False
+        self.format = "tree"
         
 
 class TestGribCheck(unittest.TestCase):

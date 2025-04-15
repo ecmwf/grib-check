@@ -8,7 +8,8 @@ class TestIndexedLookupTable(unittest.TestCase):
         table = SimpleLookupTable("tests/test_parameters.json")
         grib = Grib("tests/wmo/od_eefo_fcmean_sfc_2024_0001_reduced_gg.grib2")
         message = next(grib)
-        element = table.get_element(message)
+        element, lookup_table_report = table.get_element(message)
+        print(element)
         self.assertEqual(
                 {
                 "pairs": [

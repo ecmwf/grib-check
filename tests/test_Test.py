@@ -2,12 +2,12 @@ import unittest
 from Grib import Grib
 from Report import Report
 from Assert import Fail
-from checker.TiggeBasicChecks import TiggeBasicChecks
+from checker.Tigge import Tigge
 
 def dummy(a, b):
     report = Report()
     report.add(Fail("dummy"))
-    return [report]
+    return report
 
 class TestTest(unittest.TestCase):
     # def test_create_wmo_test(self):
@@ -98,7 +98,7 @@ class TestTest(unittest.TestCase):
         }
 
         for message in Grib("./tests/tigge/tigge_ecmf_sfc_10v.grib"):
-            test = TiggeBasicChecks.TiggeTest(message, parameter, check_map)
+            test = Tigge.DefaultTest(message, parameter, check_map)
             report = test.run()
             print(report)
 

@@ -1,9 +1,9 @@
-from checker.TiggeBasicChecks import TiggeBasicChecks
+from checker.Wmo import Wmo
 from Assert import Le, Eq, Fail, IsIn, AssertTrue, IsMultipleOf
 from Report import Report
 
 
-class Uerra(TiggeBasicChecks):
+class Uerra(Wmo):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
   

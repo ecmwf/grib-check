@@ -1,10 +1,10 @@
-from checker.TiggeBasicChecks import TiggeBasicChecks
+from checker.Wmo import Wmo
 from Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
 from Report import Report
 import logging
 
 
-class Tigge(TiggeBasicChecks):
+class Tigge(Wmo):
     def __init__( self, param_file=None, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
         super().__init__(param_file, valueflg=valueflg)

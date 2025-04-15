@@ -147,6 +147,8 @@ class Report:
         return self.__as_string_tree(entries=self.__entries, level=0, max_level=None, color=False, failed_only=False)
 
     def add(self, entry):
+        if not (isinstance(entry, Assert) or type(entry) is Report or type(entry) is str):
+            print(f"entry={entry}, type={type(entry)}")
         assert isinstance(entry, Assert) or type(entry) is Report or type(entry) is str
         if isinstance(entry, Assert):
             if self.__status is None:
@@ -172,6 +174,8 @@ class Report:
         self.__entries.append(entry)
 
         return self
+
+
 
     def error(self, msg):
         # TODO: Implement error handling

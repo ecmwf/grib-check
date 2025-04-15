@@ -1,9 +1,9 @@
 from Assert import Le, Ne, Eq, Fail, IsIn, IsMultipleOf
 from Report import Report
-from checker.TiggeBasicChecks import TiggeBasicChecks
+from checker.Wmo import Wmo
 
 
-class Lam(TiggeBasicChecks):
+class Lam(Wmo):
     def __init__(self, param_file=None, valueflg=False):
         super().__init__(param_file, valueflg=valueflg)
 
