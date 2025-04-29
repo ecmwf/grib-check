@@ -1,6 +1,7 @@
 from CheckEngine import CheckEngine
 from LookupTable import SimpleLookupTable
 from checker.CheckPool import CheckPool
+import os
 import logging
 
 
@@ -35,5 +36,6 @@ class Wmo(CheckEngine, CheckPool):
         self.values = None
         self.valueflg = valueflg
 
-        parameters = SimpleLookupTable(param_file if param_file is not None else"checker/TiggeParameters.json")
+        script_path = os.path.dirname(os.path.realpath(__file__))
+        parameters = SimpleLookupTable(param_file if param_file is not None else f"{script_path}/TiggeParameters.json")
         super().__init__(tests=parameters)

@@ -78,7 +78,7 @@ class KeyValue:
 
     def __mul__(self, other):
         k = f"{self} * {other}"
-        v = None if self.__value is None else self.__value * other.__value if type(other) is KeyValue and other.__value is None  else self.__value * other
+        v = None if self.__value is None else self.__value * other.__value if type(other) is KeyValue and other.__value is None  else self.__value * other.__value
         return KeyValue(k, v, self.__level + 1)
 
     def __truediv__(self, other):
