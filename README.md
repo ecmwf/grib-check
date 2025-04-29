@@ -10,13 +10,8 @@ source venv/bin/activate
 pip install pandas eccodes
 ```
 
-1. Add checker/Destiny.py
-
-```bash
-touch checker/Destiny.py
-
-```
-Derive a new class from `Wmo`, to inherit the test pool.
+Add checker/Destiny.py
+Derive a new the `Destiny` class from `Wmo`, to inherit the test pool.
 
 ``` python
 from checker.Wmo import Wmo
@@ -33,7 +28,7 @@ class Destiny(Wmo):
 
         return super()._basic_checks(message, p).add(report)
 ```
-2. Add Destiny to available projects in GribCheck.py
+Add Destiny to available projects in GribCheck.py
 
 ``` python
 ...
@@ -48,7 +43,7 @@ from checker.Destiny import Destiny
 
 ```
 
-3. Run the check
+Run the check
 
 ``` bash
 python GribCheck.py -t destiny /path/to/file.grib2
@@ -56,10 +51,11 @@ python GribCheck.py -t destiny /path/to/file.grib2
 
 ## Grib
 
-The Grib class is a wrapper to eccodes.
+The Grib class is a wrapper around ecCodes.
 
 ### Message
-A message is wrapper around the ecCodes handle, with the difference it has automatic memory management
+
+A message is a wrapper around the ecCodes handle, with the key difference that it provides automatic memory management.
 
 ### KeyValue
 
