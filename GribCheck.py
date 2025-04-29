@@ -9,6 +9,7 @@ from checker.S2S import S2S
 from checker.S2SRefcst import S2SRefcst
 from checker.Crra import Crra
 from checker.Lam import Lam
+from checker.Destiny import Destiny
 from Grib import Grib
 import logging
 from Report import Report
@@ -57,6 +58,8 @@ class GribCheck:
             checker = Crra(param_file=self.args.parameters, valueflg=self.args.valueflg)
         elif self.args.grib_type == "lam":
             checker = Lam(param_file=self.args.parameters, valueflg=self.args.valueflg)
+        elif self.args.grib_type == "destiny":
+            checker = Destiny(param_file=self.args.parameters, valueflg=self.args.valueflg)
         else:
             raise ValueError("Unknown data type")
 
@@ -77,7 +80,7 @@ if __name__ == "__main__":
     # parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
     parser.add_argument("-a", "--valueflg", help="check value ranges", action="store_true")
     parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
-    parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo"], default="tigge")
+    parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo", "destiny"], default="tigge")
     parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
     parser.add_argument("-l", "--report_verbosity", help="report depth", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")

@@ -1,12 +1,15 @@
 from checker.Wmo import Wmo
 from Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
 from Report import Report
+import os
 import logging
 
 
 class Tigge(Wmo):
     def __init__( self, param_file=None, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
+        script_path = os.path.dirname(os.path.realpath(__file__))
+        param_file= param_file if param_file is not None else f"{script_path}/TiggeParameters.json"
         super().__init__(param_file, valueflg=valueflg)
 
     def _basic_checks(self, message, p):
