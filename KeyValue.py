@@ -1,11 +1,20 @@
 import logging
+from enum import Enum
+
+
+class OpType(Enum):
+    DASH = 0
+    DOT = 1
+    NONE = 2
+
 
 class KeyValue:
-    def __init__(self, key, value, level=0):
+    def __init__(self, key, value, level=0, last_op_type=OpType.NONE):
         self.logger = logging.getLogger(__class__.__name__)
         self.__key = key
         self.__value = value
         self.__level = level
+        self.__last_op_type = last_op_type
 
     def key(self):
         return self.__key
@@ -61,38 +70,65 @@ class KeyValue:
         else:
             return self.__value >= other
 
+
+
+    def __dash_op__(self, lhs, rhs, op, op_sign, op_type):
+        lhs_last_op_type = lhs.__last_op_type if type(lhs) is KeyValue else OpType.NONE
+        rhs_last_op_type = rhs.__last_op_type if type(rhs) is KeyValue else OpType.NONE
+
+        lhss = f"({lhs})" if lhs_last_op_type == OpType.DASH and op_type == OpType.DOT else f"{lhs}"
+        rhss = f"({rhs})" if rhs_last_op_type == OpType.DASH and op_type == OpType.DOT else f"{rhs}"
+
+        k = f"{lhss} {op_sign} {rhss}"
+
+        if lhs is None or rhs is None:
+            return KeyValue(k, None, self.__level + 1)
+
+        if type(lhs) is KeyValue and lhs.__value is None:
+            return KeyValue(k, None, self.__level + 1)
+
+        if type(rhs) is KeyValue and rhs.__value is None:
+            return KeyValue(k, None, self.__level + 1)
+
+        v1 = lhs.__value if type(lhs) is KeyValue else lhs
+        v2 = rhs.__value if type(rhs) is KeyValue else rhs
+
+        return KeyValue(k, op(v1, v2), self.__level + 1, op_type)
+
+
     def __add__(self, other):
-        k = f"{self} + {other}"
-        v = None if self.__value is None else self.__value + other.__value if type(other) is KeyValue and other.__value is None  else self.__value + other
-        return KeyValue(k, v, self.__level + 1)
+        return self.__dash_op__(self, other, lambda x, y: x + y, "+", OpType.DASH)
 
     def __radd__(self, other):
-        k = f"{other} + {self}"
-        v = None if self.__value is None else self.__value + other.__value if type(other) is KeyValue and other.__value is None  else self.__value + other
-        return KeyValue(k, v, self.__level + 1)
+        return self.__dash_op__(other, self, lambda x, y: x + y, "+", OpType.DASH)
 
     def __sub__(self, other):
-        k = f"{self} - {other}"
-        v = None if self.__value is None else self.__value - other.__value if type(other) is KeyValue and other.__value is None  else self.__value - other
-        return KeyValue(k, v, self.__level + 1)
+        return self.__dash_op__(self, other, lambda x, y: x - y, "-", OpType.DASH)
+
+    def __rsub__(self, other):
+        return self.__dash_op__(other, self, lambda x, y: x - y, "-", OpType.DASH)
 
     def __mul__(self, other):
-        k = f"{self} * {other}"
-        v = None if self.__value is None else self.__value * other.__value if type(other) is KeyValue and other.__value is None  else self.__value * other.__value
-        return KeyValue(k, v, self.__level + 1)
+        return self.__dash_op__(self, other, lambda x, y: x * y, "*", OpType.DOT)
+
+    def __rmul__(self, other):
+        return self.__dash_op__(other, self, lambda x, y: x * y, "*", OpType.DOT)
 
     def __truediv__(self, other):
-        k = f"{self} / {other}"
-        v = None if self.__value is None else self.__value / other.__value if type(other) is KeyValue and other.__value is None else self.__value / other
-        return KeyValue(k, v, self.__level + 1)
+        return self.__dash_op__(self, other, lambda x, y: x / y, "/", OpType.DOT)
+
+    def __rtruediv__(self, other):
+        return self.__dash_op__(other, self, lambda x, y: x / y, "/", OpType.DOT)
 
     def __mod__(self, other):
-        k = f"{self} % {other}"
+        k = f"{self} % {other}" if self.__level == 0 else f"({self}) % {other}"
+        if not (isinstance(self.__value, (int, float)) and isinstance(other, (int, float))):
+            return KeyValue(k, None, self.__level + 1)
         v = None if self.__value is None else self.__value % other.__value if type(other) is KeyValue else self.__value % other
         return KeyValue(k, v, self.__level + 1)
 
     def __neg__(self):
-        k = f"-{self}"
+        k = f"-{self}" if self.__level == 0 else f"-({self})"
         v = None if self.__value is None else -self.__value
         return KeyValue(k, v, self.__level + 1)
 
