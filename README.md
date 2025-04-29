@@ -2,7 +2,7 @@
 
 ## Quick start
 
-### Install the package
+Install dependencies
 
  ``` bash
 .python -m venv venv
@@ -10,8 +10,8 @@ source venv/bin/activate
 pip install pandas eccodes
 ```
 
-Add checker/Destiny.py
-Derive a new the `Destiny` class from `Wmo`, to inherit the test pool.
+Add a new file called checker/Destiny.py
+Derive the `Destiny` class from `Wmo`, to inherit the test pool.
 
 ``` python
 from checker.Wmo import Wmo
