@@ -166,11 +166,11 @@ class CheckPool:
 
             report.add(Eq(parallel, (l_east - l_west) / we + 1, "parallel == (l_east - l_west) / we + 1"))
             report.add(Lt(((deast - dwest) / dwe + 1 - parallel).abs(), 1e-10, "abs((deast-dwest)/dwe + 1 - parallel) < 1e-10"))
-            report.add(Eq(message["PLPresent"], "0", "not message.get('PLPresent')"))
+            report.add(Eq(message["PLPresent"], 0, "not message.get('PLPresent')"))
 
         report.add(Ne(message["Nj"], 0))
 
-        if message["PLPresent"]:
+        if message["PLPresent"] != 0:
             count = message.get_size("pl")
             expected_lon2 = 0
             total = 0
