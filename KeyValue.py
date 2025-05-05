@@ -22,6 +22,9 @@ class KeyValue:
     def value(self):
         return self.__value 
 
+    def type(self):
+        return type(self.__value)
+
     def __str__(self):
         if self.__level == 0:
             return f"{self.__key}({self.__value})"
@@ -36,6 +39,7 @@ class KeyValue:
 
     def __eq__(self, other):
         if type(other) is KeyValue:
+            # return self.__value == other.__value and self.__key == other.__key and type(self.__value) == type(other.__value)
             return self.__value == other.__value
         else:
             return self.__value == other
@@ -128,7 +132,7 @@ class KeyValue:
         return KeyValue(k, v, self.__level + 1)
 
     def __neg__(self):
-        k = f"-{self}" if self.__level == 0 else f"-({self})"
+        k = f"-({self})" if self.__level == 0 else f"-({self})"
         v = None if self.__value is None else -self.__value
         return KeyValue(k, v, self.__level + 1)
 
