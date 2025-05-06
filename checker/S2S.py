@@ -102,6 +102,13 @@ class S2S(Wmo):
         dns = message.get("jDirectionIncrementInDegrees", float)
         dwe = message.get("iDirectionIncrementInDegrees", float)
 
+        if message["iScansNegatively"] != 0:
+            east, west = west, east;
+            deast, dwest = dwest, deast;
+
+        if message["jScansPositively"] != 0:
+            north, south = south, north;
+            dnorth, dsouth = dsouth, dnorth;
 
         report.add(Gt(north, south, "north > south"))
         report.add(Gt(east, west, "east > west"))
