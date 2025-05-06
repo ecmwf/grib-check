@@ -68,7 +68,7 @@ class GribCheck:
             for filename in FileScanner(self.args.path):
                 grib = Grib(filename)
                 for pos, message in enumerate(grib):
-                    results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos, checker)))
+                    results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos + 1, checker)))
 
             for result in results:
                 print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only, format=self.args.format), end="")
