@@ -55,7 +55,7 @@ class CheckPool:
             return self.__check_map[name]
 
     def _check_date(self, message, p):
-        report = Report("Default Check Date")
+        report = Report("WMO Check Date")
         # todo check for how many years back the reforecast is done? Is it coded in the grib???
         # Check if the date is OK
         date = message["date"]
@@ -69,7 +69,7 @@ class CheckPool:
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
-        report = Report("Default Statistical Process")
+        report = Report("WMO Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
 
@@ -105,7 +105,7 @@ class CheckPool:
 
     # not registered in the lookup table
     def _check_range(self, message, p):
-        report = Report("Default Range check")
+        report = Report("WMO Range check")
 
         # TODO:: Enable only if valueflg = 1
         
@@ -126,7 +126,7 @@ class CheckPool:
 
     # not registered in the lookup table
     def _gaussian_grid(self, message):
-        report = Report("Default Gaussian grid")
+        report = Report("WMO Gaussian grid")
 
         tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
         n = message["numberOfParallelsBetweenAPoleAndTheEquator"] # This is the key N
@@ -228,7 +228,7 @@ class CheckPool:
 
     # not registered in the lookup table
     def _latlon_grid(self, message):
-        report = Report("Default Latlon grid")
+        report = Report("WMO Latlon grid")
 
         # tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
         data_points = message["numberOfDataPoints"]
@@ -310,7 +310,7 @@ class CheckPool:
     # not registered in the lookup table
     def _check_packing(self, message):
         # ECC-1009: Warn if not using simple packing
-        report = Report("Default Check packing")
+        report = Report("WMO Check packing")
         report.add(Eq(message["packingType"], "grid_simple"))
         return report
 
@@ -322,7 +322,7 @@ class CheckPool:
         # Then we can compare the previous (possibly wrongly coded) value with
         # the newly computed one
 
-        report = Report("Default Check Validity Datetime")
+        report = Report("WMO Check Validity Datetime")
         stepType = message.get("stepType", str)
 
         if stepType != "instant": # not instantaneous
@@ -345,14 +345,14 @@ class CheckPool:
     
 
     def _basic_checks_2(self, message, p):
-        report = Report("Default Basic Checks 2")
+        report = Report("WMO Basic Checks 2")
         # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
         report.add(IsIn(message["typeOfProcessedData"], [2, 3, 4]))
         return report
 
 
     def _basic_checks(self, message, p):
-        report = Report("Default Basic checks")
+        report = Report("WMO Basic checks")
         report.add(Eq(message["editionNumber"], 2))
         report.add(Missing(message, "reserved") | Eq(message["reserved"], 0))
 
@@ -438,7 +438,7 @@ class CheckPool:
         return report
 
     def _daily_average(self, message, p):
-        report = Report("Default Daily Average")
+        report = Report("WMO Daily Average")
         start_step = message["startStep"]
         end_step = message["endStep"]
         report.add(Eq(start_step, end_step - 24))
@@ -454,13 +454,13 @@ class CheckPool:
         return report
 
     def _from_start(self, message, p):
-        report = Report("Default From STart")
+        report = Report("WMO From STart")
         report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
         return report
 
     def _point_in_time(self, message, p):
-        report = Report("Default Point in time")
+        report = Report("WMO Point in time")
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]: # Analysis, Forecast
             pass
@@ -478,7 +478,7 @@ class CheckPool:
         return report
 
     def _given_thickness(self, message, p):
-        report = Report("Default Given thickness")
+        report = Report("WMO Given thickness")
         report.add(Ne(message["typeOfSecondFixedSurface"], 255))
         report.add(Exists(message, "scaleFactorOfSecondFixedSurface"))
         report.add(Exists(message, "scaledValueOfSecondFixedSurface"))
@@ -489,28 +489,28 @@ class CheckPool:
         return report
 
     def _has_bitmap(self, message, p):
-        report = Report("Default Has bitmap")
+        report = Report("WMO Has bitmap")
         report.add(Eq(message["bitMapIndicator"], 0))
         return report
 
     def _has_soil_layer(self, message, p):
-        report = Report("Default Has soil layer")
+        report = Report("WMO Has soil layer")
         report.add(Eq(message["topLevel"], message["bottomLevel"] - 1))
         report.add(Le(message["level"], 14)) # max in UERRA
         return report
 
     def _has_soil_level(self, message, p):
-        report = Report("Default tHas soil level")
+        report = Report("WMO tHas soil level")
         report.add(Eq(message["topLevel"], message["bottomLevel"]))
         report.add(Le(message["level"], 14)) # max in UERRA
         return report
 
     def _height_level(self, message, p):
-        report = Report("Default Height level")
+        report = Report("WMO Height level")
         return report
 
     def _given_level(self, message, p):
-        report = Report("Default Given level")
+        report = Report("WMO Given level")
         report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Exists(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Exists(message, "scaledValueOfFirstFixedSurface"))
@@ -520,17 +520,17 @@ class CheckPool:
         return report
 
     def _potential_temperature_level(self, message, p):
-        report = Report("Default Potential temperature level")
+        report = Report("WMO Potential temperature level")
         report.add(Eq(message["level"], 320, f'invalid potential temperature level {message["level"]}' ))
         return report
 
     def _potential_vorticity_level(self, message, p):
-        report = Report("Default Potential vorticity level")
+        report = Report("WMO Potential vorticity level")
         report.add(Eq(message["level"], 2, f'invalid potential vorticity level {message["level"]}'))
         return report
 
     def _predefined_level(self, message, p):
-        report = Report("Default Predefined level")
+        report = Report("WMO Predefined level")
         report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
@@ -540,7 +540,7 @@ class CheckPool:
         return report
 
     def _predefined_thickness(self, message, p):
-        report = Report("Default Predefined thickness")
+        report = Report("WMO Predefined thickness")
         report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
@@ -550,25 +550,25 @@ class CheckPool:
         return report
 
     def _pressure_level(self, message, p):
-        report = Report("Default Pressure level")
+        report = Report("WMO Pressure level")
         levels = [1000, 200, 250, 300, 500, 700, 850, 925, 50]
         report.add(IsIn(message["level"], levels, 'invalid pressure level'))
         return report
 
     def _resolution_s2s(self, message, p):
-        report = Report("Default Resolution S2S")
+        report = Report("WMO Resolution S2S")
         report.add(Eq(message["iDirectionIncrement"], 1500000))
         report.add(Eq(message["jDirectionIncrement"], 1500000))
         return report
 
     def _resolution_s2s_ocean(self, message, p):
-        report = Report("Default Resolution S2S Ocean")
+        report = Report("WMO Resolution S2S Ocean")
         report.add(Eq(message["iDirectionIncrement"], 1000000))
         report.add(Eq(message["jDirectionIncrement"], 1000000))
         return report
 
     def _since_prev_pp(self, message, p):
-        report = Report("Default Since previous post-processing")
+        report = Report("WMO Since previous post-processing")
         report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
         report.add(Eq(message["endStep"], message["startStep"] + message["lengthOfTimeRange"]))
         report.add(self._statistical_process(message, p))
@@ -576,7 +576,7 @@ class CheckPool:
         return report
 
     def _six_hourly(self, message, p):
-        report = Report("Default Six hourly")
+        report = Report("WMO Six hourly")
         if message["indicatorOfUnitForTimeRange"] == 11:
             report.add(Eq(message["lengthOfTimeRange"], 1))
         else:
@@ -588,7 +588,7 @@ class CheckPool:
         return report
 
     def _three_hourly(self, message, p):
-        report = Report("Default Three hourly")
+        report = Report("WMO Three hourly")
         if message["indicatorOfUnitForTimeRange"] == 11:
             report.add(Eq(message["lengthOfTimeRange"], 1))
         else:
