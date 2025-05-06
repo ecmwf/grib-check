@@ -54,6 +54,19 @@ class CheckPool:
         else:
             return self.__check_map[name]
 
+    def _check_date(self, message, p):
+        report = Report("Default Check Date")
+        # todo check for how many years back the reforecast is done? Is it coded in the grib???
+        # Check if the date is OK
+        date = message["date"]
+        # report.add(Ge(message["date"], 20060101))
+        
+        report.add(Eq((date / 10000).to_int(), message["year"]))
+        report.add(Eq(((date % 10000) / 100).to_int(), message["month"]))
+        report.add(Eq((date % 100).to_int(), message["day"]))
+
+        return report
+
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
         report = Report("Default Statistical Process")
