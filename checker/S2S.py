@@ -9,15 +9,6 @@ class S2S(Wmo):
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("S2S Basic Checks")
-
-        # todo check for how many years back the reforecast is done? Is it coded in the grib???
-        # Check if the date is OK
-        date = message["date"]
-        # report.add(Ge(message["date"], 20060101))
-        
-        report.add(Eq((date / 10000).to_int(), message["year"]))
-        report.add(Eq(((date % 10000) / 100).to_int(), message["month"]))
-        report.add(Eq((date % 100).to_int(), message["day"]))
         report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
         report.add(IsMultipleOf(message["step"], 6))
 

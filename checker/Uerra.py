@@ -16,6 +16,9 @@ class Uerra(Wmo):
             report.add(Eq(message["step"], 0))
         else:
             report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
+
+        report.add(self._check_date(message, p))
+
         return report
 
     def _basic_checks(self, message, p) -> Report:

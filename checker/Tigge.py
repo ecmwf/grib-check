@@ -19,6 +19,9 @@ class Tigge(Wmo):
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
         report.add(Le(message["endStep"], 30*24))
         report.add(IsMultipleOf(message["step"], 6))
+
+        report.add(self._check_date(message, p))
+
         return report
 
     # not registered in the lookup table

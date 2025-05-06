@@ -15,6 +15,9 @@ class S2SRefcst(Wmo):
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5])) # TIGGE prod or test
         report.add(Le(message["endStep"], 30*24))
         report.add(IsMultipleOf(message["step"], 6))
+
+        report.add(self._check_date(message, p))
+
         return super()._basic_checks(message, p).add(report)
 
     def _latlon_grid(self, message) -> Report:
