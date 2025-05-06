@@ -118,7 +118,8 @@ class Report:
                         raise NotImplementedError
                 # output += f"{path}{entry.as_string(color, comment_position="right")}\n"
             elif type(entry) is str:
-                output += f"{none_str}: {path}{entry}\n"
+                if not failed_only:
+                    output += f"{none_str}: {path}{entry}\n"
             else:
                 raise NotImplementedError
 
