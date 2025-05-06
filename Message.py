@@ -23,6 +23,7 @@ from KeyValue import KeyValue
 
 class Message:
     def __init__(self, handle=None, message_buffer=None, position=None):
+        assert(position != 0)
         assert handle is not None or message_buffer is not None
         assert (handle is not None and message_buffer is not None) is not True
         self.logger = logging.getLogger(__class__.__name__)
