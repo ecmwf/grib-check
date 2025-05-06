@@ -10,7 +10,7 @@ class S2S(Wmo):
     def _basic_checks(self, message, p) -> Report:
         report = Report("S2S Basic Checks")
         report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
-        report.add(IsMultipleOf(message["step"], 6))
+        report.add(IsMultipleOf(message.get("step", int), 6))
 
         return super()._basic_checks(message, p).add(report)
 
@@ -36,7 +36,11 @@ class S2S(Wmo):
             report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
             report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
+        tosp = message.get("typeOfStatisticalProcessing", int)
+        if tosp == 0: # Statistical processing not applied
+            report.add(IsIn(message["timeIncrementBetweenSuccessiveFields"], [1, 4]))
+        else:
+            report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
         report.add(IsMultipleOf(message["endStep"], 6))
 
         return super()._statistical_process(message, p).add(report)
