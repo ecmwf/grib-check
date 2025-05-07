@@ -46,22 +46,22 @@ class Message:
         iterator = codes_keys_iterator_new(self.__h, "ls") 
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
-            report.add(f"{key}={self.get(key)}")
+            report.add(f"{key} = {self[key].value()}")
         report.add("")
 
         iterator = codes_keys_iterator_new(self.__h, "mars") 
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
-            report.add(f"{key}={self.get(key)}")
+            report.add(f"{key} = {self[key].value()}")
         report.add("")
 
-        report.add(f"model={self.get('model')}")
-        report.add(f"paramId={self.get('paramId')}")
-        report.add(f"discipline={self.get('discipline')}")
-        report.add(f"parameterCategory={self.get('parameterCategory')}")
-        report.add(f"parameterNumber={self.get('parameterNumber')}")
-        report.add(f"typeOfStatisticalProcessing={self.get('typeOfStatisticalProcessing')}")
-        report.add(f"typeOfFirstFixedSurface={self.get('typeOfFirstFixedSurface', int)}")
+        report.add(f"model = {self['model'].value()}")
+        report.add(f"paramId = {self['paramId'].value()}")
+        report.add(f"discipline = {self['discipline'].value()}")
+        report.add(f"parameterCategory = {self['parameterCategory'].value()}")
+        report.add(f"parameterNumber = {self['parameterNumber'].value()}")
+        report.add(f"typeOfStatisticalProcessing = {self['typeOfStatisticalProcessing'].value()}")
+        report.add(f"typeOfFirstFixedSurface = {self['typeOfFirstFixedSurface', int].value()}")
 
         return report
 
