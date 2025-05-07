@@ -1,5 +1,5 @@
 import logging
-from LookupTable import SimpleLookupTable
+from LookupTable import LookupTable
 from Test import Test
 from Message import Message
 from Report import Report
@@ -25,10 +25,10 @@ class CheckEngine:
                 report.add(self.__check_map[check_func](self.__message, data))
             return report
 
-    def __init__(self, tests: SimpleLookupTable):
+    def __init__(self, param_lookup_table: LookupTable):
         self.logger = logging.getLogger(__class__.__name__)
-        assert tests is not None
-        self._test_store = tests 
+        assert param_lookup_table is not None
+        self._test_store = param_lookup_table 
         self.__check_map = None
 
     def _create_test(self, message: Message, parameters: dict) -> Test:

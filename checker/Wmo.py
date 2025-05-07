@@ -6,7 +6,7 @@ import logging
 
 
 class Wmo(CheckEngine, CheckPool):
-    def __init__(self, param_file=None, valueflg=False):
+    def __init__(self, param_lookup_table=None, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
 
         self.set_checks({
@@ -37,5 +37,5 @@ class Wmo(CheckEngine, CheckPool):
         self.valueflg = valueflg
 
         script_path = os.path.dirname(os.path.realpath(__file__))
-        parameters = SimpleLookupTable(param_file if param_file is not None else f"{script_path}/TiggeParameters.json")
-        super().__init__(tests=parameters)
+        param_lookup_table = param_lookup_table if param_lookup_table is not None else SimpleLookupTable(f"{script_path}/TiggeParameters.json")
+        super().__init__(param_lookup_table)
