@@ -1,11 +1,16 @@
 from checker.Wmo import Wmo
 from Assert import Le, Eq, Fail, IsIn, AssertTrue, IsMultipleOf
 from Report import Report
+from LookupTable import SimpleLookupTable
+import os
 
 
 class Uerra(Wmo):
     def __init__(self, param_file=None, valueflg=False):
-        super().__init__(param_file, valueflg=valueflg)
+        script_path = os.path.dirname(os.path.realpath(__file__))
+        param_file = param_file if param_file is not None else f"{script_path}/TiggeParameters.json"
+        param_lookup_table = SimpleLookupTable(param_file, ignore_keys=["model"])
+        super().__init__(param_lookup_table, valueflg=valueflg)
   
     def _basic_checks_2(self, message, p) -> Report:
         report = Report("Uerra Basic Checks")
@@ -25,7 +30,7 @@ class Uerra(Wmo):
         report = Report("Uerra Basic Checks")
         report.add(Le(message["hour"], 24))
         report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
-        return super()._statistical_process(message, p).add(report)
+        return super()._basic_checks(message, p).add(report)
 
     def _from_start(self, message, p) -> Report:
         report = Report("Uerra From Start")

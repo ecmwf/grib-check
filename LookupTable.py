@@ -15,19 +15,24 @@ class SimpleLookupTable(LookupTable):
     '''
     A simple lookup table that uses a JSON file to store the data.
     '''
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, ignore_keys=None):
         assert filename is not None
         self.df = pd.read_json(filename, orient='records')
+        self.ignore_keys = ignore_keys
 
     def get_element(self, message: Message):
         report = Report('Matched parameter')
         params = list()
         for _, row in self.df.iterrows():
             count = 0
+            count_ignore = 0
             for pair in row['pairs']:
+                if self.ignore_keys is not None and pair['key'] in self.ignore_keys:
+                    count_ignore += 1
+                    continue
                 if pair['value'] == message.get(pair['key'], type(pair['value'])):
                     count += 1
-            if count == len(row['pairs']):
+            if count == len(row['pairs']) - count_ignore:
                 params.append((count, row))
                 # return row.to_dict()
         if len(params) > 0:
