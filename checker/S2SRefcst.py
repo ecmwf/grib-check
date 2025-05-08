@@ -4,8 +4,8 @@ from checker.Wmo import Wmo
 
 
 class S2SRefcst(Wmo):
-    def __init__(self, param_file=None, valueflg=False):
-        super().__init__(param_file, valueflg=valueflg)
+    def __init__(self, lookup_table, valueflg=False):
+        super().__init__(lookup_table, valueflg=valueflg)
 
 
     def _basic_checks(self, message, p) -> Report:

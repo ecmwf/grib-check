@@ -7,11 +7,9 @@ import logging
 
 
 class Tigge(Wmo):
-    def __init__( self, param_file=None, valueflg=False):
+    def __init__( self, lookup_table, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
-        script_path = os.path.dirname(os.path.realpath(__file__))
-        param_file= param_file if param_file is not None else f"{script_path}/TiggeParameters.json"
-        super().__init__(SimpleLookupTable(param_file), valueflg=valueflg)
+        super().__init__(lookup_table, valueflg=valueflg)
 
     def _basic_checks(self, message, p):
         report = Report("Tigge Basic Checks")

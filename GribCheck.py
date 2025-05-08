@@ -2,7 +2,6 @@
 
 import argparse
 from FileScanner import FileScanner
-from checker.WmoChecker import WmoChecker
 from checker.Tigge import Tigge
 from checker.Uerra import Uerra
 from checker.S2S import S2S
@@ -10,12 +9,15 @@ from checker.S2SRefcst import S2SRefcst
 from checker.Crra import Crra
 from checker.Lam import Lam
 from checker.Destiny import Destiny
+from checker.Wmo import Wmo
 from Grib import Grib
 import logging
 from Report import Report
 import concurrent.futures
 import multiprocessing
 from Message import Message
+from LookupTable import SimpleLookupTable
+import os
 
 
 def worker(filename, message_buffer, pos, checker, args):
@@ -29,7 +31,8 @@ def worker(filename, message_buffer, pos, checker, args):
 
     print(report.as_string(max_level=args.report_verbosity, color=args.color, failed_only=args.failed_only, format=args.format), end="", flush=True)
 
-    return report
+    # return report
+    return None
 
 
 class GribCheck:
@@ -45,37 +48,45 @@ class GribCheck:
         uerra: uncertainty estimation reanalysis
         crra: climate reanalysis
         '''
+        script_path = os.path.dirname(os.path.realpath(__file__))
+        tigge_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/TiggeParameters.json"
+        wmo_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WmoParameters.json"
 
         if self.args.grib_type == "wmo":
-            checker = WmoChecker(param_file=self.args.parameters)
+            checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "tigge":
-            checker = Tigge(param_file=self.args.parameters, valueflg=self.args.valueflg)
+            checker = Tigge(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "s2s":
-            checker = S2S(param_file=self.args.parameters, valueflg=self.args.valueflg)
+            checker = S2S(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "s2s_refcst":
-            checker = S2SRefcst(param_file=self.args.parameters, valueflg=self.args.valueflg)
+            checker = S2SRefcst(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "uerra":
-            checker = Uerra(param_file=self.args.parameters, valueflg=self.args.valueflg)
+            checker = Uerra(SimpleLookupTable(tigge_params, ignore_keys=["model"]), valueflg=self.args.valueflg)
         elif self.args.grib_type == "crra":
-            checker = Crra(param_file=self.args.parameters, valueflg=self.args.valueflg)
+            print(f"tigge params: {tigge_params}")
+            checker = Crra(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "lam":
-            checker = Lam(param_file=self.args.parameters, valueflg=self.args.valueflg)
+            checker = Lam(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "destiny":
-            checker = Destiny(param_file=self.args.parameters, valueflg=self.args.valueflg)
+            checker = Destiny(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
         else:
             raise ValueError("Unknown data type")
 
-        # results = []
-        with multiprocessing.Pool(processes=self.args.num_threads) as pool:
+
+        if self.args.num_threads > 1:
+            results = []
+            with multiprocessing.Pool(processes=self.args.num_threads) as pool:
+                for filename in FileScanner(self.args.path):
+                    grib = Grib(filename)
+                    for pos, message in enumerate(grib):
+                        results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos + 1, checker, self.args)))
+                for result in results:
+                    result.wait()
+        else:
             for filename in FileScanner(self.args.path):
                 grib = Grib(filename)
                 for pos, message in enumerate(grib):
-                    # results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos + 1, checker, self.args)))
-                    pool.apply_async(worker, (filename, message.get_buffer(), pos + 1, checker, self.args))
-
-            # for result in results:
-            #     print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only, format=self.args.format), end="", flush=True)
-
+                        worker(filename, message.get_buffer(), pos + 1, checker, self.args)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

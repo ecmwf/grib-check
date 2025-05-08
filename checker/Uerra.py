@@ -6,11 +6,8 @@ import os
 
 
 class Uerra(Wmo):
-    def __init__(self, param_file=None, valueflg=False):
-        script_path = os.path.dirname(os.path.realpath(__file__))
-        param_file = param_file if param_file is not None else f"{script_path}/TiggeParameters.json"
-        param_lookup_table = SimpleLookupTable(param_file, ignore_keys=["model"])
-        super().__init__(param_lookup_table, valueflg=valueflg)
+    def __init__(self, lookup_table, valueflg=False):
+        super().__init__(lookup_table, valueflg=valueflg)
   
     def _basic_checks_2(self, message, p) -> Report:
         report = Report("Uerra Basic Checks")

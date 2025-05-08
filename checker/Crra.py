@@ -4,8 +4,8 @@ from checker.Uerra import Uerra
 
 
 class Crra(Uerra):
-    def __init__(self, param_file=None, valueflg=False):
-        super().__init__(param_file, valueflg=valueflg)
+    def __init__(self, lookup_table, valueflg=False):
+        super().__init__(lookup_table, valueflg=valueflg)
 
     def basic_checks_2(self, message, p) -> Report:
         report = Report("Crra Basic Checks")

@@ -25,14 +25,15 @@ class CheckEngine:
                 report.add(self.__check_map[check_func](self.__message, data))
             return report
 
-    def __init__(self, param_lookup_table: LookupTable):
+    def __init__(self, lookup_table: LookupTable):
         self.logger = logging.getLogger(__class__.__name__)
-        assert param_lookup_table is not None
-        self._test_store = param_lookup_table 
-        self.__check_map = None
+        assert lookup_table is not None
+        self._test_store = lookup_table 
+        # self._check_map = None
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
         assert parameters is not None
+        assert self._check_map is not None
         return self.DefaultTest(message, parameters, self._check_map)
 
     def set_checks(self, check_map: dict):
