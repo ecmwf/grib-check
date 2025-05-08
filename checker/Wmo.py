@@ -9,7 +9,7 @@ import logging
 
 
 class Wmo(CheckEngine):
-    def __init__(self, param_lookup_table=None, valueflg=False):
+    def __init__(self, lookup_table, valueflg=False):
         self.logger = logging.getLogger(__class__.__name__)
 
         self.set_checks({
@@ -39,9 +39,7 @@ class Wmo(CheckEngine):
         self.values = None
         self.valueflg = valueflg
 
-        script_path = os.path.dirname(os.path.realpath(__file__))
-        param_lookup_table = param_lookup_table if param_lookup_table is not None else SimpleLookupTable(f"{script_path}/TiggeParameters.json")
-        super().__init__(param_lookup_table)
+        super().__init__(lookup_table)
 
 
     def register_check(self, name, func):
