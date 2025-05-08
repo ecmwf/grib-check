@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+import signal
+import sys
+
+signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on Ctrl+C
+
 import argparse
 from FileScanner import FileScanner
 from checker.Tigge import Tigge
