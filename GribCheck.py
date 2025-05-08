@@ -18,7 +18,7 @@ import multiprocessing
 from Message import Message
 
 
-def worker(filename, message_buffer, pos, checker):
+def worker(filename, message_buffer, pos, checker, args):
     message = Message(message_buffer=message_buffer, position=pos)
 
     sub_report = Report(f"field {message.position()}")
@@ -26,6 +26,8 @@ def worker(filename, message_buffer, pos, checker):
 
     report = Report(f"{filename}")
     report.add(sub_report)
+
+    print(report.as_string(max_level=args.report_verbosity, color=args.color, failed_only=args.failed_only, format=args.format), end="", flush=True)
 
     return report
 
@@ -63,15 +65,16 @@ class GribCheck:
         else:
             raise ValueError("Unknown data type")
 
-        results = []
+        # results = []
         with multiprocessing.Pool(processes=self.args.num_threads) as pool:
             for filename in FileScanner(self.args.path):
                 grib = Grib(filename)
                 for pos, message in enumerate(grib):
-                    results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos + 1, checker)))
+                    # results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos + 1, checker, self.args)))
+                    pool.apply_async(worker, (filename, message.get_buffer(), pos + 1, checker, self.args))
 
-            for result in results:
-                print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only, format=self.args.format), end="")
+            # for result in results:
+            #     print(result.get().as_string(max_level=self.args.report_verbosity, color=self.args.color, failed_only=self.args.failed_only, format=self.args.format), end="", flush=True)
 
 
 if __name__ == "__main__":
