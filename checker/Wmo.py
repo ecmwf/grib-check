@@ -113,21 +113,22 @@ class Wmo(CheckEngine):
     def _check_range(self, message, p):
         report = Report("WMO Range check")
 
-        # TODO:: Enable only if valueflg = 1
-        
-        # See ECC-437
-        missing = message.get("missingValue", float)
-        min_value, max_value = message.minmax()
-        if not message["bitMapIndicator"] == 0 and min_value == missing and max_value == missing:
-            if min_value < p['min1'] or min_value > p['min2']: 
-                min1 = min_value if min_value < p['min1'] else p['min1']
-                min2 = min_value if min_value > p['min2'] else p['min2']
-                report.add(Fail(f"Missing value {min_value} is not in range [{p['min1']},{p['min2']}] => [{min1},{min2}]"))
+        if self.valueflg == 1:
+            # See ECC-437
+            missing = message.get("missingValue", float)
+            min_value, max_value = message.minmax()
+            if not message["bitMapIndicator"] == 0 and min_value == missing and max_value == missing:
+                if min_value < p['min1'] or min_value > p['min2']: 
+                    min1 = min_value if min_value < p['min1'] else p['min1']
+                    min2 = min_value if min_value > p['min2'] else p['min2']
+                    report.add(Fail(f"Missing value {min_value} is not in range [{p['min1']},{p['min2']}] => [{min1},{min2}]"))
 
-            if max_value < p['max1'] or max_value > p['max2']:
-                max1 = max_value if max_value < p['max1'] else p['max1']
-                max2 = max_value if max_value > p['max2'] else p['max2']
-                report.add(Fail(f"Missing value {max_value} is not in range [{p['max1']},{p['max2']}] => [{max1},{max2}]"))
+                if max_value < p['max1'] or max_value > p['max2']:
+                    max1 = max_value if max_value < p['max1'] else p['max1']
+                    max2 = max_value if max_value > p['max2'] else p['max2']
+                    report.add(Fail(f"Missing value {max_value} is not in range [{p['max1']},{p['max2']}] => [{max1},{max2}]"))
+        else:
+            report.add("Check disabled. Use the option -a or --valueflg to enable it.")
         return report
 
     # not registered in the lookup table
