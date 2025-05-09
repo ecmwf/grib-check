@@ -69,7 +69,7 @@ class GribCheck:
             checker = Uerra(SimpleLookupTable(tigge_params, ignore_keys=["model"]), valueflg=self.args.valueflg)
         elif self.args.grib_type == "crra":
             print(f"tigge params: {tigge_params}")
-            checker = Crra(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
+            checker = Crra(SimpleLookupTable(tigge_params, ignore_keys=["model"]), valueflg=self.args.valueflg)
         elif self.args.grib_type == "lam":
             checker = Lam(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "destiny":
