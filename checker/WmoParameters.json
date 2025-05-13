@@ -1,5 +1,6 @@
 [
     {
+        "name": "Derived forecast_4",
         "pairs": [
             {"key": "stream", "value": "eefo"},
             {"key": "dataType", "value": "fcmean"}
@@ -15,6 +16,7 @@
         ]
     },
     {
+        "name": "Derived forecast_0",
         "pairs": [
             {"key": "stream", "value": "eefo"},
             {"key": "dataType", "value": "taem"}
@@ -30,6 +32,7 @@
         ]
     },
     {
+        "name": "Derived forecast_1",
         "pairs": [
             {"key": "stream", "value": "eefo"},
             {"key": "dataType", "value": "taes"}
@@ -45,6 +48,7 @@
         ]
     },
     {
+        "name": "Derived forecast_2",
         "pairs": [
             {"key": "stream", "value": "enfo"},
             {"key": "dataType", "value": "pf"}
@@ -59,8 +63,11 @@
     },
     {
         "name": "Destiny limits",
+        "expected": [
+            {"key": "values", "min": [-100, -1], "max": [1, 100]}
+        ],
         "pairs": [
-            {"key": "param", "value": 134}
+            {"key": "param", "value": 133}
         ],
         "checks": ["destiny_limits"]
     }

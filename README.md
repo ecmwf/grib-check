@@ -302,4 +302,8 @@ A typical report contains one or more assertions.
 Ge(message['a'], message['b']) # a >= b
 ```
 
+TODO: 
+
+* Run python unittests
+* Better message if JSON file is not found
 

@@ -15,7 +15,7 @@ class Destiny(Wmo):
     def _point_in_time(self, message, p) -> Report:
         report = Report("Point In Time (Destiny)")
         report.add(IsMultipleOf(message["step"], 3))
-        return super()._basic_checks(message, p).add(report)
+        return super()._point_in_time(message, p).add(report)
 
     # Create new checks
     def _destiny_limits(self, message, p) -> Report:
