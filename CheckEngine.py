@@ -29,16 +29,26 @@ class CheckEngine:
         self.logger = logging.getLogger(__class__.__name__)
         assert lookup_table is not None
         self._test_store = lookup_table 
-        # self._check_map = None
+        self._check_map = None
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
         assert parameters is not None
         assert self._check_map is not None
         return self.DefaultTest(message, parameters, self._check_map)
 
-    def set_checks(self, check_map: dict):
-        assert check_map is not None
-        self._check_map = check_map
+    # def set_checks(self, check_map: dict):
+    #     assert check_map is not None
+    #     self._check_map = check_map
+
+    def register_checks(self, check_funcs: dict):
+        assert check_funcs is not None
+        if self._check_map is None:
+            self._check_map = dict()
+        for name, func in check_funcs.items():
+            if name in self._check_map:
+                raise ValueError(f"Check function {name} already registered")
+            self._check_map[name] = func
+
 
     def validate(self, message) -> Report:
         report = Report()

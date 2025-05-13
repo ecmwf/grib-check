@@ -10,9 +10,10 @@ import logging
 
 class Wmo(CheckEngine):
     def __init__(self, lookup_table, valueflg=False):
+        super().__init__(lookup_table)
         self.logger = logging.getLogger(__class__.__name__)
 
-        self.set_checks({
+        self.register_checks({
             "basic_checks_2": self._basic_checks_2,
             "basic_checks": self._basic_checks,
             "daily_average": self._daily_average,
@@ -39,26 +40,25 @@ class Wmo(CheckEngine):
         self.values = None
         self.valueflg = valueflg
 
-        super().__init__(lookup_table)
 
 
-    def register_check(self, name, func):
-        if name in self._check_map:
-            raise ValueError(f"Check {name} already registered.")
-        else:
-            self._check_map[name] = func
-
-    def override_check(self, name, func):
-        if name not in self._check_map:
-            raise ValueError(f"Check {name} not registered.")
-        else:
-            self._check_map[name] = func
-
-    def get_check(self, name):
-        if name not in self._check_map:
-            raise ValueError(f"Check {name} not registered.")
-        else:
-            return self._check_map[name]
+    # def register_check(self, name, func):
+    #     if name in self._check_map:
+    #         raise ValueError(f"Check {name} already registered.")
+    #     else:
+    #         self._check_map[name] = func
+    #
+    # def override_check(self, name, func):
+    #     if name not in self._check_map:
+    #         raise ValueError(f"Check {name} not registered.")
+    #     else:
+    #         self._check_map[name] = func
+    #
+    # def get_check(self, name):
+    #     if name not in self._check_map:
+    #         raise ValueError(f"Check {name} not registered.")
+    #     else:
+    #         return self._check_map[name]
 
     def _check_date(self, message, p):
         report = Report("WMO Check Date")
