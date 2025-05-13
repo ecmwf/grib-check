@@ -56,6 +56,13 @@
             {"key": "name", "value": "2 metre temperature"}
         ],
         "checks": ["product_definition_template_number", "derived_forecast"]
+    },
+    {
+        "name": "Destiny limits",
+        "pairs": [
+            {"key": "param", "value": 134}
+        ],
+        "checks": ["destiny_limits"]
     }
 
 

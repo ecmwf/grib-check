@@ -20,7 +20,7 @@ The library currently supports the following types:
 - uerra
 - crra
 - lam
-- destiny
+- destiny (under development)
 
 You can specify the type of data using the `-t` or `--grib_type` command-line argument.
 For example, to check a GRIB file of type "tigge", you would run the following command:
@@ -129,6 +129,7 @@ Add a new JSON file `./checker/WmoParameters.json` in the parameters directory.
 ```json
 [
   {
+      "name": "Name of the check",
       "pairs": [
           {"key": "stream", "value": "enfo"},
           {"key": "dataType", "value": "pf"}
@@ -156,7 +157,7 @@ python GribCheck.py -t destiny /path/to/file.grib2
 The parameters file is a JSON document that defined the parameters to be validated.
 Each parameter is represented as a dictionary with the following optional and required fields:
 
-- `name`: (option) The name of the parameter.
+- `name`: The name of the parameter.
 - `expected`: (optional) A list of simple and quick checks to be performed on a GRIB message.
 - `pairs`: A list of key-value pairs that are used to select the most appropriate parameter for validation.
 - `checks`: A list of more complex validations to be performed on the message.
