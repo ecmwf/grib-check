@@ -106,17 +106,17 @@ class Report:
                 if not failed_only or not status:
                     if status is True:
                         if color:
-                            output += f"{pass_str}: {path}{entry.as_string(color, "right")}\n"
+                            output += f"{pass_str}: {path}{entry.as_string(color, 'right')}\n"
                         else:
-                            output += f"{pass_str}: {path}{entry.as_string(color, "right")}\n"
+                            output += f"{pass_str}: {path}{entry.as_string(color, 'right')}\n"
                     elif status is False:
                         if color:
-                            output += f"{fail_str}: {path}{entry.as_string(color, "right")}\n"
+                            output += f"{fail_str}: {path}{entry.as_string(color, 'right')}\n"
                         else:
-                            output += f"{fail_str}: {path}{entry.as_string(color, "right")}\n"
+                            output += f"{fail_str}: {path}{entry.as_string(color, 'right')}\n"
                     else:
                         raise NotImplementedError
-                # output += f"{path}{entry.as_string(color, comment_position="right")}\n"
+                # output += f"{path}{entry.as_string(color, comment_position='right')}\n"
             elif type(entry) is str:
                 if not failed_only:
                     output += f"{none_str}: {path}{entry}\n"

@@ -20,7 +20,7 @@ class CheckEngine:
 
         def run(self) -> Report:
             data = self.__parameter
-            report = Report(f'{data['name']}')
+            report = Report(f"{data['name']}")
             for check_func in data["checks"]:
                 report.add(self.__check_map[check_func](self.__message, data))
             return report
