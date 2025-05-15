@@ -1,6 +1,7 @@
 import pandas as pd
 from Message import Message
 from Report import Report
+import sys
 
 
 class LookupTable:
@@ -17,7 +18,12 @@ class SimpleLookupTable(LookupTable):
     '''
     def __init__(self, filename: str, ignore_keys=None):
         assert filename is not None
-        self.df = pd.read_json(filename, orient='records')
+        try:
+            self.df = pd.read_json(filename, orient='records')
+        except ValueError as e:
+            print(f"ERROR: Couldn't read JSON file {filename}: {e}", file=sys.stderr)
+            sys.exit(1)
+
         self.ignore_keys = ignore_keys
 
     def get_element(self, message: Message):
