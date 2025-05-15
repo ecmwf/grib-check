@@ -13,7 +13,7 @@ from checker.S2S import S2S
 from checker.S2SRefcst import S2SRefcst
 from checker.Crra import Crra
 from checker.Lam import Lam
-from checker.Destiny import Destiny
+from checker.DestinE import DestinE
 from checker.Wmo import Wmo
 from Grib import Grib
 import logging
@@ -72,7 +72,7 @@ class GribCheck:
         elif self.args.grib_type == "lam":
             checker = Lam(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "destiny":
-            checker = Destiny(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
+            checker = DestinE(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
         else:
             raise ValueError("Unknown data type")
 
