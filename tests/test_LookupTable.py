@@ -1,5 +1,5 @@
 import unittest
-from LookupTable import SimpleLookupTable, IndexedLookupTable
+from LookupTable import SimpleLookupTable
 from Grib import Grib
 from Message import Message
 
@@ -12,6 +12,7 @@ class TestIndexedLookupTable(unittest.TestCase):
         print(element)
         self.assertEqual(
                 {
+                "name": "param_1",
                 "pairs": [
                     {"key": "stream", "value": "eefo"},
                     {"key": "dataType", "value": "fcmean"}
@@ -22,7 +23,9 @@ class TestIndexedLookupTable(unittest.TestCase):
                     {"key": "shortName", "value": "mean2t"}, 
                     {"key": "name", "value": "Mean 2 metre temperature"}
                 ],
-                "checks": ["product_definition_template_number"]
+                "checks": [
+                    "basic_checks"
+                ]
                 }, element)
             
 if __name__ == '__main__':

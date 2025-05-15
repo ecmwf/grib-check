@@ -1,5 +1,6 @@
 [
     {
+        "name": "param_0",
         "pairs": [
             {"key": "stream", "value": "oper"},
             {"key": "dataType", "value": "af"}
@@ -11,10 +12,11 @@
             {"key": "name", "value": "Mean 2 metre temperature"}
         ],
         "checks": [
-            "product_definition_template_number"
+            "basic_checks"
         ]
     },
     {
+        "name": "param_1",
         "pairs": [
             {"key": "stream", "value": "eefo"},
             {"key": "dataType", "value": "fcmean"}
@@ -26,10 +28,11 @@
             {"key": "name", "value": "Mean 2 metre temperature"}
         ],
         "checks": [
-            "product_definition_template_number"
+            "basic_checks"
         ]
     },
     {
+        "name": "param_2",
         "pairs": [
             {"key": "stream", "value": "eefo"},
             {"key": "dataType", "value": "taem"}
@@ -41,10 +44,11 @@
             {"key": "name", "value": "Mean 2 metre temperature"}
         ],
         "checks": [
-            "product_definition_template_number"
+            "basic_checks"
         ]
     },
     {
+        "name": "param_3",
         "pairs": [
             {"key": "stream", "value": "eefo"},
             {"key": "dataType", "value": "taes"}
@@ -56,10 +60,11 @@
             {"key": "name", "value": "Mean 2 metre temperature"}
         ],
         "checks": [
-            "product_definition_template_number"
+            "basic_checks"
         ]
     },
     {
+        "name": "param_4",
         "pairs": [
             {"key": "stream", "value": "enfo"},
             {"key": "dataType", "value": "pf"}
@@ -70,6 +75,9 @@
             {"key": "shortName", "value": "2t"},
             {"key": "name", "value": "2 metre temperature"}
         ],
-        "checks": ["product_definition_template_number", "derived_forecast"]
+        "checks": [
+            "derived_forecast",
+            "basic_checks"
+        ]
     }
 ]
