@@ -54,6 +54,7 @@ class CheckEngine:
         report = Report()
         kv, store_report = self._test_store.get_element(message)
         if kv is not None:
+            kv["checks"] += ["basic_checks"]
             test = self._create_test(message, kv)
             report.add(store_report)
             report.add(test.run())
