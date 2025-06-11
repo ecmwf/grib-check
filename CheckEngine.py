@@ -61,8 +61,9 @@ class CheckEngine:
 
             if "expected" in kv:
                 expected_report = Report("Expected Values")
-                for check in kv["expected"]:
-                    expected_report.add(Eq(message[check["key"]], check["value"]))
+                for expected in kv["expected"]:
+                    if "key" in expected and "value" in expected:
+                        expected_report.add(Eq(message[expected["key"]], expected["value"]))
                 report.add(expected_report)
         else:
             self.logger.debug(f"Could not find parameter for: {message}")
