@@ -3,7 +3,7 @@ from LookupTable import LookupTable
 from Test import Test
 from Message import Message
 from Report import Report
-from Assert import Fail
+from Assert import Fail, Eq
 
 
 class CheckEngine:
@@ -58,6 +58,12 @@ class CheckEngine:
             test = self._create_test(message, kv)
             report.add(store_report)
             report.add(test.run())
+
+            if "expected" in kv:
+                expected_report = Report("Expected Values")
+                for check in kv["expected"]:
+                    expected_report.add(Eq(message[check["key"]], check["value"]))
+                report.add(expected_report)
         else:
             self.logger.debug(f"Could not find parameter for: {message}")
             report.add(Fail("Could not find parameter"))
