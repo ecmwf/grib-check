@@ -363,8 +363,7 @@ class Wmo(CheckEngine):
         report.add(Eq(message["editionNumber"], 2))
         report.add(Missing(message, "reserved") | Eq(message["reserved"], 0))
 
-        # if self.valueflg:
-        if True:
+        if self.valueflg:
             values_report = Report("Check values")
             count = 0
             try:
