@@ -21,7 +21,8 @@ class Wpmip(Wmo):
 
         report.add(self._check_date(message, p))
 
-        return report
+        return super()._basic_checks(message, p).add(report)
+        # return report
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
