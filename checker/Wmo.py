@@ -558,7 +558,7 @@ class Wmo(CheckEngine):
     def _pressure_level(self, message, p):
         report = Report("WMO Pressure level")
         levels = [1000, 200, 250, 300, 500, 700, 850, 925, 50]
-        report.add(IsIn(message["level"], levels, 'invalid pressure level'))
+        report.add(IsIn(message["level"], levels))
         return report
 
     def _resolution_s2s(self, message, p):
