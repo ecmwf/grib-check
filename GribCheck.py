@@ -8,6 +8,7 @@ signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on C
 import argparse
 from FileScanner import FileScanner
 from checker.Tigge import Tigge
+from checker.Wpmip import Wpmip
 from checker.Uerra import Uerra
 from checker.S2S import S2S
 from checker.S2SRefcst import S2SRefcst
@@ -55,6 +56,7 @@ class GribCheck:
         '''
         script_path = os.path.dirname(os.path.realpath(__file__))
         tigge_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/TiggeParameters.json"
+        wpmip_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WpmipParameters.json"
         destine_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/DestineParameters.json"
         wmo_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WmoParameters.json"
 
@@ -62,6 +64,8 @@ class GribCheck:
             checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "tigge":
             checker = Tigge(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
+        elif self.args.grib_type == "wpmip":
+            checker = Wpmip(SimpleLookupTable(wpmip_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "s2s":
             checker = S2S(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "s2s_refcst":
@@ -99,7 +103,7 @@ if __name__ == "__main__":
     # parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
     parser.add_argument("-a", "--valueflg", help="check value ranges", action="store_true")
     parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
-    parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo", "destine"], default="wmo")
+    parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo", "destine", "wpmip"], default="wmo")
     parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
     parser.add_argument("-l", "--report_verbosity", help="report depth", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
