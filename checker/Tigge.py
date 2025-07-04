@@ -23,6 +23,12 @@ class Tigge(Wmo):
 
         return report
 
+    def _pressure_level(self, message, p):
+        report = Report("TIGGE Pressure level")
+        levels = [1000, 200, 250, 300, 500, 700, 850, 925, 50]
+        report.add(IsIn(message["level"], levels))
+        return report
+
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
         report = Report("Tigge Statistical Process")

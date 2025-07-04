@@ -13,16 +13,32 @@ class Wpmip(Wmo):
 
     def _basic_checks(self, message, p):
         report = Report("Wpmip Basic Checks")
-        # Only 00, 06 12 and 18 Cycle OK 
-        report.add(IsIn(message["hour"], [0, 6, 12, 18]))
-        report.add(IsIn(message["productionStatusOfProcessedData"], [16, 17]))
-        report.add(Le(message["endStep"], 30*24))
-        report.add(IsMultipleOf(message["step"], 6))
 
+        # WPMIP prod/test data
+        report.add(IsIn(message["productionStatusOfProcessedData"], [16, 17]))
+
+        # to use MARS new key "model"
+        report.add(Eq(message["backgroundProcess"], 1))
+        report.add(Eq(message["generatingProcessIdentifier"], 3))
+
+        # CCSDS compression
+        report.add(Eq(message["dataRepresentationTemplateNumber"], 4))
+
+#       # Only 00, 06 12 and 18 Cycle OK 
+#       report.add(IsIn(message["hour"], [0, 6, 12, 18]))
+
+        report.add(Le(message["endStep"], 10*24))
+        report.add(IsMultipleOf(message["step"], 6))
         report.add(self._check_date(message, p))
 
         return super()._basic_checks(message, p).add(report)
         # return report
+
+    def _pressure_level(self, message, p):
+        report = Report("WPMIP Pressure level")
+        levels = [1, 10, 20, 30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 700, 850, 925, 1000]
+        report.add(IsIn(message["level"], levels))
+        return report
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
@@ -77,7 +93,21 @@ class Wpmip(Wmo):
 
         return super()._point_in_time(message, p).add(report)
 
-    def _height_level(self, message, p) -> Report:
-        report = Report("Wpmip Height Level")
-        report.add(Fail("Not implemented: dummy height_level()"))
-        return report
+    def _latlon_grid(self, message):
+        report = Report(f"{__class__.__name__}.latlon_grid")
+            
+        report.add(Eq(message["Ni"], 1440))
+        report.add(Eq(message["Nj"], 721))
+        report.add(Eq(message["scanningMode"], 0))
+
+        report.add(Eq(message["basicAngleOfTheInitialProductionDomain"], 0))
+#       report.add(Missing(message, "subdivisionsOfBasicAngle"))
+        report.add(Eq(message["latitudeOfFirstGridPoint"], 90000000))
+        report.add(Eq(message["longitudeOfFirstGridPoint"], 0))
+        report.add(Eq(message["latitudeOfLastGridPoint"], -90000000))
+        report.add(Eq(message["longitudeOfLastGridPoint"], 359750000))
+        report.add(Eq(message["iDirectionIncrement"], 250000))
+        report.add(Eq(message["jDirectionIncrement"], 250000))
+
+        return super()._latlon_grid(message).add(report)
+

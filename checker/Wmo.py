@@ -235,7 +235,7 @@ class Wmo(CheckEngine):
 
     # not registered in the lookup table
     def _latlon_grid(self, message):
-        report = Report("WMO Latlon grid")
+        report = Report("WMO latlon grid")
 
         # tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
         data_points = message["numberOfDataPoints"]
@@ -279,6 +279,9 @@ class Wmo(CheckEngine):
 
         report.add(Eq(message["iDirectionIncrementGiven"], 1))
         report.add(Eq(message["jDirectionIncrementGiven"], 1))
+        # https://jira.ecmwf.int/browse/SD-39816
+          # 96-97 codeflag resolutionAndComponentFlags = 48 [00110000:(3=1) i direction increments given;(4=1) j direction increments given;(5=0)...
+        report.add(Eq(message["resolutionAndComponentFlags"], 48))
 
         report.add(Eq(message["numberOfOctectsForNumberOfPoints"], 0))
         report.add(Eq(message["interpretationOfNumberOfPoints"], 0))
@@ -553,12 +556,6 @@ class Wmo(CheckEngine):
         report.add(Ne(message["typeOfSecondFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
         report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
-        return report
-
-    def _pressure_level(self, message, p):
-        report = Report("WMO Pressure level")
-        levels = [1000, 200, 250, 300, 500, 700, 850, 925, 50]
-        report.add(IsIn(message["level"], levels))
         return report
 
     def _resolution_s2s(self, message, p):
