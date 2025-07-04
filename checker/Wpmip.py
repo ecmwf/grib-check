@@ -22,7 +22,8 @@ class Wpmip(Wmo):
         report.add(Eq(message["generatingProcessIdentifier"], 3))
 
         # CCSDS compression
-        report.add(Eq(message["dataRepresentationTemplateNumber"], 4))
+        # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/
+        report.add(Eq(message["dataRepresentationTemplateNumber"], 42))
 
 #       # Only 00, 06 12 and 18 Cycle OK 
 #       report.add(IsIn(message["hour"], [0, 6, 12, 18]))
