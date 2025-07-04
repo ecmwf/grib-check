@@ -109,7 +109,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
     parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
     parser.add_argument("-c", "--color", help="use color in output", action="store_true")
-    parser.add_argument("-j", "--num_threads", help="number of threads", type=int, default=4)
+    parser.add_argument("-j", "--num_threads", help="number of threads", type=int, default=1)
     parser.add_argument("-b", "--failed_only", help="show only failed checks", action="store_true")
     parser.add_argument("-f", "--format", help="output format", choices=["short", "tree"], default="tree")
     args = parser.parse_args()
