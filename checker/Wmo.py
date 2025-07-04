@@ -1,10 +1,9 @@
 from CheckEngine import CheckEngine
 from LookupTable import SimpleLookupTable
 from Grib import get_gaussian_latitudes
-from Assert import Ge, Le, Lt, Ne, Eq, Exists, Missing, Fail, IsIn, EqDbl, AssertTrue
+from Assert import Ge, Le, Lt, Ne, Eq, Exists, Missing, Fail, IsIn, EqDbl, AssertTrue, Pass
 from Report import Report
 import numpy as np
-import os
 import logging
 
 
@@ -113,20 +112,32 @@ class Wmo(CheckEngine):
     def _check_range(self, message, p):
         report = Report("WMO Range check")
 
-        if self.valueflg == 1:
+        if self.valueflg:
             # See ECC-437
             missing = message.get("missingValue", float)
             min_value, max_value = message.minmax()
-            if not message["bitMapIndicator"] == 0 and min_value == missing and max_value == missing:
-                if min_value < p['min1'] or min_value > p['min2']: 
-                    min1 = min_value if min_value < p['min1'] else p['min1']
-                    min2 = min_value if min_value > p['min2'] else p['min2']
-                    report.add(Fail(f"Missing value {min_value} is not in range [{p['min1']},{p['min2']}] => [{min1},{min2}]"))
 
-                if max_value < p['max1'] or max_value > p['max2']:
-                    max1 = max_value if max_value < p['max1'] else p['max1']
-                    max2 = max_value if max_value > p['max2'] else p['max2']
-                    report.add(Fail(f"Missing value {max_value} is not in range [{p['max1']},{p['max2']}] => [{max1},{max2}]"))
+            for entry in p['expected']:
+                if entry['key'] == 'values':
+                    mi1 = entry['min'][0]
+                    mi2 = entry['min'][1]
+                    ma1 = entry['max'][0]
+                    ma2 = entry['max'][1]
+
+                    if not message["bitMapIndicator"] == 0 and min_value != missing and max_value != missing:
+                        if min_value < mi1   or min_value > mi2: 
+                            min1 = min_value if min_value < mi1 else mi1
+                            min2 = min_value if min_value > mi2 else mi2
+                            report.add(Fail(f"Minimum value {min_value} is not in range [{mi1}, {mi2}] => [{min1}, {min2}]"))
+                        else:
+                            report.add(Pass(f"Minimum value {min_value} is in range [{mi1}, {mi2}]"))
+
+                        if max_value < ma1 or max_value > ma2:
+                            max1 = max_value if max_value < ma1 else ma1
+                            max2 = max_value if max_value > ma2 else ma2
+                            report.add(Fail(f"Maximum value {max_value} is not in range [{ma1}, {ma2}] => [{max1}, {max2}]"))
+                        else:
+                            report.add(Pass(f"Maximum value {max_value} is in range [{ma1}, {ma2}]"))
         else:
             report.add("Check disabled. Use the option -a or --valueflg to enable it.")
         return report
