@@ -1,8 +1,6 @@
 from checker.Wmo import Wmo
-from Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
+from Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf, Missing
 from Report import Report
-from LookupTable import SimpleLookupTable
-import os
 import logging
 
 
@@ -102,7 +100,7 @@ class Wpmip(Wmo):
         report.add(Eq(message["scanningMode"], 0))
 
         report.add(Eq(message["basicAngleOfTheInitialProductionDomain"], 0))
-#       report.add(Missing(message, "subdivisionsOfBasicAngle"))
+        # report.add(Missing(message, "subdivisionsOfBasicAngle"))
         report.add(Eq(message["latitudeOfFirstGridPoint"], 90000000))
         report.add(Eq(message["longitudeOfFirstGridPoint"], 0))
         report.add(Eq(message["latitudeOfLastGridPoint"], -90000000))
