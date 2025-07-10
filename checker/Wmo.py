@@ -28,7 +28,6 @@ class Wmo(CheckEngine):
             "potential_vorticity_level": self._potential_vorticity_level,
             "predefined_level": self._predefined_level,
             "predefined_thickness": self._predefined_thickness,
-            "pressure_level": self._pressure_level,
             "resolution_s2s": self._resolution_s2s,
             "resolution_s2s_ocean": self._resolution_s2s_ocean,
             "since_prev_pp": self._since_prev_pp,
