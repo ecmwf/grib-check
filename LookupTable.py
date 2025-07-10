@@ -1,4 +1,6 @@
-import pandas as pd
+# import pandas as pd
+import _jsonnet
+import json
 from Message import Message
 from Report import Report
 import sys
@@ -19,7 +21,8 @@ class SimpleLookupTable(LookupTable):
     def __init__(self, filename: str, ignore_keys=None):
         assert filename is not None
         try:
-            self.df = pd.read_json(filename, orient='records')
+            jresult = _jsonnet.evaluate_file(filename)
+            self.data = json.loads(jresult)
         except ValueError as e:
             print(f"ERROR: Couldn't read JSON file {filename}: {e}", file=sys.stderr)
             sys.exit(1)
@@ -29,7 +32,7 @@ class SimpleLookupTable(LookupTable):
     def get_element(self, message: Message):
         report = Report('Matched parameter')
         params = list()
-        for _, row in self.df.iterrows():
+        for row in self.data:
             count = 0
             count_ignore = 0
             for pair in row['pairs']:
@@ -40,15 +43,13 @@ class SimpleLookupTable(LookupTable):
                     count += 1
             if count == len(row['pairs']) - count_ignore:
                 params.append((count, row))
-                # return row.to_dict()
         if len(params) > 0:
             params.sort(key=lambda x: x[0], reverse=True)
-            # json_str = str(json.dumps(params[0][1].to_dict()['pairs'], indent=4))
-            if "name" in params[0][1].to_dict():
+            if "name" in params[0][1]:
                 report.rename(f"Matched parameter: {params[0][1]['name']}")
-            for pair in params[0][1].to_dict()['pairs']:
+            for pair in params[0][1]['pairs']:
                 report.add(pair['key'] + ": " + str(pair['value']))
-            return params[0][1].to_dict(), report
+            return params[0][1], report
        
         return (None, report)
 
