@@ -55,10 +55,10 @@ class GribCheck:
         crra: climate reanalysis
         '''
         script_path = os.path.dirname(os.path.realpath(__file__))
-        tigge_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/TiggeParameters.json"
-        wpmip_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WpmipParameters.json"
-        destine_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/DestineParameters.json"
-        wmo_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WmoParameters.json"
+        tigge_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/TiggeParameters.jsonnet"
+        wpmip_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WpmipParameters.jsonnet"
+        destine_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/DestineParameters.jsonnet"
+        wmo_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WmoParameters.jsonnet"
 
         if self.args.grib_type == "wmo":
             checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
