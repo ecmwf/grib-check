@@ -6,7 +6,7 @@ It provides a set of checks that can be applied to GRIB messages, ensuring that 
 
 ## Prerequisites
  ``` bash
-pip install pandas eccodes
+pip install jsonnet eccodes
 ```
 
 ## Usage
