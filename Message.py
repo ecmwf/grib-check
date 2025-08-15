@@ -116,35 +116,32 @@ class Message:
         return self.__position
 
     def minmax(self):
-        if self.min is None or self.max is None:
-            bitmap = not Eq(self, "bitMapIndicator", 255).status()
+        if self.min is not None and self.max is not None:
+            return self.min, self.max
 
+        try:
+            values = self.get_double_array("values")
+        except Exception:
+            return
+
+        bitmap = not Eq(self, "bitMapIndicator", 255).status()
+
+        if bitmap:
+            missing = self.get("missingValue")
+            it = (v for v in values if v != missing)
             try:
-                self.__values = self.get_double_array("values")
-            except Exception:
-                return
-
-            if bitmap:
-                missing = self.get("missingValue")
-                min_value = max_value = missing
-                for value in self.__values:
-                    if (min_value == missing) or (
-                        (value != missing) and (min_value > value)
-                    ):
-                        min_value = value
-                    if (max_value == missing) or (
-                        (value != missing) and (max_value < value)
-                    ):
-                        max_value = value
+                m = M = next(it)
+            except StopIteration:
+                m = M = missing
             else:
-                min_value = max_value = self.__values[0]
-                for value in self.__values:
-                    if min_value > value:
-                        min_value = value
-                    if max_value < value:
-                        max_value = value
+                for v in it:
+                    if v < m:
+                        m = v
+                    elif v > M:
+                        M = v
+        else:
+            m = min(values)
+            M = max(values)
 
-            self.min = min_value
-            self.max = max_value
-
-        return (self.min, self.max)
+        self.min, self.max = m, M
+        return m, M
