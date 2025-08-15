@@ -376,6 +376,8 @@ class Wmo(CheckEngine):
         report.add(Eq(message["editionNumber"], 2))
         report.add(Missing(message, "reserved") | Eq(message["reserved"], 0))
 
+        report.add(self._check_range(message, p))
+
         if self.valueflg:
             values_report = Report("Check values")
             count = 0
@@ -465,8 +467,8 @@ class Wmo(CheckEngine):
         if end_step == 0:
             report.add(AssertTrue(min_value == 0 and max_value() == 0, "min_value == 0 and max_value == 0"))
             pass
-        else:
-            report.add(self._check_range(message, p))
+#       else:
+#           report.add(self._check_range(message, p))
 
         report.add(self._statistical_process(message ,p))
 
@@ -585,7 +587,7 @@ class Wmo(CheckEngine):
         report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
         report.add(Eq(message["endStep"], message["startStep"] + message["lengthOfTimeRange"]))
         report.add(self._statistical_process(message, p))
-        report.add(self._check_range(message, p))
+#       report.add(self._check_range(message, p))
         return report
 
     def _six_hourly(self, message, p):
@@ -597,7 +599,7 @@ class Wmo(CheckEngine):
         report.add(Eq(message["endStep"], message["startStep"] + 6))
 
         report.add(self._statistical_process(message, p))
-        report.add(self._check_range(message, p))
+#       report.add(self._check_range(message, p))
         return report
 
     def _three_hourly(self, message, p):
@@ -609,5 +611,5 @@ class Wmo(CheckEngine):
         report.add(Eq(message["endStep"], message["startStep"] + 3))
 
         report.add(self._statistical_process(message, p))
-        report.add(self._check_range(message, p))
+#       report.add(self._check_range(message, p))
         return report
