@@ -10,8 +10,8 @@ GribCheck is a Python library designed for validating GRIB files.
 It provides a set of checks that can be applied to GRIB messages, ensuring that they conform to specific standards and expectations.
 
 ## Further Information
-Developer documentation is available at [GribCheck Developer documentation](./devdoc.md).
-[Checks documentation](./checkdocs.md) provides detailed information on how to add new checks and customize existing ones.
+- Developer documentation is available at [GribCheck Developer documentation](./devdoc.md).
+- [Checks documentation](./checkdocs.md) provides detailed information on how to add new checks and customize existing ones.
 
 ## Prerequisites
  ``` bash
