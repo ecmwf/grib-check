@@ -1,8 +1,17 @@
 # GRIB Check
+> [!IMPORTANT]
+> This software is **Emerging** and subject to ECMWF's guidelines on [Software Maturity](https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity).
+>
+> Support level: None.
+> The project is made available as-is, with no guarantee of support.
+> However, bug reports and community contributions are encouraged and appreciated.
 
-## Overview
 GribCheck is a Python library designed for validating GRIB files.
 It provides a set of checks that can be applied to GRIB messages, ensuring that they conform to specific standards and expectations.
+
+## Further Information
+Developer documentation is available at [GribCheck Developer documentation](./devdoc.md).
+[Checks documentation](./checkdocs.md) provides detailed information on how to add new checks and customize existing ones.
 
 ## Prerequisites
  ``` bash
@@ -83,248 +92,20 @@ FAIL: data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
               invalid pressure level
 ```
 
+# License
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
+  http://www.apache.org/licenses/LICENSE-2.0
 
-## Adding a new GRIB type
-
-To explain how to add a new GRIB type, we'll walk through a scenario where we introduce a project called "destine". 
-This project will inherit the WMO checks and define additional custom restrictions.
-
-Add a new file called `checker/Destiny.py` and derive the `Destiny` class from `Wmo`.
-This way, you gain access to many predefined checks like `point_in_time`, `basic_checks`, and `given_level`.
-You can also override existing checks or create new ones.
-The list of existing checks can be found in the `checker/Wmo.py` file.
-If you want to reuse a check, you can call the base class method and add your own checks to the report.
-It's demonstrated in the code below in the `_point_in_time()` method.
-If you want to create a new check, you can define it in the `Destiny` class.
-The check needs to be registered in the constructor using `self.register_checks()`.
-The `_destine_limits()` method is an example of a new check that we created.
-
-``` python
-from checker.Wmo import Wmo
-from Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
-from Report import Report
-
-class DestinE(Wmo):
-    def __init__( self, lookup_table, valueflg=False):
-        super().__init__(lookup_table, valueflg=valueflg)
-        self.register_checks({
-            "destine_limits": self._destine_limits
-        })
-
-    # Reuse / override checks
-    def _point_in_time(self, message, p) -> Report:
-        report = Report("Point In Time (DestinE)")
-        report.add(IsMultipleOf(message["step"], 3))
-        return super()._point_in_time(message, p).add(report)
-
-    # Create new checks
-    def _destine_limits(self, message, p) -> Report:
-        report = Report("DestinE Limits")
-        report.add(Le(message["step"], 30))
-        report.add(IsIn(message["forecastTime"], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
-        report.add(IsIn(message["indicatorOfUnitOfTimeRange"], [0, 1]))
-        report.add(IsIn(message["timeIncrementBetweenSuccessiveFields"], [0, 1]))
-        return report
-```
-Add Destiny option in GribCheck.py
-
-``` python
-...
-...
-from checker.Destiny import DestinE
-...
-      elif self.args.grib_type == "destine":
-          checker = Destiny(param_file=self.args.parameters, valueflg=self.args.valueflg)
-...
-    parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo", "destine"], default="tigge")
-...
-
-```
-
-Add a new JSON file `./checker/WmoParameters.json` in the parameters directory.
-
-```json
-[
-  {
-      "name": "Name of the check",
-      "pairs": [
-          {"key": "stream", "value": "enfo"},
-          {"key": "dataType", "value": "pf"}
-      ],
-      "expected": [
-          {"key": "productDefinitionTemplateNumber", "value": 1},
-          {"key": "paramId", "value": "167"},
-          {"key": "shortName", "value": "2t"},
-          {"key": "name", "value": "2 metre temperature"}
-      ],
-      "checks": [
-          "point_in_time",
-          "destine_limits"
-    ]
-  }
-]
-```
-
-In this way, we apply the `point_in_time` check from WMO and extend it with our own custom checks.
-To start the checks, use the following command:
-
-``` bash
-python GribCheck.py -t destine /path/to/file.grib2
-```
-
-### Parameters
-
-The parameters file is a JSON document that defined the parameters to be validated.
-Each parameter is represented as a dictionary with the following optional and required fields:
-
-- `name`: The name of the parameter.
-- `expected`: (optional) A list of simple and quick checks to be performed on a GRIB message.
-- `pairs`: A list of key-value pairs that are used to select the most appropriate parameter for validation.
-- `checks`: A list of more complex validations to be performed on the message.
-
-A parameter is considered a match if all key-value pairs match those in the message.
-If multiple parameters match, the one with the highest number of matching key-value pairs is selected.
-Once a parameter is selected, validations defined in both `expected` and `checks` are executed.
-
-Below is an example entry from a parameters file:
-
-```json
-[
-{
-  "name" : "sea_surface_height_o2d.s2",
-  "expected" : [
-    {"key": "class", "value": 0},
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
-  ],
-  "pairs" : [
-    {"key": "class", "value": "s2"},
-    {"key": "paramId", "value": 151145},
-    {"key": "discipline", "value": 10},
-    {"key": "parameterCategory", "value": 3},
-    {"key": "parameterNumber", "value": 1},
-    {"key": "typeOfFirstFixedSurface", "value": 160},
-    {"key": "scaleFactorOfFirstFixedSurface", "value": 0},
-    {"key": "scaledValueOfFirstFixedSurface", "value": 0}
-  ],
-  "checks" : [
-    "basic_checks",
-    "daily_average",
-    "given_level",
-    "has_bitmap",
-    "resolution_s2s_ocean"
-  ]
-},
-]
-```
-> **_NOTE:_**  The support for `min`/`max` in the `expected` field is still under development.
-
-
-# Development
-
-## Running tests
-```bash
-  python -m unittest
-```
-## Grib
-
-The Grib class is a wrapper around ecCodes.
-
-### Message
-
-A message is a wrapper around the ecCodes handle, with the key difference that it provides automatic memory management.
-
-To get the value of a key, we can use either the `get` method or the square brackets `[]` operator.
-While square brackets are more convenient, it returns the value in the native format (e.g., a string).
-The `get` method, on the other hand, can return the value in a specific format, such as `float`, `int`, or `str`.
-
-```python
-grib = Grib("path/to/file.grib2")
-message = grib.next()
-print(f"message['stream'] = {message['stream']}")
-# message['stream'] = enfo
-print(f"message.get('stream', int) = {message.get('stream', int)}")
-# message.get('stream', int) = 1035
-```
-### KeyValue type
-
-Values returned by a Message are stored in a KeyValue type.
-Each KeyValue contains the key name, the value (which can be a number or a string), and the corresponding data type.
-
-```python
-a = KeyValue("a", 5)
-print(f"a.key() = {a.key()}\n a.value() = {a.value()}\n a.type() = {a.type()}")
-# a.key() = a
-# a.value() = 5
-# a.type() = <class 'int'>
-```
-
-### Mathematical operations
-
-KeyValue supports various mathematical operations. These operations serve two purposes:
-First, they modify the value as expected.
-Secondly, they construct a mathematical expression in string format to demonstrate how the value was calculated.
-This can help users to understand the logic behind the calculations.
-
-The key changes the format of the string representation of the KeyValue after the operation.
-For example, if we add two KeyValue objects together, the resulting KeyValue will have a string representation that shows the addition operation.
-Inside the parentheses, the string representation of the KeyValue is displayed.
-
-
-```python
-a = KeyValue("a", 5)
-b = KeyValue("b", 6)
-c = a + b
-
-print(f"c.key() = {c.key()}")
-# c.value() = a(5) + b(6)
-
-print(f"c.value() = {c.value()}")
-# c.value() = 11
-
-print(f"{c} = {c.value()}")
-# a(5) + b(6) = 11
-```
-
-### Check functions
-
-A check takes a message and parameters as arguments and returns a report.
-We can override checks from the base class simply by creating a new check with the same name.
-
-``` python
-    def check_overridden(self, message, p) -> Report:
-        report = Report("Simple Check")
-        return report
-```
-
-Sometimes, we want to extend tests defined in a base class.
-In such cases, we override the function from the base class but retain the results produced by the original function.
-One way to achieve this is by merging the reports and returning the combined result.
-
-``` python
-    def check_extended(self, message, p) -> Report:
-        report = Report("Extended check")
-        return super().check_extended(message, p).add(report)
-```
-### Report
-
-A report serves as a container for various entities, such as assertions, informational messages, and nested reports.
-Each report has a status, which is determined by the statuses of the entities it contains.
-For example, if a single assertion fails, the report's status will be set to "fail" accordingly.
-Reports can also be nested, and the same rules for status propagation apply to nested reports as well.
-
-```python
-        report = Report("Extended check")
-        report.add(Ge(message['bitsPerValue'], 0))
-```
-
-### Assertion
-
-An assertion verifies whether values meet the expected conditions.
-For example, we can check whether `bitsPerValue` is a positive number.
-A typical report contains one or more assertions.
-
-```python
-Ge(message['a'], message['b']) # a >= b
-```
-
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
