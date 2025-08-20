@@ -112,32 +112,37 @@ class IsMultipleOf(Assert):
             return f"{self.__mod_value} == 0"
 
 
-class Exists(Assert):
-    def __init__(self, message, key, comment=None):
-        self.__is_missing = message.is_missing(key)
-        self.__key = key
-        self._status = not self.__is_missing
-        self._comment = comment
-
-    def _as_string(self, color=False) -> str:
-        if color:
-            return f"{self.__key} exists({not self.__is_missing})"
-        else:
-            return f"{self.__key} exists({not self.__is_missing})"
-
 
 class Missing(Assert):
     def __init__(self, message, key, comment=None):
-        self.__is_missing = message.is_missing(key)
+        self.__key_is_missing = message[key].value() is None
+        if not self.__key_is_missing:
+            self.__value_is_missing = message.is_missing(key)
+            self._status = self.__value_is_missing
+        else:
+            self.__value_is_missing = None
+            self._status = False
         self.__key = key
-        self._status = self.__is_missing
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
-        if color:
-            return f"{self.__key} is missing({self.__is_missing})"
+        return f"{self.__key} exists({not self.__key_is_missing}) and has a missing value({None if self.__value_is_missing == None else self.__value_is_missing})"
+
+
+class Exists(Assert):
+    def __init__(self, message, key, comment=None):
+        self.__key_is_missing = message[key].value() is None
+        if not self.__key_is_missing:
+            self.__value_is_missing = message.is_missing(key)
+            self._status = not self.__value_is_missing
         else:
-            return f"{self.__key} is missing({self.__is_missing})"
+            self.__value_is_missing = None
+            self._status = False;
+        self.__key = key
+        self._comment = comment
+
+    def _as_string(self, color=False) -> str:
+        return f"{self.__key} exists({not self.__key_is_missing}) and has a non-missing value({None if self.__value_is_missing == None else not self.__value_is_missing})"
 
 
 class Eq(Assert):

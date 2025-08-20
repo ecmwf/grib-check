@@ -106,11 +106,9 @@ class Message:
     def get_buffer(self) -> bytes:
         return codes_get_message(self.__h)
 
+    # Check whether the given key has the value 'missing'
     def is_missing(self, key) -> bool:
-        try:
-            return False if codes_is_missing(self.__h, key) == 0 else True
-        except KeyValueNotFoundError:
-            return True
+        return False if codes_is_missing(self.__h, key) == 0 else True
 
     def position(self):
         return self.__position
