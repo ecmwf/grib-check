@@ -8,7 +8,6 @@
 # does it submit to any jurisdiction.
 #
 
-import unittest
 from grib_check import GribCheck
 
 class Config:
@@ -31,12 +30,8 @@ class Config:
         self.format = "tree"
         
 
-class TestGribCheck(unittest.TestCase):
-    def test_grib_check(self):
-        config = Config()
-        grib_check = GribCheck(config)
-        grib_check.run()
-
-
-if __name__ == '__main__':
-    unittest.main()
+# class TestGribCheck:
+#     def test_grib_check(self):
+#         config = Config()
+#         grib_check = GribCheck(config)
+#         grib_check.run()

@@ -8,20 +8,17 @@
 # does it submit to any jurisdiction.
 #
 
-import unittest
 from LookupTable import SimpleLookupTable
 from Grib import Grib
 from Message import Message
 
-class TestIndexedLookupTable(unittest.TestCase):
+class TestIndexedLookupTable:
     def test_get_element(self):
         table = SimpleLookupTable("tests/test_parameters.json")
         grib = Grib("tests/wmo/od_eefo_fcmean_sfc_2024_0001_reduced_gg.grib2")
         message = next(grib)
         element, lookup_table_report = table.get_element(message)
-        print(element)
-        self.assertEqual(
-                {
+        expected = {
                 "name": "param_1",
                 "pairs": [
                     {"key": "stream", "value": "eefo"},
@@ -36,7 +33,5 @@ class TestIndexedLookupTable(unittest.TestCase):
                 "checks": [
                     "basic_checks"
                 ]
-                }, element)
-            
-if __name__ == '__main__':
-    unittest.main()
+                }
+        assert expected == element

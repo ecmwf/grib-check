@@ -8,19 +8,18 @@
 # does it submit to any jurisdiction.
 #
 
-import unittest
 from Report import Report
 from Assert import Fail, Pass
 
-class TestAssert(unittest.TestCase):
+class TestAssert:
 
     def test_level_1(self):
         report = Report("Report 1")
         report.add(Pass("Assertion 1"))
-        self.assertEqual(str(report), "PASS: Report 1\n  PASS: Assertion 1\n")
+        assert str(report) == "PASS: Report 1\n  PASS: Assertion 1\n"
 
         report.add(Fail("Assertion 2"))
-        self.assertEqual(str(report), "FAIL: Report 1\n  PASS: Assertion 1\n  FAIL: Assertion 2\n")
+        assert str(report) == "FAIL: Report 1\n  PASS: Assertion 1\n  FAIL: Assertion 2\n"
 
     def test_nested_report(self):
         report = Report("Report 1")
@@ -31,20 +30,16 @@ class TestAssert(unittest.TestCase):
 
         report.add(nested)
 
-        self.assertEqual(str(report), "PASS: Report 1\n  PASS: Assertion 1\n  PASS: Report 2\n    PASS: Assertion 2\n")
+        assert str(report) == "PASS: Report 1\n  PASS: Assertion 1\n  PASS: Report 2\n    PASS: Assertion 2\n"
 
     def test_assertions(self):
         report1 = Report("Test report")
         report1.add(Fail("Some error message"))
-        self.assertEqual(str(report1), "FAIL: Test report\n  FAIL: Some error message\n")
+        assert str(report1) == "FAIL: Test report\n  FAIL: Some error message\n"
 
         f = Fail("Some error message")
         p = Pass("Some success message")
         report2 = Report("Test report 2")
         report2.add(f & p)
 
-        self.assertEqual(str(report2), "FAIL: Test report 2\n  FAIL: Some error message and Some success message\n")
-
-            
-if __name__ == '__main__':
-    unittest.main()
+        assert str(report2) == "FAIL: Test report 2\n  FAIL: Some error message and Some success message\n"
