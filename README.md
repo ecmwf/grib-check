@@ -91,6 +91,10 @@ FAIL: data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
         PASS: level(850) in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10]
               invalid pressure level
 ```
+## Running tests
+```bash
+  python -m unittest
+```
 
 # License
 Licensed to the Apache Software Foundation (ASF) under one

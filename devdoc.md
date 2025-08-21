@@ -1,9 +1,5 @@
 # Development
 
-## Running tests
-```bash
-  python -m unittest
-```
 ## Grib
 
 The Grib class is a wrapper around ecCodes.
