@@ -8,7 +8,6 @@
 # does it submit to any jurisdiction.
 #
 
-import unittest
 from Grib import Grib
 from Report import Report
 from Assert import Fail
@@ -19,7 +18,7 @@ def dummy(a, b):
     report.add(Fail("dummy"))
     return report
 
-class TestTest(unittest.TestCase):
+class TestTest:
     # def test_create_wmo_test(self):
     #     check_map = {
     #         # "product_definition_template_number": self.__product_definition_template_number,
@@ -110,8 +109,4 @@ class TestTest(unittest.TestCase):
         for message in Grib("./tests/tigge/tigge_ecmf_sfc_10v.grib"):
             test = Tigge.DefaultTest(message, parameter, check_map)
             report = test.run()
-            print(report)
-
-if __name__ == '__main__':
-    unittest.main()
-
+            # print(report)
