@@ -36,7 +36,8 @@ urls.Issues = "https://github.com/ecmwf/grib-check/issues"
 urls.Repository = "https://github.com/ecmwf/grib-check"
 
 [project.scripts]
-grib_check = "grib_check.grib_check:main"
+grib_check = "grib_check.GribCheck:main"
+tigge_name = "grib_check.TiggeName:main"
 
 [tool.setuptools.packages.find]
 include = [ "grib_check", "grib_check.*" ]

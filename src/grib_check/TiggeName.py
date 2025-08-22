@@ -15,7 +15,7 @@ import math
 import argparse
 import sys
 import os
-from file_scanner import *
+from grib_check.FileScanner import *
 
 
 class TiggeName:
@@ -127,7 +127,7 @@ class TiggeName:
     def get_error_counter(self):
         return self.error
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--list-mode', help='enable list mode', action='store_true')
     parser.add_argument('-c', '--compare-mode', help='enable compare mode', action='store_true')
@@ -140,3 +140,6 @@ if __name__ == "__main__":
         tigge_name.validate(filename)
 
     sys.exit(0 if tigge_name.get_error_counter()== 0 else 1)
+
+if __name__ == "__main__":
+    main()  
