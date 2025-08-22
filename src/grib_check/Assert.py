@@ -13,7 +13,7 @@
 import math
 import logging
 import numpy as np
-from TermColor import TermColor
+from .TermColor import TermColor
 
 class Assert:
     def __init__(self, comment=None):

@@ -27,9 +27,9 @@ from eccodes import (
     KeyValueNotFoundError,
 )
 import logging
-from Assert import Eq
-from Report import Report
-from KeyValue import KeyValue
+from .Assert import Eq
+from .Report import Report
+from .KeyValue import KeyValue
 
 class Message:
     def __init__(self, handle=None, message_buffer=None, position=None):

@@ -11,8 +11,8 @@
 # import pandas as pd
 import _jsonnet
 import json
-from Message import Message
-from Report import Report
+from .Message import Message
+from .Report import Report
 import sys
 
 

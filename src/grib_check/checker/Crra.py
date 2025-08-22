@@ -8,9 +8,9 @@
 # does it submit to any jurisdiction.
 #
 
-from Assert import IsIn, Eq, IsMultipleOf
-from Report import Report
-from checker.Uerra import Uerra
+from grib_check.Assert import IsIn, Eq, IsMultipleOf
+from grib_check.Report import Report
+from .Uerra import Uerra
 
 
 class Crra(Uerra):
