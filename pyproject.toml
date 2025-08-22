@@ -27,7 +27,7 @@ classifiers = [
 ]
 dynamic = [ "version" ]
 dependencies = [
-  "eccodes>=2.27.0",
+  "eccodes>=2.27.0", "jsonnet"
 ]
 optional-dependencies.test = [ "pytest" ]
 urls.Documentation = "https://github.com/ecmwf/grib-check"
