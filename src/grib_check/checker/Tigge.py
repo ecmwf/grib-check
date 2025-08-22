@@ -8,10 +8,10 @@
 # does it submit to any jurisdiction.
 #
 
-from checker.Wmo import Wmo
-from Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
-from Report import Report
-from LookupTable import SimpleLookupTable
+from .Wmo import Wmo
+from grib_check.Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
+from grib_check.Report import Report
+from grib_check.LookupTable import SimpleLookupTable
 import os
 import logging
 

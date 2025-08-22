@@ -8,8 +8,8 @@
 # does it submit to any jurisdiction.
 #
 
-from Grib import Grib
-from checker.Tigge import Tigge
+from grib_check.Grib import Grib
+from grib_check.checker.Tigge import Tigge
     
 class TestWmoChecker:
     def test_load_data_from_file(self):

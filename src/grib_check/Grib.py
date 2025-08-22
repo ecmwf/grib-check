@@ -12,9 +12,9 @@ from eccodes import (
     codes_grib_new_from_file,
     codes_get_gaussian_latitudes,
 )
-from Message import Message
-from Report import Report
-from Assert import Fail
+from .Message import Message
+from .Report import Report
+from .Assert import Fail
 import sys
 
 

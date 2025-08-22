@@ -9,11 +9,11 @@
 #
 
 import logging
-from LookupTable import LookupTable
-from Test import Test
-from Message import Message
-from Report import Report
-from Assert import Fail, Eq
+from .LookupTable import LookupTable
+from .Test import Test
+from .Message import Message
+from .Report import Report
+from .Assert import Fail, Eq
 
 
 class CheckEngine:

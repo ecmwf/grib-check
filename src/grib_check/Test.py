@@ -8,8 +8,8 @@
 # does it submit to any jurisdiction.
 #
 
-from Message import Message
-from Report import Report
+from .Message import Message
+from .Report import Report
 
 class Test:
     '''

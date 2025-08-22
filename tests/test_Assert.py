@@ -8,9 +8,9 @@
 # does it submit to any jurisdiction.
 #
 
-from Grib import Grib
-from Assert import Eq
-from KeyValue import KeyValue
+from grib_check.Grib import Grib
+from grib_check.Assert import Eq
+from grib_check.KeyValue import KeyValue
 
 class TestAssert:
     def test_and(self):
@@ -50,7 +50,7 @@ class TestAssert:
         assert f"{eq1} or {eq1}" == a.as_string()
 
     def test_eq(self):
-        from Assert import Eq
+        from grib_check.Assert import Eq
         kv1 = KeyValue("stream", "eefo")
         kv2 = KeyValue("stream", "nai")
 
@@ -87,7 +87,7 @@ class TestAssert:
         assert "eefo == nai" == eq.as_string()
 
     def test_isin(self):
-        from Assert import IsIn
+        from grib_check.Assert import IsIn
         kv = KeyValue("stream", "eefo")
 
         isin = IsIn(kv, ["eefo", "nai"])
@@ -99,7 +99,7 @@ class TestAssert:
         assert "stream(eefo) in ['nai', 'dgov']" == isin.as_string()
 
     def test_multiple_of(self):
-        from Assert import IsMultipleOf
+        from grib_check.Assert import IsMultipleOf
 
         multiple_of = IsMultipleOf(KeyValue("test", 12), 6)
         assert multiple_of.status()
@@ -110,7 +110,7 @@ class TestAssert:
         assert "test(12) % 7 == 0" == multiple_of.as_string()
 
     def test_exists(self):
-        from Assert import Exists
+        from grib_check.Assert import Exists
 
         grib = Grib("tests/dgov-data/od_eefo_fcmean_sfc_2024_0001_reduced_gg.grib2")
         message = grib.__next__()
@@ -128,7 +128,7 @@ class TestAssert:
         assert "hoursAfterDataCutoff exists(True) and has a non-missing value(False)" == exists.as_string()
 
     def test_missing(self):
-        from Assert import Missing
+        from grib_check.Assert import Missing
 
         grib = Grib("tests/dgov-data/od_eefo_fcmean_sfc_2024_0001_reduced_gg.grib2")
         message = grib.__next__()
@@ -146,7 +146,7 @@ class TestAssert:
         assert missing.status()
 
     def test_eq_double(self):
-        from Assert import EqDbl
+        from grib_check.Assert import EqDbl
 
         kv = KeyValue("test", 6.0001)
         eq = EqDbl(kv, 6.0, 0.01)
@@ -176,7 +176,7 @@ class TestAssert:
         # assert "6 == 6 within 0.01" == eq.as_string()
 
     def test_ne(self):
-        from Assert import Ne
+        from grib_check.Assert import Ne
 
         kv1 = KeyValue("test", 6)
         kv2 = KeyValue("test", 7)
@@ -209,7 +209,7 @@ class TestAssert:
         assert "7 != test(6)" == ne.as_string()
 
     def test_ge(self):
-        from Assert import Ge
+        from grib_check.Assert import Ge
 
         kv1 = KeyValue("test", 6)
         kv2 = KeyValue("test", 7)
@@ -243,7 +243,7 @@ class TestAssert:
 
 
     def test_le(self):
-        from Assert import Le
+        from grib_check.Assert import Le
 
         kv1 = KeyValue("test", 6)
         kv2 = KeyValue("test", 7)
@@ -276,7 +276,7 @@ class TestAssert:
         assert "5 <= test(6)" == le.as_string()
 
     def test_gt(self):
-        from Assert import Gt
+        from grib_check.Assert import Gt
 
         kv1 = KeyValue("test", 6)
         kv2 = KeyValue("test", 7)
@@ -309,7 +309,7 @@ class TestAssert:
         assert "5 > test(6)" == gt.as_string()
 
     def test_lt(self):
-        from Assert import Lt
+        from grib_check.Assert import Lt
 
         kv1 = KeyValue("test", 6)
         kv2 = KeyValue("test", 7)
@@ -343,7 +343,7 @@ class TestAssert:
         
 
     def test_fail(self):
-        from Assert import Fail
+        from grib_check.Assert import Fail
 
         fail = Fail("This is a failure")
         assert not fail.status()
@@ -355,7 +355,7 @@ class TestAssert:
 
 
     def test_pass(self):
-        from Assert import Pass
+        from grib_check.Assert import Pass
 
         pas = Pass("This is a pass")
         assert pas.status()

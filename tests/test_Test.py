@@ -8,10 +8,10 @@
 # does it submit to any jurisdiction.
 #
 
-from Grib import Grib
-from Report import Report
-from Assert import Fail
-from checker.Tigge import Tigge
+from grib_check.Grib import Grib
+from grib_check.Report import Report
+from grib_check.Assert import Fail
+from grib_check.checker.Tigge import Tigge
 
 def dummy(a, b):
     report = Report()
