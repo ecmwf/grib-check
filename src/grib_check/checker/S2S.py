@@ -8,9 +8,9 @@
 # does it submit to any jurisdiction.
 #
 
-from Assert import Le, Lt, Gt, Ge, Ne, Eq, Fail, IsIn, IsMultipleOf, EqDbl
-from Report import Report
-from checker.Wmo import Wmo
+from grib_check.Assert import Le, Lt, Gt, Ge, Ne, Eq, Fail, IsIn, IsMultipleOf, EqDbl
+from grib_check.Report import Report
+from .Wmo import Wmo
 
 
 class S2S(Wmo):

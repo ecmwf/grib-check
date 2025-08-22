@@ -8,11 +8,11 @@
 # does it submit to any jurisdiction.
 #
 
-from CheckEngine import CheckEngine
-from LookupTable import SimpleLookupTable
-from Grib import get_gaussian_latitudes
-from Assert import Ge, Le, Lt, Ne, Eq, Exists, Missing, Fail, IsIn, EqDbl, AssertTrue, Pass
-from Report import Report
+from grib_check.CheckEngine import CheckEngine
+from grib_check.LookupTable import SimpleLookupTable
+from grib_check.Grib import get_gaussian_latitudes
+from grib_check.Assert import Ge, Le, Lt, Ne, Eq, Exists, Missing, Fail, IsIn, EqDbl, AssertTrue, Pass
+from grib_check.Report import Report
 import numpy as np
 import logging
 

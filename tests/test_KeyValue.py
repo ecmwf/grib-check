@@ -8,7 +8,7 @@
 # does it submit to any jurisdiction.
 #
 
-from KeyValue import KeyValue
+from grib_check.KeyValue import KeyValue
 
 class TestIndexedLookupTable:
     def test_init(self):

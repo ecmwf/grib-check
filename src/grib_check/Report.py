@@ -9,8 +9,8 @@
 #
 
 import logging
-from Assert import Assert
-from TermColor import TermColor
+from .Assert import Assert
+from .TermColor import TermColor
 import numpy as np
 
 class RWarning:

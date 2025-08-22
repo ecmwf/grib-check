@@ -16,23 +16,23 @@ import sys
 signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on Ctrl+C
 
 import argparse
-from FileScanner import FileScanner
-from checker.Tigge import Tigge
-from checker.Wpmip import Wpmip
-from checker.Uerra import Uerra
-from checker.S2S import S2S
-from checker.S2SRefcst import S2SRefcst
-from checker.Crra import Crra
-from checker.Lam import Lam
-from checker.DestinE import DestinE
-from checker.Wmo import Wmo
-from Grib import Grib
+from .FileScanner import FileScanner
+from .checker.Tigge import Tigge
+from .checker.Wpmip import Wpmip
+from .checker.Uerra import Uerra
+from .checker.S2S import S2S
+from .checker.S2SRefcst import S2SRefcst
+from .checker.Crra import Crra
+from .checker.Lam import Lam
+from .checker.DestinE import DestinE
+from .checker.Wmo import Wmo
+from .Grib import Grib
 import logging
-from Report import Report
+from .Report import Report
 import concurrent.futures
 import multiprocessing
-from Message import Message
-from LookupTable import SimpleLookupTable
+from .Message import Message
+from .LookupTable import SimpleLookupTable
 import os
 
 
@@ -107,7 +107,8 @@ class GribCheck:
                 for pos, message in enumerate(grib):
                         worker(filename, message.get_buffer(), pos + 1, checker, self.args)
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser()
     # parser.add_argument("-w", "--warnflg", help="warnings are treated as errors", action="store_true")
     # parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
@@ -137,6 +138,9 @@ if __name__ == "__main__":
     logger.info('Started')
 
     grib_check = GribCheck(args)
-    grib_check.run()
-    # sys.exit(grib_check.run())
+    return grib_check.run()
 
+
+if __name__ == "__main__":
+    ret = main()
+    # sys.exit(0 if ret is None else ret)
