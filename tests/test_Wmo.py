@@ -18,5 +18,7 @@ class TestWmoChecker:
         # checker = WmoChecker(param_file="./tests/WmoParameters.json")
         checker = Wmo(SimpleLookupTable("./tests/test_parameters.json"))
 
-        for message in Grib("./tests/dgov-data/od_eefo_taes_sfc_2024_0001_reduced_gg.grib2"):
+        for message in Grib(
+            "./tests/dgov-data/od_eefo_taes_sfc_2024_0001_reduced_gg.grib2"
+        ):
             checker.validate(message)

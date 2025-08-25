@@ -52,6 +52,7 @@ class TestAssert:
 
     def test_eq(self):
         from grib_check.Assert import Eq
+
         kv1 = KeyValue("stream", "eefo")
         kv2 = KeyValue("stream", "nai")
 
@@ -89,6 +90,7 @@ class TestAssert:
 
     def test_isin(self):
         from grib_check.Assert import IsIn
+
         kv = KeyValue("stream", "eefo")
 
         isin = IsIn(kv, ["eefo", "nai"])
@@ -118,15 +120,24 @@ class TestAssert:
 
         exists = Exists(message, "stream")
         assert exists.status()
-        assert "stream exists(True) and has a non-missing value(True)" == exists.as_string()
+        assert (
+            "stream exists(True) and has a non-missing value(True)"
+            == exists.as_string()
+        )
 
         exists = Exists(message, "non_existent_key")
         assert not exists.status()
-        assert "non_existent_key exists(False) and has a non-missing value(None)" == exists.as_string()
+        assert (
+            "non_existent_key exists(False) and has a non-missing value(None)"
+            == exists.as_string()
+        )
 
         exists = Exists(message, "hoursAfterDataCutoff")
         assert not exists.status()
-        assert "hoursAfterDataCutoff exists(True) and has a non-missing value(False)" == exists.as_string()
+        assert (
+            "hoursAfterDataCutoff exists(True) and has a non-missing value(False)"
+            == exists.as_string()
+        )
 
     def test_missing(self):
         from grib_check.Assert import Missing
@@ -136,14 +147,22 @@ class TestAssert:
 
         missing = Missing(message, "stream")
         assert not missing.status()
-        assert "stream exists(True) and has a missing value(False)" == missing.as_string()
+        assert (
+            "stream exists(True) and has a missing value(False)" == missing.as_string()
+        )
 
         missing = Missing(message, "non_existent_key")
         assert not missing.status()
-        assert "non_existent_key exists(False) and has a missing value(None)" == missing.as_string()
+        assert (
+            "non_existent_key exists(False) and has a missing value(None)"
+            == missing.as_string()
+        )
 
         missing = Missing(message, "hoursAfterDataCutoff")
-        assert "hoursAfterDataCutoff exists(True) and has a missing value(True)" == missing.as_string()
+        assert (
+            "hoursAfterDataCutoff exists(True) and has a missing value(True)"
+            == missing.as_string()
+        )
         assert missing.status()
 
     def test_eq_double(self):
@@ -163,7 +182,7 @@ class TestAssert:
         assert "test(6.0001) == 7.0 within 0.01" == eq.as_string()
 
         # TODO(maee): Add functionality to compare KeyValue with KeyValue
-        
+
         # eq = EqDbl(6.0001, 6.0, 0.01)
         # assert eq.status()
         # assert "6.0001 == 6.0 within 0.01" == eq.as_string()
@@ -195,11 +214,11 @@ class TestAssert:
 
         ne = Ne(6, 7)
         assert ne.status()
-        assert "6 != 7" == ne.as_string()  
+        assert "6 != 7" == ne.as_string()
 
         ne = Ne(6, 6)
         assert not ne.status()
-        assert "6 != 6" == ne.as_string()  
+        assert "6 != 6" == ne.as_string()
 
         ne = Ne(6, kv1)
         assert not ne.status()
@@ -228,11 +247,11 @@ class TestAssert:
 
         ge = Ge(6, 7)
         assert not ge.status()
-        assert "6 >= 7" == ge.as_string()  
+        assert "6 >= 7" == ge.as_string()
 
         ge = Ge(6, 6)
         assert ge.status()
-        assert "6 >= 6" == ge.as_string()  
+        assert "6 >= 6" == ge.as_string()
 
         ge = Ge(7, kv1)
         assert ge.status()
@@ -241,7 +260,6 @@ class TestAssert:
         ge = Ge(5, kv1)
         assert not ge.status()
         assert "5 >= test(6)" == ge.as_string()
-
 
     def test_le(self):
         from grib_check.Assert import Le
@@ -262,11 +280,11 @@ class TestAssert:
 
         le = Le(6, 7)
         assert le.status()
-        assert "6 <= 7" == le.as_string()  
+        assert "6 <= 7" == le.as_string()
 
         le = Le(6, 6)
         assert le.status()
-        assert "6 <= 6" == le.as_string()  
+        assert "6 <= 6" == le.as_string()
 
         le = Le(7, kv1)
         assert not le.status()
@@ -295,11 +313,11 @@ class TestAssert:
 
         gt = Gt(6, 7)
         assert not gt.status()
-        assert "6 > 7" == gt.as_string()  
+        assert "6 > 7" == gt.as_string()
 
         gt = Gt(6, 6)
         assert not gt.status()
-        assert "6 > 6" == gt.as_string()  
+        assert "6 > 6" == gt.as_string()
 
         gt = Gt(7, kv1)
         assert gt.status()
@@ -328,11 +346,11 @@ class TestAssert:
 
         lt = Lt(6, 7)
         assert lt.status()
-        assert "6 < 7" == lt.as_string()  
+        assert "6 < 7" == lt.as_string()
 
         lt = Lt(6, 6)
         assert not lt.status()
-        assert "6 < 6" == lt.as_string()  
+        assert "6 < 6" == lt.as_string()
 
         lt = Lt(7, kv1)
         assert not lt.status()
@@ -341,7 +359,6 @@ class TestAssert:
         lt = Lt(5, kv1)
         assert lt.status()
         assert "5 < test(6)" == lt.as_string()
-        
 
     def test_fail(self):
         from grib_check.Assert import Fail
@@ -353,7 +370,6 @@ class TestAssert:
         fail = Fail("Another failure")
         assert not fail.status()
         assert "Another failure" == fail.as_string()
-
 
     def test_pass(self):
         from grib_check.Assert import Pass

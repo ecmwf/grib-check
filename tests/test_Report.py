@@ -20,7 +20,9 @@ class TestAssert:
         assert str(report) == "PASS: Report 1\n  PASS: Assertion 1\n"
 
         report.add(Fail("Assertion 2"))
-        assert str(report) == "FAIL: Report 1\n  PASS: Assertion 1\n  FAIL: Assertion 2\n"
+        assert (
+            str(report) == "FAIL: Report 1\n  PASS: Assertion 1\n  FAIL: Assertion 2\n"
+        )
 
     def test_nested_report(self):
         report = Report("Report 1")
@@ -31,7 +33,10 @@ class TestAssert:
 
         report.add(nested)
 
-        assert str(report) == "PASS: Report 1\n  PASS: Assertion 1\n  PASS: Report 2\n    PASS: Assertion 2\n"
+        assert (
+            str(report)
+            == "PASS: Report 1\n  PASS: Assertion 1\n  PASS: Report 2\n    PASS: Assertion 2\n"
+        )
 
     def test_assertions(self):
         report1 = Report("Test report")
@@ -43,4 +48,7 @@ class TestAssert:
         report2 = Report("Test report 2")
         report2.add(f & p)
 
-        assert str(report2) == "FAIL: Test report 2\n  FAIL: Some error message and Some success message\n"
+        assert (
+            str(report2)
+            == "FAIL: Test report 2\n  FAIL: Some error message and Some success message\n"
+        )

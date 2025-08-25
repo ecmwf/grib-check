@@ -20,7 +20,7 @@ class TestIndexedLookupTable:
         a = KeyValue("a", 5)
         b = KeyValue("b", 10)
         c = KeyValue("c", 15)
-        
+
         x = a + b
         assert x.key() == "a(5) + b(10)"
         assert x.value() == 15
@@ -53,7 +53,7 @@ class TestIndexedLookupTable:
         x = (a + b) % 10
         assert x.key() == "(a(5) + b(10)) % 10"
         assert x.value() == (5 + 10) % 10
-        
+
         x = -(a + b)
         assert x.key() == "-(a(5) + b(10))"
         assert x.value() == -(5 + 10)

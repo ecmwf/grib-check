@@ -29,7 +29,7 @@ class Config:
         self.debug = True
         self.failed_only = False
         self.format = "tree"
-        
+
 
 # class TestGribCheck:
 #     def test_grib_check(self):
