@@ -8,9 +8,10 @@
 # does it submit to any jurisdiction.
 #
 
-from grib_check.Grib import Grib
 from grib_check.Assert import Eq
+from grib_check.Grib import Grib
 from grib_check.KeyValue import KeyValue
+
 
 class TestAssert:
     def test_and(self):

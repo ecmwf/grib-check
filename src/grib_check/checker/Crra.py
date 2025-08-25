@@ -8,8 +8,9 @@
 # does it submit to any jurisdiction.
 #
 
-from grib_check.Assert import IsIn, Eq, IsMultipleOf
+from grib_check.Assert import Eq, IsIn, IsMultipleOf
 from grib_check.Report import Report
+
 from .Uerra import Uerra
 
 

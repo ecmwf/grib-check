@@ -8,13 +8,28 @@
 # does it submit to any jurisdiction.
 #
 
-from grib_check.CheckEngine import CheckEngine
-from grib_check.LookupTable import SimpleLookupTable
-from grib_check.Grib import get_gaussian_latitudes
-from grib_check.Assert import Ge, Le, Lt, Ne, Eq, Exists, Missing, Fail, IsIn, EqDbl, AssertTrue, Pass
-from grib_check.Report import Report
-import numpy as np
 import logging
+
+import numpy as np
+
+from grib_check.Assert import (
+    AssertTrue,
+    Eq,
+    EqDbl,
+    Exists,
+    Fail,
+    Ge,
+    IsIn,
+    Le,
+    Lt,
+    Missing,
+    Ne,
+    Pass,
+)
+from grib_check.CheckEngine import CheckEngine
+from grib_check.Grib import get_gaussian_latitudes
+from grib_check.LookupTable import SimpleLookupTable
+from grib_check.Report import Report
 
 
 class Wmo(CheckEngine):

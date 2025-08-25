@@ -9,9 +9,12 @@
 #
 
 import logging
+
+import numpy as np
+
 from .Assert import Assert
 from .TermColor import TermColor
-import numpy as np
+
 
 class RWarning:
     def __init__(self, msg):

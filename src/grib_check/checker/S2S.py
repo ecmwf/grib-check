@@ -8,8 +8,9 @@
 # does it submit to any jurisdiction.
 #
 
-from grib_check.Assert import Le, Lt, Gt, Ge, Ne, Eq, Fail, IsIn, IsMultipleOf, EqDbl
+from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt, Ne
 from grib_check.Report import Report
+
 from .Wmo import Wmo
 
 

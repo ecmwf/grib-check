@@ -8,28 +8,31 @@
 # does it submit to any jurisdiction.
 #
 
+import logging
+
 import numpy as np
 from eccodes import (
-    codes_release,
-    codes_is_missing,
-    codes_get_message,
-    codes_get_size,
-    codes_get_long,
+    KeyValueNotFoundError,
     codes_get_double,
-    codes_get_string,
-    codes_set_string,
     codes_get_double_array,
+    codes_get_long,
+    codes_get_message,
     codes_get_native_type,
+    codes_get_size,
+    codes_get_string,
+    codes_is_missing,
+    codes_keys_iterator_get_name,
     codes_keys_iterator_new,
     codes_keys_iterator_next,
-    codes_keys_iterator_get_name,
     codes_new_from_message,
-    KeyValueNotFoundError,
+    codes_release,
+    codes_set_string,
 )
-import logging
+
 from .Assert import Eq
-from .Report import Report
 from .KeyValue import KeyValue
+from .Report import Report
+
 
 class Message:
     def __init__(self, handle=None, message_buffer=None, position=None):

@@ -10,6 +10,7 @@
 
 from grib_check.KeyValue import KeyValue
 
+
 class TestIndexedLookupTable:
     def test_init(self):
         a = KeyValue("a", 5)
