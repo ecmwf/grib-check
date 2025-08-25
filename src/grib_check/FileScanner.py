@@ -21,7 +21,7 @@ class FileScanner:
                 self.logger.debug(f"Scanning {path}")
                 for root, dirs, fns in os.walk(path):
                     for fn in fns:
-                        self.fns.append(root + '/' + fn)
+                        self.fns.append(root + "/" + fn)
             else:
                 self.fns.append(path)
 

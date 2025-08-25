@@ -39,7 +39,7 @@ class CheckEngine:
     def __init__(self, lookup_table: LookupTable):
         self.logger = logging.getLogger(__class__.__name__)
         assert lookup_table is not None
-        self._test_store = lookup_table 
+        self._test_store = lookup_table
         self._check_map = None
 
     def _create_test(self, message: Message, parameters: dict) -> Test:
@@ -60,7 +60,6 @@ class CheckEngine:
                 raise ValueError(f"Check function {name} already registered")
             self._check_map[name] = func
 
-
     def validate(self, message) -> Report:
         report = Report()
         kv, store_report = self._test_store.get_element(message)
@@ -74,7 +73,9 @@ class CheckEngine:
                 expected_report = Report("Expected Values")
                 for expected in kv["expected"]:
                     if "key" in expected and "value" in expected:
-                        expected_report.add(Eq(message[expected["key"]], expected["value"]))
+                        expected_report.add(
+                            Eq(message[expected["key"]], expected["value"])
+                        )
                 report.add(expected_report)
         else:
             self.logger.debug(f"Could not find parameter for: {message}")

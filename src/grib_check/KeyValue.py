@@ -30,7 +30,7 @@ class KeyValue:
         return self.__key
 
     def value(self):
-        return self.__value 
+        return self.__value
 
     def type(self):
         return type(self.__value)
@@ -84,14 +84,20 @@ class KeyValue:
         else:
             return self.__value >= other
 
-
-
     def __dash_op__(self, lhs, rhs, op, op_sign, op_type):
         lhs_last_op_type = lhs.__last_op_type if type(lhs) is KeyValue else OpType.NONE
         rhs_last_op_type = rhs.__last_op_type if type(rhs) is KeyValue else OpType.NONE
 
-        lhss = f"({lhs})" if lhs_last_op_type == OpType.DASH and op_type == OpType.DOT else f"{lhs}"
-        rhss = f"({rhs})" if rhs_last_op_type == OpType.DASH and op_type == OpType.DOT else f"{rhs}"
+        lhss = (
+            f"({lhs})"
+            if lhs_last_op_type == OpType.DASH and op_type == OpType.DOT
+            else f"{lhs}"
+        )
+        rhss = (
+            f"({rhs})"
+            if rhs_last_op_type == OpType.DASH and op_type == OpType.DOT
+            else f"{rhs}"
+        )
 
         k = f"{lhss} {op_sign} {rhss}"
 
@@ -108,7 +114,6 @@ class KeyValue:
         v2 = rhs.__value if type(rhs) is KeyValue else rhs
 
         return KeyValue(k, op(v1, v2), self.__level + 1, op_type)
-
 
     def __add__(self, other):
         return self.__dash_op__(self, other, lambda x, y: x + y, "+", OpType.DASH)
@@ -136,9 +141,19 @@ class KeyValue:
 
     def __mod__(self, other):
         k = f"{self} % {other}" if self.__level == 0 else f"({self}) % {other}"
-        if not (isinstance(self.__value, (int, float)) and isinstance(other, (int, float))):
+        if not (
+            isinstance(self.__value, (int, float)) and isinstance(other, (int, float))
+        ):
             return KeyValue(k, None, self.__level + 1)
-        v = None if self.__value is None else self.__value % other.__value if type(other) is KeyValue else self.__value % other
+        v = (
+            None
+            if self.__value is None
+            else (
+                self.__value % other.__value
+                if type(other) is KeyValue
+                else self.__value % other
+            )
+        )
         return KeyValue(k, v, self.__level + 1)
 
     def __neg__(self):
@@ -148,7 +163,11 @@ class KeyValue:
 
     def __rcontains__(self, other):
         k = f"{self} in {other}"
-        v = self.__value in other.__value if type(other) is KeyValue else self.__value in other
+        v = (
+            self.__value in other.__value
+            if type(other) is KeyValue
+            else self.__value in other
+        )
         return KeyValue(k, v, self.__level + 1)
 
     def __int__(self):
