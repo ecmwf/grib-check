@@ -19,6 +19,7 @@ def dummy(a, b):
     report.add(Fail("dummy"))
     return report
 
+
 class TestTest:
     # def test_create_wmo_test(self):
     #     check_map = {
@@ -32,11 +33,11 @@ class TestTest:
     #         "pairs": [
     #             {"key": "stream", "value": "eefo"},
     #             {"key": "dataType", "value": "fcmean"}
-    #         ], 
+    #         ],
     #         "expected": [
-    #             {"key": "productDefinitionTemplateNumber", "value": 11}, 
-    #             {"key": "paramId", "value": "228004"}, 
-    #             {"key": "shortName", "value": "mean2t"}, 
+    #             {"key": "productDefinitionTemplateNumber", "value": 11},
+    #             {"key": "paramId", "value": "228004"},
+    #             {"key": "shortName", "value": "mean2t"},
     #             {"key": "name", "value": "Mean 2 metre temperature"}
     #         ],
     #         "checks": ["product_definition_template_number"]
@@ -63,48 +64,29 @@ class TestTest:
                     "key": "model",
                     "key_type": "str",
                     "value_long": 0,
-                    "value_string": "glob"
+                    "value_string": "glob",
                 },
-                {
-                    "key": "paramId",
-                    "key_type": "int",
-                    "value_long": 165
-                },
-                {
-                    "key": "discipline",
-                    "key_type": "int",
-                    "value_long": 0
-                },
-                {
-                    "key": "parameterCategory",
-                    "key_type": "int",
-                    "value_long": 2
-                },
-                {
-                    "key": "parameterNumber",
-                    "key_type": "int",
-                    "value_long": 2
-                },
+                {"key": "paramId", "key_type": "int", "value_long": 165},
+                {"key": "discipline", "key_type": "int", "value_long": 0},
+                {"key": "parameterCategory", "key_type": "int", "value_long": 2},
+                {"key": "parameterNumber", "key_type": "int", "value_long": 2},
                 {
                     "key": "scaleFactorOfFirstFixedSurface",
                     "key_type": "int",
-                    "value_long": 0
+                    "value_long": 0,
                 },
                 {
                     "key": "scaledValueOfFirstFixedSurface",
                     "key_type": "int",
-                    "value_long": 10
+                    "value_long": 10,
                 },
                 {
                     "key": "typeOfFirstFixedSurface",
                     "key_type": "int",
-                    "value_long": 103
-                }
+                    "value_long": 103,
+                },
             ],
-            "checks": [
-                "point_in_time",
-                "given_level"
-            ]
+            "checks": ["point_in_time", "given_level"],
         }
 
         for message in Grib("./tests/tigge/tigge_ecmf_sfc_10v.grib"):

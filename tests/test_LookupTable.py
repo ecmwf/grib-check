@@ -20,19 +20,17 @@ class TestIndexedLookupTable:
         message = next(grib)
         element, lookup_table_report = table.get_element(message)
         expected = {
-                "name": "param_1",
-                "pairs": [
-                    {"key": "stream", "value": "eefo"},
-                    {"key": "dataType", "value": "fcmean"}
-                ], 
-                "expected": [
-                    {"key": "productDefinitionTemplateNumber", "value": 11}, 
-                    {"key": "paramId", "value": "228004"}, 
-                    {"key": "shortName", "value": "mean2t"}, 
-                    {"key": "name", "value": "Mean 2 metre temperature"}
-                ],
-                "checks": [
-                    "basic_checks"
-                ]
-                }
+            "name": "param_1",
+            "pairs": [
+                {"key": "stream", "value": "eefo"},
+                {"key": "dataType", "value": "fcmean"},
+            ],
+            "expected": [
+                {"key": "productDefinitionTemplateNumber", "value": 11},
+                {"key": "paramId", "value": "228004"},
+                {"key": "shortName", "value": "mean2t"},
+                {"key": "name", "value": "Mean 2 metre temperature"},
+            ],
+            "checks": ["basic_checks"],
+        }
         assert expected == element
