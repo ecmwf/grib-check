@@ -15,10 +15,10 @@ import os
 import sys
 
 from eccodes import (
-        codes_get_long,
-        codes_get_string,
-        codes_grib_new_from_file,
-        codes_release
+    codes_get_long,
+    codes_get_string,
+    codes_grib_new_from_file,
+    codes_release,
 )
 
 from grib_check.FileScanner import FileScanner

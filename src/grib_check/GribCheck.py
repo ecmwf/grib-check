@@ -10,13 +10,12 @@
 # nor does it submit to any jurisdiction.
 #
 
-import signal
-import sys
-
 import argparse
 import logging
 import multiprocessing
 import os
+import signal
+import sys
 
 from .checker.Crra import Crra
 from .checker.DestinE import DestinE
@@ -32,7 +31,6 @@ from .Grib import Grib
 from .LookupTable import SimpleLookupTable
 from .Message import Message
 from .Report import Report
-
 
 signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on Ctrl+C
 
