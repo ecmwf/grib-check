@@ -20,7 +20,7 @@ jobs:
       - run: black --version
       - run: isort --check .
       - run: black --check .
-      # - run: flake8 .
+      - run: flake8 --max-line-length 200 .
 
   checks:
     strategy:

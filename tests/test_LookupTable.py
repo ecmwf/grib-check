@@ -10,7 +10,6 @@
 
 from grib_check.Grib import Grib
 from grib_check.LookupTable import SimpleLookupTable
-from grib_check.Message import Message
 
 
 class TestIndexedLookupTable:

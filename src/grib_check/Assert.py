@@ -34,11 +34,13 @@ class Assert:
         elif comment_position == "below":
             comment = f"\n{self._comment}" if self._comment is not None else ""
         else:
-            raise ValueError("comment_position must be either 'right' or 'below'")
+            raise ValueError(
+                "comment_position must be either 'right' or 'below'")
 
         if color:
             return (
-                f"{self._as_string(color)}{TermColor.OKBLUE}{comment}{TermColor.ENDC}"
+                f'''{self._as_string(color)}
+                {TermColor.OKBLUE}{comment}{TermColor.ENDC}'''
             )
         else:
             return f"{self._as_string(color)}{comment}"
@@ -144,7 +146,7 @@ class Missing(Assert):
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
-        return f"{self.__key} exists({not self.__key_is_missing}) and has a missing value({None if self.__value_is_missing == None else self.__value_is_missing})"
+        return f"{self.__key} exists({not self.__key_is_missing}) and has a missing value({None if self.__value_is_missing is None else self.__value_is_missing})"
 
 
 class Exists(Assert):
@@ -160,7 +162,7 @@ class Exists(Assert):
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
-        return f"{self.__key} exists({not self.__key_is_missing}) and has a non-missing value({None if self.__value_is_missing == None else not self.__value_is_missing})"
+        return f"{self.__key} exists({not self.__key_is_missing}) and has a non-missing value({None if self.__value_is_missing is None else not self.__value_is_missing})"
 
 
 class Eq(Assert):
@@ -182,7 +184,8 @@ class EqDbl(Assert):
         self.__lsh = lsh
         self.__rhs = rhs
         self.__tolerance = tolerance
-        self._status = math.fabs((self.__lsh - self.__rhs).value()) <= self.__tolerance
+        self._status = math.fabs(
+            (self.__lsh - self.__rhs).value()) <= self.__tolerance
         self._comment = comment
 
     def _as_string(self, color=False) -> str:

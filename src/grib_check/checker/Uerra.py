@@ -8,10 +8,7 @@
 # nor does it submit to any jurisdiction.
 #
 
-import os
-
 from grib_check.Assert import AssertTrue, Eq, Fail, IsIn, IsMultipleOf, Le
-from grib_check.LookupTable import SimpleLookupTable
 from grib_check.Report import Report
 
 from .Wmo import Wmo

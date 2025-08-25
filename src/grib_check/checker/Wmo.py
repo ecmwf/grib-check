@@ -28,7 +28,6 @@ from grib_check.Assert import (
 )
 from grib_check.CheckEngine import CheckEngine
 from grib_check.Grib import get_gaussian_latitudes
-from grib_check.LookupTable import SimpleLookupTable
 from grib_check.Report import Report
 
 
@@ -305,7 +304,7 @@ class Wmo(CheckEngine):
             )
 
             total = 0
-            max_pl = pl[0]  #  max elem of pl array = num points at equator
+            max_pl = pl[0]  # max elem of pl array = num points at equator
 
             for p in pl:
                 total = total + p

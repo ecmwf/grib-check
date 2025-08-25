@@ -91,5 +91,4 @@ class TestTest:
 
         for message in Grib("./tests/tigge/tigge_ecmf_sfc_10v.grib"):
             test = Tigge.DefaultTest(message, parameter, check_map)
-            report = test.run()
-            # print(report)
+            test.run()
