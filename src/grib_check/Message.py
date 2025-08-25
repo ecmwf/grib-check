@@ -36,7 +36,7 @@ from .Report import Report
 
 class Message:
     def __init__(self, handle=None, message_buffer=None, position=None):
-        assert(position != 0)
+        assert position != 0
         assert handle is not None or message_buffer is not None
         assert (handle is not None and message_buffer is not None) is not True
         self.logger = logging.getLogger(__class__.__name__)
@@ -56,13 +56,13 @@ class Message:
 
     def get_report(self):
         report = Report("Message dump")
-        iterator = codes_keys_iterator_new(self.__h, "ls") 
+        iterator = codes_keys_iterator_new(self.__h, "ls")
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
             report.add(f"{key} = {self[key].value()}")
         report.add("")
 
-        iterator = codes_keys_iterator_new(self.__h, "mars") 
+        iterator = codes_keys_iterator_new(self.__h, "mars")
         while iterator is not None and codes_keys_iterator_next(iterator):
             key = codes_keys_iterator_get_name(iterator)
             report.add(f"{key} = {self[key].value()}")
@@ -73,8 +73,12 @@ class Message:
         report.add(f"discipline = {self['discipline'].value()}")
         report.add(f"parameterCategory = {self['parameterCategory'].value()}")
         report.add(f"parameterNumber = {self['parameterNumber'].value()}")
-        report.add(f"typeOfStatisticalProcessing = {self['typeOfStatisticalProcessing'].value()}")
-        report.add(f"typeOfFirstFixedSurface = {self['typeOfFirstFixedSurface', int].value()}")
+        report.add(
+            f"typeOfStatisticalProcessing = {self['typeOfStatisticalProcessing'].value()}"
+        )
+        report.add(
+            f"typeOfFirstFixedSurface = {self['typeOfFirstFixedSurface', int].value()}"
+        )
 
         return report
 

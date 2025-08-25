@@ -17,11 +17,9 @@ from .Wmo import Wmo
 
 
 class DestinE(Wmo):
-    def __init__( self, lookup_table, valueflg=False):
+    def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
-        self.register_checks({
-            "destine_limits": self._destine_limits
-        })
+        self.register_checks({"destine_limits": self._destine_limits})
 
     # Reuse / override checks
     def _point_in_time(self, message, p) -> Report:
@@ -37,5 +35,3 @@ class DestinE(Wmo):
         report.add(IsIn(message["indicatorOfUnitOfTimeRange"], [0, 1]))
         report.add(IsIn(message["timeIncrementBetweenSuccessiveFields"], [0, 1]))
         return report
-
-

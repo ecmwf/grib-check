@@ -24,9 +24,11 @@ class Assert:
         self._logger = logging.getLogger(__class__.__name__)
         self._status = True
         self._comment = comment
-        raise NotImplementedError("Assert class is abstract and should not be instantiated directly")
+        raise NotImplementedError(
+            "Assert class is abstract and should not be instantiated directly"
+        )
 
-    def as_string(self, color=False, comment_position = "below") -> str:
+    def as_string(self, color=False, comment_position="below") -> str:
         if comment_position == "right":
             comment = f" : ({self._comment})" if self._comment is not None else ""
         elif comment_position == "below":
@@ -35,13 +37,15 @@ class Assert:
             raise ValueError("comment_position must be either 'right' or 'below'")
 
         if color:
-            return f"{self._as_string(color)}{TermColor.OKBLUE}{comment}{TermColor.ENDC}"
+            return (
+                f"{self._as_string(color)}{TermColor.OKBLUE}{comment}{TermColor.ENDC}"
+            )
         else:
             return f"{self._as_string(color)}{comment}"
 
     def __str__(self) -> str:
         return self.as_string(color=False, comment_position="right")
-    
+
     def __or__(self, other):
         return Or(self, other)
 
@@ -71,7 +75,7 @@ class AssertTrue(Assert):
 
 
 class And(Assert):
-    def __init__(self, lhs:Assert, rhs:Assert, comment=None):
+    def __init__(self, lhs: Assert, rhs: Assert, comment=None):
         self.__lsh = lhs
         self.__rsh = rhs
         self._comment = comment
@@ -85,7 +89,7 @@ class And(Assert):
 
 
 class Or(Assert):
-    def __init__(self, lhs:Assert, rhs:Assert, comment=None):
+    def __init__(self, lhs: Assert, rhs: Assert, comment=None):
         self.__lhs = lhs
         self.__rhs = rhs
         self._status = self.__lhs.status() or self.__rhs.status()
@@ -127,7 +131,6 @@ class IsMultipleOf(Assert):
             return f"{self.__mod_value} == 0"
 
 
-
 class Missing(Assert):
     def __init__(self, message, key, comment=None):
         self.__key_is_missing = message[key].value() is None
@@ -152,7 +155,7 @@ class Exists(Assert):
             self._status = not self.__value_is_missing
         else:
             self.__value_is_missing = None
-            self._status = False;
+            self._status = False
         self.__key = key
         self._comment = comment
 
@@ -243,6 +246,7 @@ class Gt(Assert):
             return f"{self.__lsh} > {self.__rhs}"
         else:
             return f"{self.__lsh} > {self.__rhs}"
+
 
 class Lt(Assert):
     def __init__(self, lsh, rhs, comment=None):

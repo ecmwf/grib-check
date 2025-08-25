@@ -35,15 +35,15 @@ class Lam(Wmo):
 
         topd = message.get("typeOfProcessedData", int)
 
-        if topd in [0, 1, 2] : # Analysis, Forecast, Analysis and forecast products
+        if topd in [0, 1, 2]:  # Analysis, Forecast, Analysis and forecast products
             pass
-        elif topd in [3, 4]: # Control forecast products
+        elif topd in [3, 4]:  # Control forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 11))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
 
-        if message["indicatorOfUnitOfTimeRange"] == 10: # three hours
+        if message["indicatorOfUnitOfTimeRange"] == 10:  # three hours
             # Three hourly is OK
             pass
         else:
@@ -51,7 +51,7 @@ class Lam(Wmo):
             report.add(IsMultipleOf(message["forecastTime"], 3))
 
         report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
-        report.add(IsMultipleOf(message["endStep"], 3)) # Every three hours
+        report.add(IsMultipleOf(message["endStep"], 3))  # Every three hours
 
         return super()._statistical_process(message, p).add(report)
 
@@ -65,17 +65,27 @@ class Lam(Wmo):
     def _point_in_time(self, message, p) -> Report:
         report = Report("Lam Point In Time")
         topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]: # Analysis, Forecast
+        if topd in [0, 1]:  # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
                 report.add(Ne(message["numberOfForecastsInEnsemble"], 0))
-                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
-        elif topd == 2: # Analysis and forecast products
+                report.add(
+                    Le(
+                        message["perturbationNumber"],
+                        message["numberOfForecastsInEnsemble"],
+                    )
+                )
+        elif topd == 2:  # Analysis and forecast products
             pass
-        elif topd == 3: # Control forecast products 
+        elif topd == 3:  # Control forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 1))
-        elif topd == 4: # Perturbed forecast products
+        elif topd == 4:  # Perturbed forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 1))
-            report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"]))
+            report.add(
+                Le(
+                    message["perturbationNumber"],
+                    message["numberOfForecastsInEnsemble"],
+                )
+            )
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 

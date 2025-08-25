@@ -3,81 +3,70 @@
         "name": "param_0",
         "pairs": [
             {"key": "stream", "value": "oper"},
-            {"key": "dataType", "value": "af"}
+            {"key": "dataType", "value": "af"},
         ],
         "expected": [
             {"key": "productDefinitionTemplateNumber", "value": 11},
             {"key": "paramId", "value": "228004"},
             {"key": "shortName", "value": "mean2t"},
-            {"key": "name", "value": "Mean 2 metre temperature"}
+            {"key": "name", "value": "Mean 2 metre temperature"},
         ],
-        "checks": [
-            "basic_checks"
-        ]
+        "checks": ["basic_checks"],
     },
     {
         "name": "param_1",
         "pairs": [
             {"key": "stream", "value": "eefo"},
-            {"key": "dataType", "value": "fcmean"}
+            {"key": "dataType", "value": "fcmean"},
         ],
         "expected": [
             {"key": "productDefinitionTemplateNumber", "value": 11},
             {"key": "paramId", "value": "228004"},
             {"key": "shortName", "value": "mean2t"},
-            {"key": "name", "value": "Mean 2 metre temperature"}
+            {"key": "name", "value": "Mean 2 metre temperature"},
         ],
-        "checks": [
-            "basic_checks"
-        ]
+        "checks": ["basic_checks"],
     },
     {
         "name": "param_2",
         "pairs": [
             {"key": "stream", "value": "eefo"},
-            {"key": "dataType", "value": "taem"}
+            {"key": "dataType", "value": "taem"},
         ],
         "expected": [
             {"key": "productDefinitionTemplateNumber", "value": 12},
             {"key": "paramId", "value": "228004"},
             {"key": "shortName", "value": "mean2t"},
-            {"key": "name", "value": "Mean 2 metre temperature"}
+            {"key": "name", "value": "Mean 2 metre temperature"},
         ],
-        "checks": [
-            "basic_checks"
-        ]
+        "checks": ["basic_checks"],
     },
     {
         "name": "param_3",
         "pairs": [
             {"key": "stream", "value": "eefo"},
-            {"key": "dataType", "value": "taes"}
+            {"key": "dataType", "value": "taes"},
         ],
         "expected": [
             {"key": "productDefinitionTemplateNumber", "value": 12},
             {"key": "paramId", "value": "228002"},
             {"key": "shortName", "value": "mean2"},
-            {"key": "name", "value": "Mean 2 metre temperature"}
+            {"key": "name", "value": "Mean 2 metre temperature"},
         ],
-        "checks": [
-            "basic_checks"
-        ]
+        "checks": ["basic_checks"],
     },
     {
         "name": "param_4",
         "pairs": [
             {"key": "stream", "value": "enfo"},
-            {"key": "dataType", "value": "pf"}
+            {"key": "dataType", "value": "pf"},
         ],
         "expected": [
             {"key": "productDefinitionTemplateNumber", "value": 1},
             {"key": "paramId", "value": "167"},
             {"key": "shortName", "value": "2t"},
-            {"key": "name", "value": "2 metre temperature"}
+            {"key": "name", "value": "2 metre temperature"},
         ],
-        "checks": [
-            "derived_forecast",
-            "basic_checks"
-        ]
-    }
+        "checks": ["derived_forecast", "basic_checks"],
+    },
 ]

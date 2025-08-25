@@ -17,7 +17,7 @@ from .Wmo import Wmo
 
 
 class Wpmip(Wmo):
-    def __init__( self, lookup_table, valueflg=False):
+    def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
         self.logger = logging.getLogger(__class__.__name__)
 
@@ -35,10 +35,10 @@ class Wpmip(Wmo):
         # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/
         report.add(Eq(message["dataRepresentationTemplateNumber"], 42))
 
-#       # Only 00, 06 12 and 18 Cycle OK 
-#       report.add(IsIn(message["hour"], [0, 6, 12, 18]))
+        #       # Only 00, 06 12 and 18 Cycle OK
+        #       report.add(IsIn(message["hour"], [0, 6, 12, 18]))
 
-        report.add(Le(message["endStep"], 10*24))
+        report.add(Le(message["endStep"], 10 * 24))
         report.add(IsMultipleOf(message["step"], 6))
         report.add(self._check_date(message, p))
 
@@ -47,7 +47,25 @@ class Wpmip(Wmo):
 
     def _pressure_level(self, message, p):
         report = Report("WPMIP Pressure level")
-        levels = [1, 10, 20, 30, 50, 70, 100, 150, 200, 250, 300, 400, 500, 700, 850, 925, 1000]
+        levels = [
+            1,
+            10,
+            20,
+            30,
+            50,
+            70,
+            100,
+            150,
+            200,
+            250,
+            300,
+            400,
+            500,
+            700,
+            850,
+            925,
+            1000,
+        ]
         report.add(IsIn(message["level"], levels))
         return report
 
@@ -57,15 +75,15 @@ class Wpmip(Wmo):
 
         topd = message.get("typeOfProcessedData", int)
 
-        if topd in [0, 1, 2]: # Analysis, Forecast, Analysis and forecast products
+        if topd in [0, 1, 2]:  # Analysis, Forecast, Analysis and forecast products
             pass
-        elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
+        elif topd in [3, 4]:  # Control forecast products, Perturbed forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 11))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
 
-        if message.get("indicatorOfUnitOfTimeRange") == 11: # six hours
+        if message.get("indicatorOfUnitOfTimeRange") == 11:  # six hours
             # Six hourly is OK
             pass
         else:
@@ -88,17 +106,35 @@ class Wpmip(Wmo):
         report = Report("Wpmip Point in Time")
 
         topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]: # Analysis, Forecast
+        if topd in [0, 1]:  # Analysis, Forecast
             if message.get("productDefinitionTemplateNumber") == 1:
-                report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd = {topd}"))
-                report.add(Le(message["perturbationNumber"], message.get("numberOfForecastsInEnsemble"), f"topd = {topd}"))
-        elif topd == 2: # Analysis and forecast products
+                report.add(
+                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd = {topd}")
+                )
+                report.add(
+                    Le(
+                        message["perturbationNumber"],
+                        message.get("numberOfForecastsInEnsemble"),
+                        f"topd = {topd}",
+                    )
+                )
+        elif topd == 2:  # Analysis and forecast products
             pass
-        elif topd == 3: # Control forecast products 
-            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}"))
-        elif topd == 4: # Perturbed forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}"))
-            report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"] - 1, f"topd = {topd}"))
+        elif topd == 3:  # Control forecast products
+            report.add(
+                Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}")
+            )
+        elif topd == 4:  # Perturbed forecast products
+            report.add(
+                Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}")
+            )
+            report.add(
+                Le(
+                    message["perturbationNumber"],
+                    message["numberOfForecastsInEnsemble"] - 1,
+                    f"topd = {topd}",
+                )
+            )
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
@@ -106,7 +142,7 @@ class Wpmip(Wmo):
 
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")
-            
+
         report.add(Eq(message["Ni"], 1440))
         report.add(Eq(message["Nj"], 721))
         report.add(Eq(message["scanningMode"], 0))
@@ -121,4 +157,3 @@ class Wpmip(Wmo):
         report.add(Eq(message["jDirectionIncrement"], 250000))
 
         return super()._latlon_grid(message).add(report)
-

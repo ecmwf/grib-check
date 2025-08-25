@@ -36,7 +36,7 @@ class Report:
     def __init__(self, name=None):
         self.__entries = list()
         self.__logger = logging.getLogger(__name__)
-        self.__pass_str = "PASS" 
+        self.__pass_str = "PASS"
         self.__fail_str = "FAIL"
         self.__none_str = "NONE"
         self.__status = None
@@ -54,17 +54,16 @@ class Report:
             fail_str = self.__fail_str
             none_str = self.__none_str
 
-
         if max_level is None or level <= max_level:
             if self.__name is not None:
                 if self.__status is None:
                     if not failed_only:
-                        output = "  " * level + f'{none_str}: {self.__name}\n'
+                        output = "  " * level + f"{none_str}: {self.__name}\n"
                 elif self.__status is True:
                     if not failed_only:
-                        output = "  " * level + f'{pass_str}: {self.__name}\n'
+                        output = "  " * level + f"{pass_str}: {self.__name}\n"
                 elif self.__status is False:
-                    output = "  " * level + f'{fail_str}: {self.__name}\n'
+                    output = "  " * level + f"{fail_str}: {self.__name}\n"
                 else:
                     print(f"self.__status={self.__status}, type={type(self.__status)}")
                     raise NotImplementedError
@@ -74,13 +73,22 @@ class Report:
             if max_level is None or level + shift <= max_level:
                 for entry in entries:
                     if isinstance(entry, Report):
-                        output += entry.__as_string_tree(entry.__entries, level + shift, max_level, color, failed_only)
+                        output += entry.__as_string_tree(
+                            entry.__entries,
+                            level + shift,
+                            max_level,
+                            color,
+                            failed_only,
+                        )
                     elif isinstance(entry, Assert):
                         msg = entry.as_string(color)
                         status = entry.status()
                         if not failed_only or not status:
                             # output += "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}\n'
-                            tmp = "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}'
+                            tmp = (
+                                "  " * (level + shift)
+                                + f"{pass_str if status else fail_str}: {msg}"
+                            )
                             tmp = tmp.replace("\n", f'\n      {"  " * (level + shift)}')
                             output += f"{tmp}\n"
                     elif type(entry) is str:
@@ -90,7 +98,6 @@ class Report:
                         raise NotImplementedError
 
         return output
-
 
     def __as_string_short(self, report, color, failed_only, path):
         output = ""
@@ -119,14 +126,22 @@ class Report:
                 if not failed_only or not status:
                     if status is True:
                         if color:
-                            output += f"{pass_str}: {path}{entry.as_string(color, 'right')}\n"
+                            output += (
+                                f"{pass_str}: {path}{entry.as_string(color, 'right')}\n"
+                            )
                         else:
-                            output += f"{pass_str}: {path}{entry.as_string(color, 'right')}\n"
+                            output += (
+                                f"{pass_str}: {path}{entry.as_string(color, 'right')}\n"
+                            )
                     elif status is False:
                         if color:
-                            output += f"{fail_str}: {path}{entry.as_string(color, 'right')}\n"
+                            output += (
+                                f"{fail_str}: {path}{entry.as_string(color, 'right')}\n"
+                            )
                         else:
-                            output += f"{fail_str}: {path}{entry.as_string(color, 'right')}\n"
+                            output += (
+                                f"{fail_str}: {path}{entry.as_string(color, 'right')}\n"
+                            )
                     else:
                         raise NotImplementedError
                 # output += f"{path}{entry.as_string(color, comment_position='right')}\n"
@@ -137,7 +152,6 @@ class Report:
                 raise NotImplementedError
 
         return output
-
 
     def rename(self, name):
         self.__name = name
@@ -150,7 +164,9 @@ class Report:
         if format == "short":
             return self.__as_string_short(self, color, failed_only, "")
         elif format == "tree":
-            return self.__as_string_tree(self.__entries, 0, max_level, color, failed_only)
+            return self.__as_string_tree(
+                self.__entries, 0, max_level, color, failed_only
+            )
         else:
             raise NotImplementedError(f"Unknown format: {format}")
 
@@ -158,10 +174,18 @@ class Report:
         return self.__status
 
     def __str__(self):
-        return self.__as_string_tree(entries=self.__entries, level=0, max_level=None, color=False, failed_only=False)
+        return self.__as_string_tree(
+            entries=self.__entries,
+            level=0,
+            max_level=None,
+            color=False,
+            failed_only=False,
+        )
 
     def add(self, entry):
-        if not (isinstance(entry, Assert) or type(entry) is Report or type(entry) is str):
+        if not (
+            isinstance(entry, Assert) or type(entry) is Report or type(entry) is str
+        ):
             print(f"entry={entry}, type={type(entry)}")
         assert isinstance(entry, Assert) or type(entry) is Report or type(entry) is str
         if isinstance(entry, Assert):
@@ -184,12 +208,14 @@ class Report:
             self.__status = None
             pass
 
-        assert type(self.__status) is bool or type(self.__status) is np.bool_ or self.__status is None
+        assert (
+            type(self.__status) is bool
+            or type(self.__status) is np.bool_
+            or self.__status is None
+        )
         self.__entries.append(entry)
 
         return self
-
-
 
     def error(self, msg):
         # TODO: Implement error handling
@@ -198,5 +224,3 @@ class Report:
     def warning(self, entry):
         # TODO: Implement warning handling
         self.add(RWarning(entry))
-
-

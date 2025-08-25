@@ -46,7 +46,16 @@ def worker(filename, message_buffer, pos, checker, args):
     report = Report(f"{filename}")
     report.add(sub_report)
 
-    print(report.as_string(max_level=args.report_verbosity, color=args.color, failed_only=args.failed_only, format=args.format), end="", flush=True)
+    print(
+        report.as_string(
+            max_level=args.report_verbosity,
+            color=args.color,
+            failed_only=args.failed_only,
+            format=args.format,
+        ),
+        end="",
+        flush=True,
+    )
 
     # return report
     return None
@@ -58,40 +67,69 @@ class GribCheck:
         self.logger = logging.getLogger(__class__.__name__)
 
     def run(self):
-        '''
+        """
         lam: local area model
         s2s: subseasonal to subseasonal
         s2s_refcst: subseasonal to subseasonal reforecast
         uerra: uncertainty estimation reanalysis
         crra: climate reanalysis
-        '''
+        """
         script_path = os.path.dirname(os.path.realpath(__file__))
-        tigge_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/TiggeParameters.jsonnet"
-        wpmip_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WpmipParameters.jsonnet"
-        destine_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/DestineParameters.jsonnet"
-        wmo_params = self.args.parameters if self.args.parameters is not None else f"{script_path}/checker/WmoParameters.jsonnet"
+        tigge_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/TiggeParameters.jsonnet"
+        )
+        wpmip_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/WpmipParameters.jsonnet"
+        )
+        destine_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/DestineParameters.jsonnet"
+        )
+        wmo_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/WmoParameters.jsonnet"
+        )
 
         if self.args.grib_type == "wmo":
             checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "tigge":
-            checker = Tigge(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
+            checker = Tigge(
+                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg
+            )
         elif self.args.grib_type == "wpmip":
-            checker = Wpmip(SimpleLookupTable(wpmip_params), valueflg=self.args.valueflg)
+            checker = Wpmip(
+                SimpleLookupTable(wpmip_params), valueflg=self.args.valueflg
+            )
         elif self.args.grib_type == "s2s":
             checker = S2S(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "s2s_refcst":
-            checker = S2SRefcst(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
+            checker = S2SRefcst(
+                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg
+            )
         elif self.args.grib_type == "uerra":
-            checker = Uerra(SimpleLookupTable(tigge_params, ignore_keys=["model"]), valueflg=self.args.valueflg)
+            checker = Uerra(
+                SimpleLookupTable(tigge_params, ignore_keys=["model"]),
+                valueflg=self.args.valueflg,
+            )
         elif self.args.grib_type == "crra":
-            checker = Crra(SimpleLookupTable(tigge_params, ignore_keys=["model"]), valueflg=self.args.valueflg)
+            checker = Crra(
+                SimpleLookupTable(tigge_params, ignore_keys=["model"]),
+                valueflg=self.args.valueflg,
+            )
         elif self.args.grib_type == "lam":
             checker = Lam(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
         elif self.args.grib_type == "destine":
-            checker = DestinE(SimpleLookupTable(destine_params), valueflg=self.args.valueflg)
+            checker = DestinE(
+                SimpleLookupTable(destine_params), valueflg=self.args.valueflg
+            )
         else:
             raise ValueError("Unknown data type")
-
 
         if self.args.num_threads > 1:
             results = []
@@ -99,44 +137,91 @@ class GribCheck:
                 for filename in FileScanner(self.args.path):
                     grib = Grib(filename)
                     for pos, message in enumerate(grib):
-                        results.append(pool.apply_async(worker, (filename, message.get_buffer(), pos + 1, checker, self.args)))
+                        results.append(
+                            pool.apply_async(
+                                worker,
+                                (
+                                    filename,
+                                    message.get_buffer(),
+                                    pos + 1,
+                                    checker,
+                                    self.args,
+                                ),
+                            )
+                        )
                 for result in results:
                     result.wait()
         else:
             for filename in FileScanner(self.args.path):
                 grib = Grib(filename)
                 for pos, message in enumerate(grib):
-                        worker(filename, message.get_buffer(), pos + 1, checker, self.args)
+                    worker(filename, message.get_buffer(), pos + 1, checker, self.args)
 
 
 def main():
     parser = argparse.ArgumentParser()
     # parser.add_argument("-w", "--warnflg", help="warnings are treated as errors", action="store_true")
     # parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
-    parser.add_argument("-a", "--valueflg", help="check value ranges", action="store_true")
-    parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
-    parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo", "destine", "wpmip"], default="wmo")
+    parser.add_argument(
+        "-a", "--valueflg", help="check value ranges", action="store_true"
+    )
+    parser.add_argument(
+        "path", nargs="+", help="path to a GRIB file or directory", type=str
+    )
+    parser.add_argument(
+        "-t",
+        "--grib_type",
+        help="type of data to check",
+        choices=[
+            "tigge",
+            "s2s",
+            "s2s_refcst",
+            "uerra",
+            "crra",
+            "lam",
+            "wmo",
+            "destine",
+            "wpmip",
+        ],
+        default="wmo",
+    )
     parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
-    parser.add_argument("-l", "--report_verbosity", help="report depth", type=int, default=10)
+    parser.add_argument(
+        "-l", "--report_verbosity", help="report depth", type=int, default=10
+    )
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
-    parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
-    parser.add_argument("-c", "--color", help="use color in output", action="store_true")
-    parser.add_argument("-j", "--num_threads", help="number of threads", type=int, default=1)
-    parser.add_argument("-b", "--failed_only", help="show only failed checks", action="store_true")
-    parser.add_argument("-f", "--format", help="output format", choices=["short", "tree"], default="tree")
+    parser.add_argument(
+        "-p", "--parameters", help="path to parameters file", default=None
+    )
+    parser.add_argument(
+        "-c", "--color", help="use color in output", action="store_true"
+    )
+    parser.add_argument(
+        "-j", "--num_threads", help="number of threads", type=int, default=1
+    )
+    parser.add_argument(
+        "-b", "--failed_only", help="show only failed checks", action="store_true"
+    )
+    parser.add_argument(
+        "-f",
+        "--format",
+        help="output format",
+        choices=["short", "tree"],
+        default="tree",
+    )
     args = parser.parse_args()
 
     if args.debug:
         print("Debug mode")
         logging.basicConfig(
-            filename='grib_check.log',
+            filename="grib_check.log",
             format="%(asctime)s %(name)s %(levelname)-8s %(thread)d %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
             level=logging.DEBUG,
         )
 
     logger = logging.getLogger(__name__)
-    logger.info('Started')
+    logger.info("Started")
 
     grib_check = GribCheck(args)
     return grib_check.run()

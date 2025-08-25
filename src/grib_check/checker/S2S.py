@@ -25,22 +25,23 @@ class S2S(Wmo):
 
         return super()._basic_checks(message, p).add(report)
 
-
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
         report = Report("S2S Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
 
-        if topd in [0, 1, 2]: # Analysis, Forecast, Analysis and forecast products
+        if topd in [0, 1, 2]:  # Analysis, Forecast, Analysis and forecast products
             pass
-        elif topd in [3, 4]: # Control forecast products, Perturbed forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
+        elif topd in [3, 4]:  # Control forecast products, Perturbed forecast products
+            report.add(
+                Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}")
+            )
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
 
-        if message["indicatorOfUnitOfTimeRange"] == 11: # six hours
+        if message["indicatorOfUnitOfTimeRange"] == 11:  # six hours
             # Six hourly is OK
             pass
         else:
@@ -48,7 +49,7 @@ class S2S(Wmo):
             report.add(IsMultipleOf(message["forecastTime"], 6))
 
         tosp = message.get("typeOfStatisticalProcessing", int)
-        if tosp == 0: # Statistical processing not applied
+        if tosp == 0:  # Statistical processing not applied
             report.add(IsIn(message["timeIncrementBetweenSuccessiveFields"], [1, 4]))
         else:
             report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
@@ -65,21 +66,43 @@ class S2S(Wmo):
     def _point_in_time(self, message, p) -> Report:
         report = Report("S2S Point In Time")
         topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]: # Analysis, Forecast
+        if topd in [0, 1]:  # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
-                report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
-                report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"], f"topd={topd}"))
-        elif topd == 2: # Analysis and forecast products
+                report.add(
+                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}")
+                )
+                report.add(
+                    Le(
+                        message["perturbationNumber"],
+                        message["numberOfForecastsInEnsemble"],
+                        f"topd={topd}",
+                    )
+                )
+        elif topd == 2:  # Analysis and forecast products
             pass
-        elif topd == 3: # Control forecast products 
+        elif topd == 3:  # Control forecast products
             # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
-            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}"))
-        elif topd == 4: # Perturbed forecast products
+            report.add(
+                Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}")
+            )
+        elif topd == 4:  # Perturbed forecast products
             # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
-            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}"))
-            report.add(Le(message["perturbationNumber"], message["numberOfForecastsInEnsemble"] - 1, f"topd={topd}"))
+            report.add(
+                Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}")
+            )
+            report.add(
+                Le(
+                    message["perturbationNumber"],
+                    message["numberOfForecastsInEnsemble"] - 1,
+                    f"topd={topd}",
+                )
+            )
         else:
-            report.add(Fail(f'Unsupported typeOfProcessedData {message["typeOfProcessedData"]}'))
+            report.add(
+                Fail(
+                    f'Unsupported typeOfProcessedData {message["typeOfProcessedData"]}'
+                )
+            )
 
         if message["indicatorOfUnitOfTimeRange"] == 11:
             # Six hourly is OK
@@ -93,7 +116,7 @@ class S2S(Wmo):
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")
 
-        tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
+        tolerance = 1.0 / 1000000.0  # angular tolerance for grib2: micro degrees
         meridian = message["numberOfPointsAlongAMeridian"]
         parallel = message["numberOfPointsAlongAParallel"]
 
@@ -102,8 +125,8 @@ class S2S(Wmo):
         west = message["longitudeOfFirstGridPoint"]
         east = message["longitudeOfLastGridPoint"]
 
-        ns= message["jDirectionIncrement"]
-        we= message["iDirectionIncrement"]
+        ns = message["jDirectionIncrement"]
+        we = message["iDirectionIncrement"]
 
         dnorth = message.get("latitudeOfFirstGridPointInDegrees", float)
         dsouth = message.get("latitudeOfLastGridPointInDegrees", float)
@@ -114,12 +137,12 @@ class S2S(Wmo):
         dwe = message.get("iDirectionIncrementInDegrees", float)
 
         if message["iScansNegatively"] != 0:
-            east, west = west, east;
-            deast, dwest = dwest, deast;
+            east, west = west, east
+            deast, dwest = dwest, deast
 
         if message["jScansPositively"] != 0:
-            north, south = south, north;
-            dnorth, dsouth = dsouth, dnorth;
+            north, south = south, north
+            dnorth, dsouth = dsouth, dnorth
 
         report.add(Gt(north, south, "north > south"))
         report.add(Gt(east, west, "east > west"))
@@ -127,10 +150,30 @@ class S2S(Wmo):
         # Check that the grid is symmetrical */
         report.add(Eq(north, -south, "north == -south"))
         report.add(EqDbl(dnorth, -dsouth, tolerance, "dnorth == -dsouth"))
-        report.add(Eq(parallel, (east-west) / we + 1, "parallel == (east - west) / we + 1"))
-        report.add(Lt(((deast - dwest) / dwe + 1 - parallel).abs(), 1e-10, "math.fabs((deast - dwest) / dwe + 1 - parallel) < 1e-10"))
-        report.add(Eq(meridian, (north - south) / ns + 1, "meridian == (north - south) / ns + 1"))
-        report.add(Lt(((dnorth - dsouth) / dns + 1 - meridian).abs(), 1e-10, "math.fabs((dnorth - dsouth) / dns + 1 - meridian) < 1e-10 "))
+        report.add(
+            Eq(parallel, (east - west) / we + 1, "parallel == (east - west) / we + 1")
+        )
+        report.add(
+            Lt(
+                ((deast - dwest) / dwe + 1 - parallel).abs(),
+                1e-10,
+                "math.fabs((deast - dwest) / dwe + 1 - parallel) < 1e-10",
+            )
+        )
+        report.add(
+            Eq(
+                meridian,
+                (north - south) / ns + 1,
+                "meridian == (north - south) / ns + 1",
+            )
+        )
+        report.add(
+            Lt(
+                ((dnorth - dsouth) / dns + 1 - meridian).abs(),
+                1e-10,
+                "math.fabs((dnorth - dsouth) / dns + 1 - meridian) < 1e-10 ",
+            )
+        )
 
         # Check that the field is global */
         area = (dnorth - dsouth) * (deast - dwest)
@@ -143,5 +186,5 @@ class S2S(Wmo):
     def _pressure_level(self, message, p) -> Report:
         report = Report("S2S Pressure Level")
         levels = [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]
-        report.add(IsIn(message["level"], levels, 'check pressure level'))
+        report.add(IsIn(message["level"], levels, "check pressure level"))
         return report
