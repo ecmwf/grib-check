@@ -8,10 +8,11 @@
 # does it submit to any jurisdiction.
 #
 
-from grib_check.Grib import Grib
 from grib_check.checker.Wmo import Wmo
+from grib_check.Grib import Grib
 from grib_check.LookupTable import SimpleLookupTable
-    
+
+
 class TestWmoChecker:
     def test_load_data_from_file(self):
         # checker = WmoChecker(param_file="./tests/WmoParameters.json")

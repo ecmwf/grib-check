@@ -8,8 +8,9 @@
 # does it submit to any jurisdiction.
 #
 
-from grib_check.Report import Report
 from grib_check.Assert import Fail, Pass
+from grib_check.Report import Report
+
 
 class TestAssert:
 

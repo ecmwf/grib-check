@@ -8,8 +8,8 @@
 # does it submit to any jurisdiction.
 #
 
-import os
 import logging
+import os
 
 
 class FileScanner:

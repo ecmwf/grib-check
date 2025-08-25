@@ -16,24 +16,25 @@ import sys
 signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on Ctrl+C
 
 import argparse
-from .FileScanner import FileScanner
-from .checker.Tigge import Tigge
-from .checker.Wpmip import Wpmip
-from .checker.Uerra import Uerra
+import concurrent.futures
+import logging
+import multiprocessing
+import os
+
+from .checker.Crra import Crra
+from .checker.DestinE import DestinE
+from .checker.Lam import Lam
 from .checker.S2S import S2S
 from .checker.S2SRefcst import S2SRefcst
-from .checker.Crra import Crra
-from .checker.Lam import Lam
-from .checker.DestinE import DestinE
+from .checker.Tigge import Tigge
+from .checker.Uerra import Uerra
 from .checker.Wmo import Wmo
+from .checker.Wpmip import Wpmip
+from .FileScanner import FileScanner
 from .Grib import Grib
-import logging
-from .Report import Report
-import concurrent.futures
-import multiprocessing
-from .Message import Message
 from .LookupTable import SimpleLookupTable
-import os
+from .Message import Message
+from .Report import Report
 
 
 def worker(filename, message_buffer, pos, checker, args):

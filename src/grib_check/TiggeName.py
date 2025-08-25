@@ -10,11 +10,13 @@
 # does it submit to any jurisdiction.
 #
 
-from eccodes import *
-import math
 import argparse
-import sys
+import math
 import os
+import sys
+
+from eccodes import *
+
 from grib_check.FileScanner import *
 
 

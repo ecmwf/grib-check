@@ -8,12 +8,14 @@
 # does it submit to any jurisdiction.
 #
 
-from .Wmo import Wmo
-from grib_check.Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
-from grib_check.Report import Report
-from grib_check.LookupTable import SimpleLookupTable
-import os
 import logging
+import os
+
+from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Lt, Ne
+from grib_check.LookupTable import SimpleLookupTable
+from grib_check.Report import Report
+
+from .Wmo import Wmo
 
 
 class Tigge(Wmo):

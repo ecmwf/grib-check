@@ -8,12 +8,14 @@
 # does it submit to any jurisdiction.
 #
 
+import json
+import sys
+
 # import pandas as pd
 import _jsonnet
-import json
+
 from .Message import Message
 from .Report import Report
-import sys
 
 
 class LookupTable:

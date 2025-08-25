@@ -11,6 +11,7 @@
 from .Message import Message
 from .Report import Report
 
+
 class Test:
     '''
     This class determines the order in which the checks are executed.

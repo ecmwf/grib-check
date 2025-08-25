@@ -10,6 +10,7 @@
 
 from grib_check import GribCheck
 
+
 class Config:
     def __init__(self):
         self.verbosity = 0
