@@ -60,8 +60,8 @@ jobs:
       - run: ECCODES_PYTHON_USE_FINDLIBS=1 python -m eccodes selfcheck
       - run: pytest
 
-      # pytest -v --cov=. --cov-report=xml --cov-branch .
+      pytest -v --cov=. --cov-report=xml --cov-branch .
 
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v1
-      #   if: 'false'
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        if: 'false'
