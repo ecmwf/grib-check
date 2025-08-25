@@ -12,7 +12,6 @@ import logging
 
 import numpy as np
 from eccodes import (
-    KeyValueNotFoundError,
     codes_get_double,
     codes_get_double_array,
     codes_get_long,

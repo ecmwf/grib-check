@@ -8,9 +8,7 @@
 # nor does it submit to any jurisdiction.
 #
 
-import logging
-
-from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Lt, Ne
+from grib_check.Assert import IsIn, IsMultipleOf, Le
 from grib_check.Report import Report
 
 from .Wmo import Wmo

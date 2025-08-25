@@ -8,7 +8,7 @@
 # nor does it submit to any jurisdiction.
 #
 
-from grib_check import GribCheck
+# from grib_check.GribCheck import GribCheck
 
 
 class Config:

@@ -10,7 +10,7 @@
 
 import logging
 
-from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Lt, Missing, Ne
+from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Ne
 from grib_check.Report import Report
 
 from .Wmo import Wmo

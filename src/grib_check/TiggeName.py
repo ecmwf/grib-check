@@ -11,13 +11,17 @@
 #
 
 import argparse
-import math
 import os
 import sys
 
-from eccodes import *
+from eccodes import (
+        codes_get_long,
+        codes_get_string,
+        codes_grib_new_from_file,
+        codes_release
+)
 
-from grib_check.FileScanner import *
+from grib_check.FileScanner import FileScanner
 
 
 class TiggeName:
@@ -110,7 +114,7 @@ class TiggeName:
             except Exception as e:
                 err += 1
                 last_error_message = str(e)
-            if h == None:
+            if h is None:
                 break
             self.field += 1
             self.__verify(h, path, os.path.basename(path))

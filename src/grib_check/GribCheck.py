@@ -13,10 +13,7 @@
 import signal
 import sys
 
-signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on Ctrl+C
-
 import argparse
-import concurrent.futures
 import logging
 import multiprocessing
 import os
@@ -35,6 +32,9 @@ from .Grib import Grib
 from .LookupTable import SimpleLookupTable
 from .Message import Message
 from .Report import Report
+
+
+signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on Ctrl+C
 
 
 def worker(filename, message_buffer, pos, checker, args):
