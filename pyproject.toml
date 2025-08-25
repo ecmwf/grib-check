@@ -41,7 +41,7 @@ tigge_name = "grib_check.TiggeName:main"
 
 [tool.setuptools.packages.find]
 include = [ "grib_check", "grib_check.*" ]
-where = [ "src/grib_check/", "src/", "./" ]
+where = [ "src/", "./" ]
 
 [tool.setuptools_scm]
 version_file = "src/grib_check/_version.py"
