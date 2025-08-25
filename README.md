@@ -1,4 +1,10 @@
+<h3 align="center">
+  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amaster"><img src="https://img.shields.io/github/actions/workflow/status/ecmwf/eccodes/ci.yml?branch=master&label=master" alt="master"></a>
+  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Adevelop"><img src="https://img.shields.io/github/actions/workflow/status/ecmwf/eccodes/ci.yml?branch=develop&label=develop" alt="develop"></a>
+</h3>
+
 # GRIB Check
+
 > [!IMPORTANT]
 > This software is **Emerging** and subject to ECMWF's guidelines on [Software Maturity](https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity).
 >
