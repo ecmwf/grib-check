@@ -2,7 +2,7 @@
 
 ## Running tests
 ```bash
-  python -m unittest
+  python -m pytest
 ```
 ## Grib
 

@@ -575,7 +575,6 @@ class Wmo(CheckEngine):
                     "min_value == 0 and max_value == 0",
                 )
             )
-            pass
         #       else:
         #           report.add(self._check_range(message, p))
 
@@ -632,7 +631,7 @@ class Wmo(CheckEngine):
         return report
 
     def _has_soil_level(self, message, p):
-        report = Report("WMO tHas soil level")
+        report = Report("WMO Has soil level")
         report.add(Eq(message["topLevel"], message["bottomLevel"]))
         report.add(Le(message["level"], 14))  # max in UERRA
         return report

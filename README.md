@@ -19,9 +19,6 @@ It provides a set of checks that can be applied to GRIB messages, ensuring that 
 - Developer documentation is available at [GribCheck Developer documentation](./devdoc.md).
 - [Checks documentation](./checkdocs.md) provides detailed information on how to add new checks and customize existing ones.
 
-## Prerequisites
- ``` bash
-pip install jsonnet eccodes
 ```
 
 ## Usage

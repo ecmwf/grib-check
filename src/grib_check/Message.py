@@ -26,6 +26,7 @@ from eccodes import (
     codes_new_from_message,
     codes_release,
     codes_set_string,
+    codes_get,
 )
 
 from .Assert import Eq
@@ -35,12 +36,14 @@ from .Report import Report
 
 class Message:
     def __init__(self, handle=None, message_buffer=None, position=None):
-        assert position != 0
+        self.__h = None
+        # assert position != 0
+        if position is not None and position < 1:
+            raise Exception("Position not supported")
         assert handle is not None or message_buffer is not None
         assert (handle is not None and message_buffer is not None) is not True
         self.logger = logging.getLogger(__class__.__name__)
 
-        self.__h = None
         if handle is not None:
             self.__h = handle
         elif message_buffer is not None:
@@ -86,7 +89,8 @@ class Message:
         return self.__h
 
     def __del__(self):
-        codes_release(self.__h)
+        if self.__h is not None:
+            codes_release(self.__h)
 
     def set(self, key, value):
         if type(value) is KeyValue:
@@ -95,20 +99,7 @@ class Message:
 
     def get(self, key, datatype=None) -> KeyValue:
         try:
-            if datatype is None:
-                datatype = codes_get_native_type(self.__h, key)
-            else:
-                assert datatype is int or datatype is float or datatype is str
-
-            if datatype is int:
-                return KeyValue(key, codes_get_long(self.__h, key))
-            elif datatype is float:
-                return KeyValue(key, codes_get_double(self.__h, key))
-            elif datatype is str:
-                return KeyValue(key, codes_get_string(self.__h, key))
-            else:
-                self.logger.debug(f"Unknown datatype: {datatype}")
-                return KeyValue(key, None)
+            return KeyValue(key, codes_get(self.__h, key, ktype=datatype))
         except Exception:
             self.logger.debug(f"KeyError: {key}")
             return KeyValue(key, None)
