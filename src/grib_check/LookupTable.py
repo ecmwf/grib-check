@@ -80,3 +80,29 @@ class IndexedLookupTable(LookupTable):
 
     def get_element(self, message: Message):
         raise NotImplementedError
+
+
+class ParamIdLookupTable(LookupTable):
+    def __init__(self, filename: str):
+        assert filename is not None
+        try:
+            jresult = _jsonnet.evaluate_file(filename)
+            self.data = json.loads(jresult)
+            self.table = dict()
+            for entry in self.data:
+                assert len(entry["pairs"]) == 1
+                assert (entry["pairs"][0]["key"] == "paramId")
+                paramId = entry["pairs"][0]["value"]
+                self.table[paramId] = entry
+        except ValueError as e:
+            print(f"ERROR: Couldn't read JSON file {filename}: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    def get_element(self, message: Message):
+        report = Report("Matched parameter")
+        paramId = message["paramId"].value()
+        if paramId not in self.table:
+            report.add(f"No match for parameter ID: {paramId}")
+            return None, report
+        report.rename(f"Matched parameter ID: {paramId}")
+        return self.table[paramId], report

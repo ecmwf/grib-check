@@ -74,7 +74,7 @@ class CheckEngine:
                 for expected in kv["expected"]:
                     if "key" in expected and "value" in expected:
                         expected_report.add(
-                            Eq(message[expected["key"]], expected["value"])
+                            Eq(message.get(expected["key"], datatype=type(expected["value"])), expected["value"])
                         )
                 report.add(expected_report)
         else:

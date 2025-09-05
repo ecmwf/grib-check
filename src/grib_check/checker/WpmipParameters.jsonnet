@@ -2,15 +2,15 @@
 {
   "name" : "total_precipitation_sfc",
   "expected" : [
-    {"key": "values", "min": [-0.05, 0.1], "max": [0.0, 0.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 228228},
+    {"key": "values", "min": [-0.05, 0.1], "max": [0.0, 0.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 1},
     {"key": "parameterNumber", "value": 52},
     {"key": "typeOfStatisticalProcessing", "value": 1},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 228228},
   ],
   "checks" : [
     "from_start",
@@ -20,14 +20,14 @@
 {
   "name" : "orography_sfc",
   "expected" : [
-    {"key": "values", "min": [-1300, 0], "max": [1000, 8888]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 228002},
+    {"key": "values", "min": [-1300, 0], "max": [1000, 8888]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 3},
     {"key": "parameterNumber", "value": 5},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 228002},
   ],
   "checks" : [
     "point_in_time",
@@ -37,14 +37,14 @@
 {
   "name" : "mean_sea_level_pressure_sfc",
   "expected" : [
-    {"key": "values", "min": [88000, 104000], "max": [98000, 115000]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 151},
+    {"key": "values", "min": [88000, 104000], "max": [98000, 115000]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 3},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 101}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 151},
   ],
   "checks" : [
     "point_in_time",
@@ -54,15 +54,15 @@
 {
   "name" : "time_integrated_surface_net_thermal_radiation_downwards_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 175},
+    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 5},
     {"key": "parameterNumber", "value": 3},
     {"key": "typeOfFirstFixedSurface", "value": 1},
     {"key": "typeOfStatisticalProcessing", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 175},
   ],
   "checks" : [
     "from_start",
@@ -72,15 +72,15 @@
 {
   "name" : "time_integral_of_top_net_solar_radiation_flux_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 178},
+    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 4},
     {"key": "parameterNumber", "value": 9},
     {"key": "typeOfStatisticalProcessing", "value": 1},
     {"key": "typeOfFirstFixedSurface", "value": 8}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 178},
   ],
   "checks" : [
     "from_start",
@@ -90,15 +90,15 @@
 {
   "name" : "time_integrated_top_net_thermal_radiation_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 179},
+    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 5},
     {"key": "parameterNumber", "value": 5},
     {"key": "typeOfStatisticalProcessing", "value": 1},
     {"key": "typeOfFirstFixedSurface", "value": 8}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 179},
   ],
   "checks" : [
     "from_start",
@@ -108,15 +108,15 @@
 {
   "name" : "time_integrated_surface_sensible_heat_flux_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 146},
+    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 0},
     {"key": "parameterNumber", "value": 11},
     {"key": "typeOfFirstFixedSurface", "value": 1},
     {"key": "typeOfStatisticalProcessing", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 146},
   ],
   "checks" : [
     "from_start",
@@ -126,15 +126,15 @@
 {
   "name" : "time_integrated_surface_latent_heat_flux_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 147},
+    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 0},
     {"key": "parameterNumber", "value": 10},
     {"key": "typeOfStatisticalProcessing", "value": 1},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 147},
   ],
   "checks" : [
     "from_start",
@@ -144,14 +144,14 @@
 {
   "name" : "land_sea_mask_sfc",
   "expected" : [
-    {"key": "values", "min": [0, 0], "max": [1, 1]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 172},
+    {"key": "values", "min": [0, 0], "max": [1, 1]},
     {"key": "discipline", "value": 2},
     {"key": "parameterCategory", "value": 0},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 172},
   ],
   "checks" : [
     "point_in_time",
@@ -161,15 +161,15 @@
 {
   "name" : "time_integrated_surface_net_solar_radiation_sfc",
   "expected" : [
-    {"key": "values", "min": [-10, 100000.0], "max": [100000.0, 10000000.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 176},
+    {"key": "values", "min": [-10, 100000.0], "max": [100000.0, 10000000.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 4},
     {"key": "parameterNumber", "value": 9},
     {"key": "typeOfStatisticalProcessing", "value": 1},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 176},
   ],
   "checks" : [
     "from_start",
@@ -179,14 +179,14 @@
 {
   "name" : "surface_pressure_sfc",
   "expected" : [
-    {"key": "values", "min": [48000, 80000], "max": [101500, 115000]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 134},
+    {"key": "values", "min": [48000, 80000], "max": [101500, 115000]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 3},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 134},
   ],
   "checks" : [
     "point_in_time",
@@ -196,16 +196,16 @@
 {
   "name" : "2_metre_specific_humidity_sfc",
   "expected" : [
-    {"key": "values", "min": [0, 2], "max": [0, 2]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 174096},
+    {"key": "values", "min": [0, 2], "max": [0, 2]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 1},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 103},
     {"key": "scaledValueOfFirstFixedSurface", "value": 2},
     {"key": "scaleFactorOfFirstFixedSurface", "value": 0}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 174096},
   ],
   "checks" : [
     "point_in_time",
@@ -215,14 +215,14 @@
 {
   "name" : "sea_surface_temperature_sfc",
   "expected" : [
-    {"key": "values", "min": [170, 290], "max": [270, 360]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 34},
+    {"key": "values", "min": [170, 290], "max": [270, 360]},
     {"key": "discipline", "value": 10},
     {"key": "parameterCategory", "value": 3},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 34},
   ],
   "checks" : [
     "point_in_time",
@@ -232,14 +232,14 @@
 {
   "name" : "sea_ice_area_fraction_sfc",
   "expected" : [
-    {"key": "values", "min": [0, 1], "max": [0, 1]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 31},
+    {"key": "values", "min": [0, 1], "max": [0, 1]},
     {"key": "discipline", "value": 10},
     {"key": "parameterCategory", "value": 2},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 31},
   ],
   "checks" : [
     "point_in_time",
@@ -249,14 +249,14 @@
 {
   "name" : "surface_air_temperature_sfc",
   "expected" : [
-    {"key": "values", "min": [170, 290], "max": [270, 360]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 167},
+    {"key": "values", "min": [170, 290], "max": [270, 360]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 0},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 103}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 167},
   ],
   "checks" : [
     "point_in_time",
@@ -266,14 +266,14 @@
 {
   "name" : "surface_air_dew_point_temperature_sfc",
   "expected" : [
-    {"key": "values", "min": [30, 290], "max": [270, 350]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 168},
+    {"key": "values", "min": [30, 290], "max": [270, 350]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 0},
     {"key": "parameterNumber", "value": 6},
     {"key": "typeOfFirstFixedSurface", "value": 103}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 168},
   ],
   "checks" : [
     "point_in_time",
@@ -283,15 +283,15 @@
 {
   "name" : "total_cloud_cover_sfc",
   "expected" : [
-    {"key": "values", "min": [-0.1, 5], "max": [90.0, 101.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 228164},
+    {"key": "values", "min": [-0.1, 5], "max": [90.0, 101.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 6},
     {"key": "parameterNumber", "value": 1},
     {"key": "typeOfFirstFixedSurface", "value": 1},
     {"key": "typeOfSecondFixedSurface", "value": 8}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 228164},
   ],
   "checks" : [
     "predefined_thickness",
@@ -300,13 +300,13 @@
 {
   "name" : "low_cloud_cover_sfc",
   "expected" : [
-    {"key": "values", "min": [-0.1, 5], "max": [90.0, 101.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 3073},
+    {"key": "values", "min": [-0.1, 5], "max": [90.0, 101.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 6},
     {"key": "parameterNumber", "value": 3}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 3073},
   ],
   "checks" : [
   ]
@@ -314,13 +314,13 @@
 {
   "name" : "high_cloud_cover_sfc",
   "expected" : [
-    {"key": "values", "min": [-0.1, 5], "max": [90.0, 101.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 3075},
+    {"key": "values", "min": [-0.1, 5], "max": [90.0, 101.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 6},
     {"key": "parameterNumber", "value": 5}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 3075},
   ],
   "checks" : [
   ]
@@ -328,13 +328,13 @@
 {
   "name" : "medium_cloud_cover_sfc",
   "expected" : [
-    {"key": "values", "min": [-0.1, 5], "max": [90.0, 101.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 3074},
+    {"key": "values", "min": [-0.1, 5], "max": [90.0, 101.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 6},
     {"key": "parameterNumber", "value": 4}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 3074},
   ],
   "checks" : [
   ]
@@ -342,15 +342,15 @@
 {
   "name" : "short_wave_(solar)_radiation_downwards_sfc",
   "expected" : [
-    {"key": "values", "min": [30, 290], "max": [270, 350]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 169},
+    {"key": "values", "min": [30, 290], "max": [270, 350]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 4},
     {"key": "parameterNumber", "value": 7},
     {"key": "typeOfFirstFixedSurface", "value": 1},
     {"key": "typeOfStatisticalProcessing", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 169},
   ],
   "checks" : [
     "point_in_time",
@@ -360,16 +360,16 @@
 {
   "name" : "10_meter_u_velocity_sfc",
   "expected" : [
-    {"key": "values", "min": [-100, -1], "max": [1, 100]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 165},
+    {"key": "values", "min": [-100, -1], "max": [1, 100]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 2},
     {"key": "parameterNumber", "value": 2},
     {"key": "scaleFactorOfFirstFixedSurface", "value": 0},
     {"key": "scaledValueOfFirstFixedSurface", "value": 10},
     {"key": "typeOfFirstFixedSurface", "value": 103}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 165},
   ],
   "checks" : [
     "point_in_time",
@@ -379,16 +379,16 @@
 {
   "name" : "10_meter_v_velocity_sfc",
   "expected" : [
-    {"key": "values", "min": [-100, -1], "max": [1, 100]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 166},
+    {"key": "values", "min": [-100, -1], "max": [1, 100]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 2},
     {"key": "parameterNumber", "value": 3},
     {"key": "typeOfFirstFixedSurface", "value": 103},
     {"key": "scaleFactorOfFirstFixedSurface", "value": 0},
     {"key": "scaledValueOfFirstFixedSurface", "value": 10}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 166},
   ],
   "checks" : [
     "point_in_time",
@@ -398,15 +398,15 @@
 {
   "name" : "time_integrated_surface_net_thermal_radiation_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 177},
+    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 5},
     {"key": "parameterNumber", "value": 5},
     {"key": "typeOfStatisticalProcessing", "value": 1},
     {"key": "typeOfFirstFixedSurface", "value": 1}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 177},
   ],
   "checks" : [
     "from_start",
@@ -416,14 +416,14 @@
 {
   "name" : "geopotential_pl",
   "expected" : [
-    {"key": "values", "min": [-5000, 306000], "max": [2000, 350000]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 156},
+    {"key": "values", "min": [-5000, 306000], "max": [2000, 350000]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 3},
     {"key": "parameterNumber", "value": 5},
     {"key": "typeOfFirstFixedSurface", "value": 100}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 156},
   ],
   "checks" : [
     "point_in_time",
@@ -434,13 +434,13 @@
 {
   "name" : "geopotential_pl",
   "expected" : [
-    {"key": "values", "min": [-5000, 306000], "max": [2000, 350000]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 129},
+    {"key": "values", "min": [-5000, 306000], "max": [2000, 350000]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 3},
     {"key": "parameterNumber", "value": 4}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 129},
   ],
   "checks" : [
     "point_in_time",
@@ -451,14 +451,14 @@
 {
   "name" : "temperature_pl",
   "expected" : [
-    {"key": "values", "min": [150, 275], "max": [200, 330]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 130},
+    {"key": "values", "min": [150, 275], "max": [200, 330]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 0},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 100}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 130},
   ],
   "checks" : [
     "point_in_time",
@@ -469,14 +469,14 @@
 {
   "name" : "u_velocity_pl",
   "expected" : [
-    {"key": "values", "min": [-250, 5], "max": [1, 250]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 131},
+    {"key": "values", "min": [-250, 5], "max": [1, 250]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 2},
     {"key": "parameterNumber", "value": 2},
     {"key": "typeOfFirstFixedSurface", "value": 100}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 131},
   ],
   "checks" : [
     "point_in_time",
@@ -487,14 +487,14 @@
 {
   "name" : "v_velocity_pl",
   "expected" : [
-    {"key": "values", "min": [-200, -2], "max": [2, 200]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 132},
+    {"key": "values", "min": [-200, -2], "max": [2, 200]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 2},
     {"key": "parameterNumber", "value": 3},
     {"key": "typeOfFirstFixedSurface", "value": 100}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 132},
   ],
   "checks" : [
     "point_in_time",
@@ -505,14 +505,14 @@
 {
   "name" : "specific_humidity_pl",
   "expected" : [
-    {"key": "values", "min": [-0.1, 0.01], "max": [0, 0.1]}
-  ],
-  "pairs" : [
-    {"key": "paramId", "value": 133},
+    {"key": "values", "min": [-0.1, 0.01], "max": [0, 0.1]},
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 1},
     {"key": "parameterNumber", "value": 0},
     {"key": "typeOfFirstFixedSurface", "value": 100}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 133},
   ],
   "checks" : [
     "point_in_time",

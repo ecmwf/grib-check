@@ -28,7 +28,7 @@ from .checker.Wmo import Wmo
 from .checker.Wpmip import Wpmip
 from .FileScanner import FileScanner
 from .Grib import Grib
-from .LookupTable import SimpleLookupTable
+from .LookupTable import SimpleLookupTable, ParamIdLookupTable
 from .Message import Message
 from .Report import Report
 
@@ -102,7 +102,7 @@ class GribCheck:
             )
         elif self.args.grib_type == "wpmip":
             checker = Wpmip(
-                SimpleLookupTable(wpmip_params), valueflg=self.args.valueflg
+                ParamIdLookupTable(wpmip_params), valueflg=self.args.valueflg
             )
         elif self.args.grib_type == "s2s":
             checker = S2S(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
