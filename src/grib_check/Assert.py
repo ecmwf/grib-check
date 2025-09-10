@@ -37,7 +37,9 @@ class Assert:
             raise ValueError("comment_position must be either 'right' or 'below'")
 
         if color:
-            return f"{self._as_string(color)}{TermColor.OKBLUE}{comment}{TermColor.ENDC}"
+            return (
+                f"{self._as_string(color)}{TermColor.OKBLUE}{comment}{TermColor.ENDC}"
+            )
         else:
             return f"{self._as_string(color)}{comment}"
 
