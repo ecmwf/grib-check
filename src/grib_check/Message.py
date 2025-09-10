@@ -12,6 +12,7 @@ import logging
 
 import numpy as np
 from eccodes import (
+    codes_get,
     codes_get_double,
     codes_get_double_array,
     codes_get_long,
@@ -26,7 +27,6 @@ from eccodes import (
     codes_new_from_message,
     codes_release,
     codes_set_string,
-    codes_get,
 )
 
 from .Assert import Eq

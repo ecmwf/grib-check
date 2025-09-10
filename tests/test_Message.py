@@ -8,9 +8,10 @@
 # nor does it submit to any jurisdiction.
 #
 
-from grib_check.Message import Message
-from eccodes import codes_new_from_samples, CODES_PRODUCT_GRIB
 import pytest
+from eccodes import CODES_PRODUCT_GRIB, codes_new_from_samples
+
+from grib_check.Message import Message
 
 
 class TestMessage:
