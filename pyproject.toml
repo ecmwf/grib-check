@@ -40,12 +40,8 @@ grib_check = "grib_check.GribCheck:main"
 tigge_name = "grib_check.TiggeName:main"
 
 [tool.setuptools.packages.find]
-include = [ "grib_check", "grib_check.*", "grib_check/checker/*.jsonnet" ]
+include = [ "grib_check", "grib_check.*" ]
 where = [ "src/", "./" ]
-
-[tool.setuptools.package-data]
-"grib_check.checker" = ["*"]
-recipe = ["*.jsonnet"]
 
 [tool.setuptools_scm]
 version_file = "src/grib_check/_version.py"
