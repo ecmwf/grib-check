@@ -13,13 +13,9 @@ import logging
 import numpy as np
 from eccodes import (
     codes_get,
-    codes_get_double,
     codes_get_double_array,
-    codes_get_long,
     codes_get_message,
-    codes_get_native_type,
     codes_get_size,
-    codes_get_string,
     codes_is_missing,
     codes_keys_iterator_get_name,
     codes_keys_iterator_new,
