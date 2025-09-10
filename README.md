@@ -1,6 +1,5 @@
 <h3 align="center">
-  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amaster"><img src="https://img.shields.io/github/actions/workflow/status/ecmwf/grib-check/ci.yml?branch=master&label=master" alt="master"></a>
-  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Adevelop"><img src="https://img.shields.io/github/actions/workflow/status/ecmwf/grib-check/ci.yml?branch=develop&label=develop" alt="develop"></a>
+  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amaster"><img src="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml/badge.svg" alt="master"></a>
 </h3>
 
 # GRIB Check
