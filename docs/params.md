@@ -30,7 +30,7 @@ Creating these files can be tedious because you often encounter repetitive patte
 This approach is error-prone and hard to maintain.  
 The example below demonstrates this problem.  
 
-```json
+```jsonnet
 {
   "name" : "specific_snow_water_content_ml",
   "expected" : [
@@ -123,14 +123,14 @@ To achieve this, we import `ext.jsonnet` into `main.jsonnet` and use the `+` ope
 
 
 ext.jsonnet
-```json
+```jsonnet
 [
   {name : "hl"}
 ]
 ```
 
 main.jsonnet
-```json
+```jsonnet
 local ext = import 'ext.jsonnet';
 
 [
@@ -146,7 +146,7 @@ When we run the example, we should get the following output.
 jsonnet main.jsonnet
 ```
 
-```
+```json
 [
    {
       "name": "ml"
@@ -174,7 +174,7 @@ This skeleton includes the four sections expected by GribCheck and is configured
 This ensures that any derived classes follow the proper structure and always include a valid name.  
 
 templates.libsonnet
-```json
+```jsonnet
 {
 Parameter: {
     name: error "Please set a parameter name",
@@ -210,7 +210,7 @@ The final parameters are generated from this list.
 
 
 inheritance.jsonnet
-```json
+```jsonnet
 local templates = import 'templates.libsonnet';
 
 local ParamId76(type) = templates.Parameter + {
