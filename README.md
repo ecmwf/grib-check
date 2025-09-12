@@ -17,7 +17,7 @@ It provides a set of checks that can be applied to GRIB messages, ensuring that 
 ## Further Information
 - Developer documentation is available at [GribCheck Developer documentation](./docs/devdoc.md).
 - [Checks documentation](./docs/checkdocs.md) provides detailed information on how to add new checks and customize existing ones.
-- [Parameter files documentation](./docs/paramdocs.md) explains how to create and manage parameter files used by GribCheck.
+- [Parameter files documentation](./docs/params.md) explains how to create and manage parameter files used by GribCheck.
 
 ## Usage
 To use GribCheck, you need to specify the type of data you want to check.
