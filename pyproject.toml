@@ -43,6 +43,10 @@ tigge_name = "grib_check.TiggeName:main"
 include = [ "grib_check", "grib_check.*" ]
 where = [ "src/", "./" ]
 
+[tool.setuptools.package-data]
+"grib_check.checker" = ["*"]
+recipe = ["*.jsonnet"]
+
 [tool.setuptools_scm]
 version_file = "src/grib_check/_version.py"
 
