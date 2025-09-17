@@ -20,6 +20,11 @@ class Wpmip(Wmo):
     def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
         self.logger = logging.getLogger(__class__.__name__)
+        self.register_checks(
+            {
+                "pressure_level": self._pressure_level,
+            }
+        )
 
     def _basic_checks(self, message, p):
         report = Report("Wpmip Basic Checks")
@@ -27,9 +32,13 @@ class Wpmip(Wmo):
         # WPMIP prod/test data
         report.add(IsIn(message["productionStatusOfProcessedData"], [16, 17]))
 
+        # WPMIP centre/subCentre DGOV-577
+        report.add(Eq(message["centre"], "323"))
+        report.add(Ne(message["subCentre"], 0))
+
         # to use MARS new key "model"
-        report.add(Eq(message["backgroundProcess"], 1))
-        report.add(Eq(message["generatingProcessIdentifier"], 3))
+        report.add(Le(message["backgroundProcess"], 255))
+        report.add(Le(message["generatingProcessIdentifier"], 2))
 
         # CCSDS compression
         # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/

@@ -2,7 +2,7 @@
 {
   "name" : "total_precipitation_sfc",
   "expected" : [
-    {"key": "values", "min": [-0.05, 0.1], "max": [0.0, 0.0]}
+    {"key": "values", "min": [-0.05, 0.1], "max": [0.0, 100.0]}
   ],
   "pairs" : [
     {"key": "paramId", "value": 228228},
@@ -97,6 +97,24 @@
     {"key": "discipline", "value": 0},
     {"key": "parameterCategory", "value": 5},
     {"key": "parameterNumber", "value": 5},
+    {"key": "typeOfStatisticalProcessing", "value": 1},
+    {"key": "typeOfFirstFixedSurface", "value": 8}
+  ],
+  "checks" : [
+    "from_start",
+    "predefined_level"
+  ]
+},
+{
+  "name" : "time_integrated_top_solar_radiation_sfc",
+  "expected" : [
+    {"key": "values", "min": [0.0, 100000000.0], "max": [0.0, 100000000.0]}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 212},
+    {"key": "discipline", "value": 0},
+    {"key": "parameterCategory", "value": 4},
+    {"key": "parameterNumber", "value": 7},
     {"key": "typeOfStatisticalProcessing", "value": 1},
     {"key": "typeOfFirstFixedSurface", "value": 8}
   ],
@@ -340,7 +358,7 @@
   ]
 },
 {
-  "name" : "short_wave_(solar)_radiation_downwards_sfc",
+  "name" : "time_integrated_short_wave_(solar)_radiation_downwards_sfc",
   "expected" : [
     {"key": "values", "min": [30, 290], "max": [270, 350]}
   ],
@@ -353,8 +371,23 @@
     {"key": "typeOfStatisticalProcessing", "value": 1}
   ],
   "checks" : [
-    "point_in_time",
+    "from_start",
     "predefined_level"
+  ]
+},
+{
+  "name" : "sea_ice_thickness_sfc",
+  "expected" : [
+    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
+  ],
+  "pairs" : [
+    {"key": "paramId", "value": 262000},
+    {"key": "discipline", "value": 10},
+    {"key": "parameterCategory", "value": 2},
+    {"key": "parameterNumber", "value": 1},
+  ],
+  "checks" : [
+    "point_in_time",
   ]
 },
 {
