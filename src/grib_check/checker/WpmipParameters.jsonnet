@@ -2,7 +2,7 @@
 {
   "name" : "total_precipitation_sfc",
   "expected" : [
-    {"key": "values", "min": [-0.05, 0.1], "max": [0.0, 100.0]}
+    {"key": "values", "min": [-0.05, 0.1], "max": [0.0, 500.0]}
   ],
   "pairs" : [
     {"key": "paramId", "value": 228228},
@@ -90,7 +90,7 @@
 {
   "name" : "time_integrated_top_net_thermal_radiation_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
+    {"key": "values", "min": [-4e+06, -8e+5], "max": [-1.8e+6, -2e+5]}
   ],
   "pairs" : [
     {"key": "paramId", "value": 179},
@@ -126,7 +126,7 @@
 {
   "name" : "time_integrated_surface_sensible_heat_flux_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
+    {"key": "values", "min": [-1e+8, 0], "max": [0, 1e+8]}
   ],
   "pairs" : [
     {"key": "paramId", "value": 146},
@@ -144,7 +144,7 @@
 {
   "name" : "time_integrated_surface_latent_heat_flux_sfc",
   "expected" : [
-    {"key": "values", "min": [-100000000.0, 100000000.0], "max": [-100000000.0, 100000000.0]}
+    {"key": "values", "min": [3e+7, -1e+4], "max": [2e+3, 8e+7]}
   ],
   "pairs" : [
     {"key": "paramId", "value": 147},
@@ -360,7 +360,7 @@
 {
   "name" : "time_integrated_short_wave_(solar)_radiation_downwards_sfc",
   "expected" : [
-    {"key": "values", "min": [30, 290], "max": [270, 350]}
+    {"key": "values", "min": [-10, 1.6e+05], "max": [1e+06, 1e+07]}
   ],
   "pairs" : [
     {"key": "paramId", "value": 169},

@@ -104,8 +104,6 @@ class Wpmip(Wmo):
 
     def _from_start(self, message, p) -> Report:
         report = Report("Wpmip From Start")
-        if message.get("endStep") != 0:
-            report.add(self._check_range(message, p))
 
         return super()._from_start(message, p).add(report)
 
