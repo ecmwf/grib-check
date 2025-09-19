@@ -84,10 +84,8 @@ class Wpmip(Wmo):
 
         topd = message.get("typeOfProcessedData", int)
 
-        if topd in [0, 1, 2]:  # Analysis, Forecast, Analysis and forecast products
-            pass
-        elif topd in [3, 4]:  # Control forecast products, Perturbed forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 11))
+        if topd in [0, 1]:  # Analysis, Forecast, Analysis and forecast products
+            report.add(Eq(message["productDefinitionTemplateNumber"], 8))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
@@ -116,34 +114,7 @@ class Wpmip(Wmo):
 
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]:  # Analysis, Forecast
-            if message.get("productDefinitionTemplateNumber") == 1:
-                report.add(
-                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd = {topd}")
-                )
-                report.add(
-                    Le(
-                        message["perturbationNumber"],
-                        message.get("numberOfForecastsInEnsemble"),
-                        f"topd = {topd}",
-                    )
-                )
-        elif topd == 2:  # Analysis and forecast products
-            pass
-        elif topd == 3:  # Control forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}")
-            )
-        elif topd == 4:  # Perturbed forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}")
-            )
-            report.add(
-                Le(
-                    message["perturbationNumber"],
-                    message["numberOfForecastsInEnsemble"] - 1,
-                    f"topd = {topd}",
-                )
-            )
+            report.add(Eq(message["productDefinitionTemplateNumber"], 0))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
