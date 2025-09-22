@@ -15,42 +15,50 @@ GribCheck is a Python library designed for validating GRIB files.
 It provides a set of checks that can be applied to GRIB messages, ensuring that they conform to specific standards and expectations.
 
 ## Further Information
+
 - Developer documentation is available at [GribCheck Developer documentation](./docs/devdoc.md).
 - [Checks documentation](./docs/checkdocs.md) provides detailed information on how to add new checks and customize existing ones.
 - [Parameter files documentation](./docs/params.md) explains how to create and manage parameter files used by GribCheck.
 
+## Installation
+
+Installing GribCheck is straightforward. You can clone the repository and install it using pip.
+
+``` bash
+git clone git@github.com:ecmwf/grib-check.git
+pip3 install grib-check
+```
 ## Usage
-To use GribCheck, you need to specify the type of data you want to check.
-The library currently supports the following types:
 
-- wmo
-- tigge
-- s2s
-- s2s_refcst
-- uerra
-- crra
-- lam
-- destine (under development)
+To use GribCheck, you need to specify the convention you want to check.
+The library currently supports the following conventions:
 
-You can specify the type of data using the `-t` or `--grib_type` command-line argument.
+- tigge : [The THORPEX Interactive Grand Global Ensemble (TIGGE)](https://confluence.ecmwf.int/display/TIGGE)
+- lam : [TIGGE Limited-Area Model (TIGGE LAM)](https://confluence.ecmwf.int/display/TIGL)
+- s2s : [Subseasonal to Seasonal (S2S)](http://s2sprediction.net/)
+- s2s_refcst : [S2S Reforecasts](http://s2sprediction.net/)
+- uerra : [Uncertainties in Ensembles of Regional ReAnalysis (UERRA)](https://uerra.eu/)
+- crra : [Copernicus Regional Reanalysis (CERRA)](https://climate.copernicus.eu/copernicus-regional-reanalysis-europe-cerra)
+
+You can specify the convention using the `-t` or `--convention` command-line argument.
 For example, to check a GRIB file of type "tigge", you would run the following command:
 
 ``` bash
-python GribCheck.py -t tigge /path/to/file.grib2
+grib_check -t tigge /path/to/file.grib2
 ```
 
 The output provides the result of each check performed on the GRIB messages in the file. 
-Each check is marked with a status of either "PASS" or "FAIL", and may include details about the specific validation performed. 
-Comment may be included to provide additional context or information about the check.
-They have the status `NONE`.
+Each check may be annotated with an additional context or information of the check performed which may be useful for diagnostics.
+Checks typically have the status FAIL or PASS.
+Sometimes, however, a status cannot be assigned - for example if a test is skipped or message is purely informational - in which case the status NONE is used.
 
 The report follows a hierarchical structure, where checks can contain sub-checks and assertions, forming branches. If an assertion fails, the failure propagates upward, and the entire branch is marked as failed.
 
-The following command demonstrates a check on a file of type "s2s". 
-For demonstration purposes, we'll change the type to "uerra" to intentionally trigger check failures and showcase the output.
+The following command demonstrates a check on a file of convention "s2s". 
+For demonstration purposes, we'll change the convention to "uerra" to intentionally trigger check failures and showcase the output.
 
 ```
-$ grib_check.py -t uerra -c data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
+$ grib_check -t uerra -c data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
 FAIL: data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
   FAIL: field 0
     NONE: Matched parameter: temperature_pl.ammc

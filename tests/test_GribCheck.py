@@ -14,7 +14,7 @@
 class Config:
     def __init__(self):
         self.verbosity = 0
-        self.grib_type = "tigge"
+        self.convention = "tigge"
         self.warnflg = False
         self.valueflg = False
         self.zeroflg = False

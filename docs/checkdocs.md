@@ -1,7 +1,9 @@
-## Adding a new GRIB type
+## Adding a new GRIB convention
 
-To explain how to add a new GRIB type, we'll walk through a scenario where we introduce a project called "destine". 
-This project will inherit the WMO checks and define additional custom restrictions.
+To explain how to add a new GRIB convention, we'll walk through a scenario where we introduce a project called "destine". 
+This project will inherit the WMO checks and define additional custom checks.
+Starting with the WMO checks is a good idea because they represent a universal set of checks that apply to all GRIB messages.
+By extending them, you begin with a solid foundation.
 
 Add a new file called `checker/Destiny.py` and derive the `Destiny` class from `Wmo`.
 This way, you gain access to many predefined checks like `point_in_time`, `basic_checks`, and `given_level`.
@@ -43,15 +45,15 @@ class DestinE(Wmo):
 Add Destiny option in GribCheck.py
 
 ``` python
-...
-...
+# ...
+# ...
 from checker.Destiny import DestinE
-...
-      elif self.args.grib_type == "destine":
+      elif self.args.convention == "destine":
+# ...
           checker = Destiny(param_file=self.args.parameters, valueflg=self.args.valueflg)
-...
-    parser.add_argument("-t", "--grib_type", help="type of data to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo", "destine"], default="tigge")
-...
+# ...
+    parser.add_argument("-t", "--convention", help="convention to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo", "destine"], default="wmo")
+# ...
 
 ```
 
@@ -83,7 +85,7 @@ In this way, we apply the `point_in_time` check from WMO and extend it with our 
 To start the checks, use the following command:
 
 ``` bash
-python GribCheck.py -t destine /path/to/file.grib2
+grib_check -t destine /path/to/file.grib2
 ```
 
 ### Parameters
