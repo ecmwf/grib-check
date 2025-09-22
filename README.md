@@ -33,12 +33,15 @@ pip3 install grib-check
 To use GribCheck, you need to specify the convention you want to check.
 The library currently supports the following conventions:
 
+- wmo : [World Meteorological Organization (WMO) (experimental)](https://public.wmo.int/en)
 - tigge : [The THORPEX Interactive Grand Global Ensemble (TIGGE)](https://confluence.ecmwf.int/display/TIGGE)
 - lam : [TIGGE Limited-Area Model (TIGGE LAM)](https://confluence.ecmwf.int/display/TIGL)
 - s2s : [Subseasonal to Seasonal (S2S)](http://s2sprediction.net/)
 - s2s_refcst : [S2S Reforecasts](http://s2sprediction.net/)
 - uerra : [Uncertainties in Ensembles of Regional ReAnalysis (UERRA)](https://uerra.eu/)
 - crra : [Copernicus Regional Reanalysis (CERRA)](https://climate.copernicus.eu/copernicus-regional-reanalysis-europe-cerra)
+- destine : [Destination Earth (DestinE) (experimental)](https://destination-earth.eu/)
+- wpmip : [Weather Prediction Model Intercomparison Project (WP-MIP) (experimental)](https://www.wcrp-esmo.org/activities/wp-mip/)
 
 You can specify the convention using the `-t` or `--convention` command-line argument.
 For example, to check a GRIB file of type "tigge", you would run the following command:

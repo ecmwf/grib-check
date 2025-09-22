@@ -169,7 +169,7 @@ def main():
     parser.add_argument(
         "-t",
         "--convention",
-        help="type of data to check",
+        help="data convention; wmo, destine and wpmip are experimental",
         choices=[
             "tigge",
             "s2s",
@@ -181,7 +181,6 @@ def main():
             "destine",
             "wpmip",
         ],
-        default="wmo",
     )
     parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
     parser.add_argument(
