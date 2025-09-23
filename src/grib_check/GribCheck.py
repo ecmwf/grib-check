@@ -94,35 +94,35 @@ class GribCheck:
             else f"{script_path}/checker/WmoParameters.jsonnet"
         )
 
-        if self.args.grib_type == "wmo":
+        if self.args.convention == "wmo":
             checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
-        elif self.args.grib_type == "tigge":
+        elif self.args.convention == "tigge":
             checker = Tigge(
                 SimpleLookupTable(tigge_params), valueflg=self.args.valueflg
             )
-        elif self.args.grib_type == "wpmip":
+        elif self.args.convention == "wpmip":
             checker = Wpmip(
                 SimpleLookupTable(wpmip_params), valueflg=self.args.valueflg
             )
-        elif self.args.grib_type == "s2s":
+        elif self.args.convention == "s2s":
             checker = S2S(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
-        elif self.args.grib_type == "s2s_refcst":
+        elif self.args.convention == "s2s_refcst":
             checker = S2SRefcst(
                 SimpleLookupTable(tigge_params), valueflg=self.args.valueflg
             )
-        elif self.args.grib_type == "uerra":
+        elif self.args.convention == "uerra":
             checker = Uerra(
                 SimpleLookupTable(tigge_params, ignore_keys=["model"]),
                 valueflg=self.args.valueflg,
             )
-        elif self.args.grib_type == "crra":
+        elif self.args.convention == "crra":
             checker = Crra(
                 SimpleLookupTable(tigge_params, ignore_keys=["model"]),
                 valueflg=self.args.valueflg,
             )
-        elif self.args.grib_type == "lam":
+        elif self.args.convention == "lam":
             checker = Lam(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
-        elif self.args.grib_type == "destine":
+        elif self.args.convention == "destine":
             checker = DestinE(
                 SimpleLookupTable(destine_params), valueflg=self.args.valueflg
             )
@@ -168,8 +168,8 @@ def main():
     )
     parser.add_argument(
         "-t",
-        "--grib_type",
-        help="type of data to check",
+        "--convention",
+        help="data convention; wmo, destine and wpmip are experimental",
         choices=[
             "tigge",
             "s2s",
@@ -181,7 +181,6 @@ def main():
             "destine",
             "wpmip",
         ],
-        default="wmo",
     )
     parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
     parser.add_argument(
