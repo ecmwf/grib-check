@@ -45,7 +45,7 @@ where = [ "src/", "./" ]
 
 [tool.setuptools.package-data]
 "grib_check.checker" = ["*"]
-recipe = ["*.jsonnet"]
+recipe = ["*.jsonnet", "*.libsonnet"]
 
 [tool.setuptools_scm]
 version_file = "src/grib_check/_version.py"
