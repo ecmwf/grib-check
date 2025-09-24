@@ -174,7 +174,7 @@ class Wmo(CheckEngine):
                             min2 = min_value if min_value > mi2 else mi2
                             report.add(
                                 Fail(
-                                    f"Minimum value {min_value} is not in range [{mi1}, {mi2}] => [{min1}, {min2}]"
+                                    f"Minimum value {min_value} is not in range [{mi1}, {mi2}]"
                                 )
                             )
                         else:
