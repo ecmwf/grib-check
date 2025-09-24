@@ -189,7 +189,7 @@ class Wmo(CheckEngine):
                             max2 = max_value if max_value > ma2 else ma2
                             report.add(
                                 Fail(
-                                    f"Maximum value {max_value} is not in range [{ma1}, {ma2}] => [{max1}, {max2}]"
+                                    f"Maximum value {max_value} is not in range [{ma1}, {ma2}]]"
                                 )
                             )
                         else:
