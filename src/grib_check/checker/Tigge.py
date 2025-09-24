@@ -36,7 +36,7 @@ class Tigge(Wmo):
 
         report.add(self._check_date(message, p))
 
-        return report
+        return super()._basic_checks(message, p).add(report)
 
     def _pressure_level(self, message, p):
         report = Report("TIGGE Pressure level")
