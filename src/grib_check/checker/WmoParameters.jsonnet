@@ -1,8 +1,8 @@
 [
-    {
-        "name": "Default",
-        "pairs": [],
-        "checks": []
-    },
+  {
+    name: 'Default',
+    pairs: [],
+    checks: ['basic_checks'],
+  },
 
 ]
