@@ -1,0 +1,89 @@
+local templates = import 'Parameter.libsonnet';
+
+[
+  templates.Wmo {
+    name: 'Derived forecast_4',
+    pairs+: [
+      { key: 'stream', value: 'eefo' },
+      { key: 'dataType', value: 'fcmean' },
+    ],
+    expected+: [
+      { key: 'productDefinitionTemplateNumber', value: 11 },
+      { key: 'paramId', value: '228004' },
+      { key: 'shortName', value: 'mean2t' },
+      { key: 'name', value: 'Mean 2 metre temperature' },
+    ],
+    checks+: [
+      'product_definition_template_number',
+    ],
+  },
+  templates.Wmo {
+    name: 'Derived forecast_0',
+    pairs+: [
+      { key: 'stream', value: 'eefo' },
+      { key: 'dataType', value: 'taem' },
+    ],
+    expected+: [
+      { key: 'productDefinitionTemplateNumber', value: 12 },
+      { key: 'paramId', value: '228004' },
+      { key: 'shortName', value: 'mean2t' },
+      { key: 'name', value: 'Mean 2 metre temperature' },
+    ],
+    checks+: [
+      'product_definition_template_number',
+    ],
+  },
+  templates.Wmo {
+    name: 'Derived forecast_1',
+    pairs+: [
+      { key: 'stream', value: 'eefo' },
+      { key: 'dataType', value: 'taes' },
+    ],
+    expected+: [
+      { key: 'productDefinitionTemplateNumber', value: 12 },
+      { key: 'paramId', value: '228002' },
+      { key: 'shortName', value: 'mean2' },
+      { key: 'name', value: 'Mean 2 metre temperature' },
+    ],
+    checks+: [
+      'product_definition_template_number',
+    ],
+  },
+  templates.Wmo {
+    name: 'Derived forecast_2',
+    pairs+: [
+      { key: 'stream', value: 'enfo' },
+      { key: 'dataType', value: 'pf' },
+    ],
+    expected+: [
+      { key: 'productDefinitionTemplateNumber', value: 1 },
+      { key: 'paramId', value: '167' },
+      { key: 'shortName', value: '2t' },
+      { key: 'name', value: '2 metre temperature' },
+    ],
+    checks+: ['product_definition_template_number', 'derived_forecast'],
+  },
+  templates.Wmo {
+    name: 'DestinE limits',
+    expected+: [
+      { key: 'values', min: [-100, -1], max: [1, 100] },
+    ],
+    pairs+: [
+      { key: 'param', value: 134 },
+    ],
+    checks+: ['destine_limits'],
+  },
+  templates.Wmo {
+    name: 'Name',
+    expected+: [
+      { key: 'stepRange', value: '0' },
+      { key: 'name', value: '2 metre temperature' },
+    ],
+    pairs+: [
+      { key: 'param', value: 130 },
+    ],
+    checks+: ['destine_limits'],
+  },
+
+
+]

@@ -1,0 +1,74 @@
+[build-system]
+# requires = [ "setuptools>=61", "setuptools-scm>=8" ]
+requires = [ "setuptools>=61", "wheel" ]
+
+[project]
+name = "grib_check"
+description = "Tools for checking GRIB files"
+readme = "README.md"
+license = { text = "Apache License Version 2.0" }
+authors = [
+  { name = "European Centre for Medium-Range Weather Forecasts (ECMWF)", email = "software.support@ecmwf.int" },
+]
+requires-python = ">=3.8"
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Enc Users/Desktop",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dynamic = [ "version" ]
+dependencies = [
+  "eccodes>=2.27.0", "jsonnet"
+]
+optional-dependencies.test = [ "pytest" ]
+urls.Documentation = "https://github.com/ecmwf/grib-check"
+urls.Homepage = "https://github.com/ecmwf/grib-check"
+urls.Issues = "https://github.com/ecmwf/grib-check/issues"
+urls.Repository = "https://github.com/ecmwf/grib-check"
+
+[project.scripts]
+grib_check = "grib_check.GribCheck:main"
+tigge_name = "grib_check.TiggeName:main"
+
+[tool.setuptools.packages.find]
+include = [ "grib_check", "grib_check.*" ]
+where = [ "src/", "./" ]
+
+[tool.setuptools.package-data]
+"grib_check.checker" = ["*"]
+recipe = ["*.jsonnet", "*.libsonnet"]
+
+[tool.setuptools_scm]
+version_file = "src/grib_check/_version.py"
+
+[tool.isort]
+profile = "black"
+
+[tool.coverage.run]
+branch = "true"
+
+[tool.pydocstyle]
+add_ignore = [ "D1", "D200", "D205", "D400", "D401" ]
+convention = "numpy"
+
+[tool.pytest.ini_options]
+addopts = [
+  "-ra",
+  "--strict-markers",
+  "--string-config",
+]
+testpaths = [
+  "tests",
+]
+python_path = [
+  "src"
+]
