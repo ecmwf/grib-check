@@ -121,9 +121,9 @@ FAIL: data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
 
 ## Documentation
 
-- [Components](./docs/devdoc.md)
-- [Checks](./docs/checkdocs.md)
+- [Components](./docs/components.md)
 - [Parameters](./docs/params.md)
+- [Adding new GRIB conventions](./docs/conventions.md)
 
 # License
 Licensed to the Apache Software Foundation (ASF) under one

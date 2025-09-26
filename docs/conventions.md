@@ -85,7 +85,7 @@ In this way, we apply the `point_in_time` check from WMO and extend it with our 
 To start the checks, use the following command:
 
 ``` bash
-grib_check -t destine /path/to/file.grib2
+grib-check -t destine /path/to/file.grib2
 ```
 
 ### Parameters
