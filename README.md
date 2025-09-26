@@ -1,6 +1,26 @@
-<h3 align="center">
-  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml/badge.svg" alt="main"></a>
-</h3>
+<p align="center">
+  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amaster">
+    <img src="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml/badge.svg" alt="master">
+  </a>
+  <a href="https://github.com/ecmwf/codex/raw/refs/heads/main/Project Maturity">
+    <img src="https://github.com/ecmwf/codex/raw/refs/heads/main/Project Maturity/emerging_badge.svg" alt="Maturity Level">
+  </a>
+  <a href="https://opensource.org/licenses/apache-2-0">
+    <img src="https://img.shields.io/badge/Licence-Apache 2.0-blue.svg" alt="Licence">
+  </a>
+  <a href="https://github.com/ecmwf/grib-checks/releases">
+    <img src="https://img.shields.io/github/v/release/ecmwf/grib-check?color=purple&label=Release" alt="Latest Release">
+  </a>
+</p>
+
+
+<p align="center">
+  <a href="#installation">Installation</a>
+  •
+  <a href="#installation">Usage</a>
+  •
+  <a href="#installation">Documentation</a>
+</p>
 
 # GRIB Check
 
@@ -13,12 +33,6 @@
 
 GribCheck is a Python library designed for validating GRIB files.
 It provides a set of checks that can be applied to GRIB messages, ensuring that they conform to specific standards and expectations.
-
-## Further Information
-
-- Developer documentation is available at [GribCheck Developer documentation](./docs/devdoc.md).
-- [Checks documentation](./docs/checkdocs.md) provides detailed information on how to add new checks and customize existing ones.
-- [Parameter files documentation](./docs/params.md) explains how to create and manage parameter files used by GribCheck.
 
 ## Installation
 
@@ -104,6 +118,12 @@ FAIL: data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
         PASS: level(850) in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10]
               invalid pressure level
 ```
+
+## Documentation
+
+- [Components](./docs/devdoc.md)
+- [Checks](./docs/checkdocs.md)
+- [Parameters](./docs/params.md)
 
 # License
 Licensed to the Apache Software Foundation (ASF) under one
