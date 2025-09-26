@@ -75,49 +75,7 @@ The report follows a hierarchical structure, where checks can contain sub-checks
 The following command demonstrates a check on a file of convention "s2s". 
 For demonstration purposes, we'll change the convention to "uerra" to intentionally trigger check failures and showcase the output.
 
-```
-$ grib-check -t uerra -c data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
-FAIL: data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
-  FAIL: field 0
-    NONE: Matched parameter: temperature_pl.ammc
-      model: glob
-      paramId: 130
-      centre: ammc
-      discipline: 0
-      parameterCategory: 0
-      parameterNumber: 0
-      typeOfFirstFixedSurface: 100
-    FAIL: temperature_pl.ammc
-      FAIL: Default Statistical Process
-        FAIL: numberOfTimeRange(None) == 1
-        FAIL: numberOfMissingInStatisticalProcess(None) == 0
-        FAIL: typeOfTimeIncrement(None) == 2
-        FAIL: minuteOfEndOfOverallTimeInterval(None) == 0
-        FAIL: secondOfEndOfOverallTimeInterval(None) == 0
-        FAIL: indicatorOfUnitForTimeRange(None) == 1
-        FAIL: lengthOfTimeRange(None) + startStep(24) == endStep(24)
-        PASS: Uerra Basic Checks
-          PASS: hour(0) <= 24
-          PASS: step(24) in [1, 2, 4, 5] or step(24) % 3 == 0
-      FAIL: Default Point in time
-        PASS: perturbationNumber(0) == 0
-              topd=typeOfProcessedData(3)
-        PASS: numberOfForecastsInEnsemble(33) != 0
-              topd=typeOfProcessedData(3)
-        FAIL: Uerra Point in Time
-          FAIL: productDefinitionTemplateNumber(60) == 1
-          PASS: forecastTime(24) in [1, 2, 4, 5] or forecastTime(24) % 3 == 0
-      PASS: Default Given level
-        PASS: typeOfFirstFixedSurface(pl) != 255
-        PASS: scaleFactorOfFirstFixedSurface exists(True)
-        PASS: scaledValueOfFirstFixedSurface exists(True)
-        PASS: typeOfSecondFixedSurface(255) == 255
-        PASS: scaleFactorOfSecondFixedSurface is missing(True)
-        PASS: scaledValueOfSecondFixedSurface is missing(True)
-      PASS: Uerra Pressure Level
-        PASS: level(850) in [1000, 975, 950, 925, 900, 875, 850, 825, 800, 750, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50, 30, 20, 10]
-              invalid pressure level
-```
+![grib-check output](docs/example_output.png "Example output of grib-check command")
 
 ## Documentation
 
