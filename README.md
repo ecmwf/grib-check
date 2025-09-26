@@ -25,7 +25,7 @@ It provides a set of checks that can be applied to GRIB messages, ensuring that 
 Installing GribCheck is straightforward. You can clone the repository and install it using pip.
 
 ``` bash
-pip3 install grib-check
+pip install grib-check
 ```
 ## Usage
 
