@@ -1,5 +1,5 @@
 <h3 align="center">
-  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amaster"><img src="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml/badge.svg" alt="master"></a>
+  <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amain"><img src="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml/badge.svg" alt="main"></a>
 </h3>
 
 # GRIB Check
