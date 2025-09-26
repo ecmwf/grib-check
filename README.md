@@ -1,5 +1,3 @@
-# GRIB Check
-
 <p align="center">
   <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amaster">
     <img src="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml/badge.svg" alt="master">
