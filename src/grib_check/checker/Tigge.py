@@ -28,12 +28,12 @@ class Tigge(Wmo):
 
     def _basic_checks(self, message, p):
         report = Report("Tigge Basic Checks")
+        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
         # Only 00, 06 12 and 18 Cycle OK
         report.add(IsIn(message["hour"], [0, 6, 12, 18]))
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
         report.add(Le(message["endStep"], 30 * 24))
         report.add(IsMultipleOf(message["step"], 6))
-
         report.add(self._check_date(message, p))
 
         return super()._basic_checks(message, p).add(report)

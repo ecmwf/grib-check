@@ -511,7 +511,6 @@ class Wmo(CheckEngine):
         # Section 1
 
         report.add(Ge(message["gribMasterTablesVersionNumber"], 4))
-        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
         report.add(Eq(message["significanceOfReferenceTime"], 1))
 
         report.add(Eq(message["minute"], 0))

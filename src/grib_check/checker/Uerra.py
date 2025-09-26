@@ -38,6 +38,8 @@ class Uerra(Wmo):
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("Uerra Basic Checks")
+        if message.get("class", str) != 'rr' and message.get("class", str) != 'ci':
+          report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
         report.add(Le(message["hour"], 24))
         report.add(
             IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3)

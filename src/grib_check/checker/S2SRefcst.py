@@ -30,6 +30,8 @@ class S2SRefcst(Wmo):
 
         report.add(self._check_date(message, p))
 
+        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
+
         return super()._basic_checks(message, p).add(report)
 
     def _latlon_grid(self, message) -> Report:

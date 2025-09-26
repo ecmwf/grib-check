@@ -83,6 +83,11 @@ class GribCheck:
             if self.args.parameters is not None
             else f"{script_path}/checker/WpmipParameters.jsonnet"
         )
+        crra_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/CrraParameters.jsonnet"
+        )
         destine_params = (
             self.args.parameters
             if self.args.parameters is not None
@@ -117,7 +122,7 @@ class GribCheck:
             )
         elif self.args.convention == "crra":
             checker = Crra(
-                SimpleLookupTable(tigge_params, ignore_keys=["model"]),
+                SimpleLookupTable(crra_params, ignore_keys=["model"]),
                 valueflg=self.args.valueflg,
             )
         elif self.args.convention == "lam":

@@ -23,6 +23,8 @@ class S2S(Wmo):
         report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
         report.add(IsMultipleOf(message.get("step", int), 6))
 
+        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
+
         return super()._basic_checks(message, p).add(report)
 
     # not registered in the lookup table
