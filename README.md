@@ -43,7 +43,7 @@ pip install grib-check
 ```
 ## Usage
 
-To use GribCheck, you need to specify the convention you want to check.
+To use GribCheck, you need to specify the GRIB convention you want to check.
 The library currently supports the following conventions:
 
 - tigge : [The THORPEX Interactive Grand Global Ensemble (TIGGE)](https://confluence.ecmwf.int/display/TIGGE)
@@ -123,6 +123,7 @@ FAIL: data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
 
 - [Components](./docs/components.md)
 - [Parameters](./docs/params.md)
+- [Checks](./docs/checks.md)
 - [Adding new GRIB conventions](./docs/conventions.md)
 
 # License
