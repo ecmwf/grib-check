@@ -1,3 +1,5 @@
+# GRIB Check
+
 <p align="center">
   <a href="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml?query=branch%3Amaster">
     <img src="https://github.com/ecmwf/grib-check/actions/workflows/ci.yml/badge.svg" alt="master">
@@ -17,12 +19,10 @@
 <p align="center">
   <a href="#installation">Installation</a>
   •
-  <a href="#installation">Usage</a>
+  <a href="#usage">Usage</a>
   •
-  <a href="#installation">Documentation</a>
+  <a href="#documentation">Documentation</a>
 </p>
-
-# GRIB Check
 
 > [!IMPORTANT]
 > This software is **Emerging** and subject to ECMWF's guidelines on [Software Maturity](https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity).
