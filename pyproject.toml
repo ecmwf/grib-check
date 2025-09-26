@@ -3,7 +3,7 @@
 requires = [ "setuptools>=61", "wheel" ]
 
 [project]
-name = "grib_check"
+name = "grib-check"
 description = "Tools for checking GRIB files"
 readme = "README.md"
 license = { text = "Apache License Version 2.0" }
@@ -36,8 +36,8 @@ urls.Issues = "https://github.com/ecmwf/grib-check/issues"
 urls.Repository = "https://github.com/ecmwf/grib-check"
 
 [project.scripts]
-grib_check = "grib_check.GribCheck:main"
-tigge_name = "grib_check.TiggeName:main"
+grib-check = "grib_check.GribCheck:main"
+tigge-name = "grib_check.TiggeName:main"
 
 [tool.setuptools.packages.find]
 include = [ "grib_check", "grib_check.*" ]

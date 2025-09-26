@@ -25,7 +25,6 @@ It provides a set of checks that can be applied to GRIB messages, ensuring that 
 Installing GribCheck is straightforward. You can clone the repository and install it using pip.
 
 ``` bash
-git clone git@github.com:ecmwf/grib-check.git
 pip3 install grib-check
 ```
 ## Usage
@@ -49,7 +48,7 @@ You can specify the convention using the `-t` or `--convention` command-line arg
 For example, to check a GRIB file of type "tigge", you would run the following command:
 
 ``` bash
-grib_check -t tigge /path/to/file.grib2
+grib-check -t tigge /path/to/file.grib2
 ```
 
 The output provides the result of each check performed on the GRIB messages in the file. 
@@ -63,7 +62,7 @@ The following command demonstrates a check on a file of convention "s2s".
 For demonstration purposes, we'll change the convention to "uerra" to intentionally trigger check failures and showcase the output.
 
 ```
-$ grib_check -t uerra -c data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
+$ grib-check -t uerra -c data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
 FAIL: data/S2S_SET/S2.ENFH.AMMC.CF.PL.grib2
   FAIL: field 0
     NONE: Matched parameter: temperature_pl.ammc
