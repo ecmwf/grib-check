@@ -11,10 +11,10 @@
 from grib_check.Assert import IsIn, IsMultipleOf, Le
 from grib_check.Report import Report
 
-from .Wmo import Wmo
+from .GeneralChecks import GeneralChecks
 
 
-class DestinE(Wmo):
+class DestinE(GeneralChecks):
     def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
         self.register_checks({"destine_limits": self._destine_limits})

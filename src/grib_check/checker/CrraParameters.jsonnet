@@ -1,7 +1,7 @@
 local templates = import 'Parameter.libsonnet';
-local tigge_params = import 'TiggeParameters.jsonnet';
+local wmo_params = import 'WmoParameters.jsonnet';
  
-tigge_params +
+wmo_params +
 [
   templates.Wmo {
     name: 'snow_albedo_sfc.rr',
@@ -94,6 +94,25 @@ tigge_params +
     ],
     checks+: [
       'point_in_time',
+      'predefined_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'direct_solar_radiation_sfc.rr',
+    expected+: [
+      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+    ],
+    pairs+: [
+      { key: 'class', value: 'rr' },
+      { key: 'paramId', value: 47 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 4 },
+      { key: 'parameterNumber', value: 54 },
+      { key: 'typeOfStatisticalProcessing', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+    ],
+    checks+: [
+      'from_start',
       'predefined_level',
     ],
   },

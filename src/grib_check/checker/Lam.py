@@ -11,10 +11,10 @@
 from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Ne
 from grib_check.Report import Report
 
-from .Wmo import Wmo
+from .GeneralChecks import GeneralChecks
 
 
-class Lam(Wmo):
+class Lam(GeneralChecks):
     def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
 

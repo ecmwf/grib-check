@@ -18,15 +18,25 @@ class Crra(Uerra):
     def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
 
-    def _basic_checks(self, message, p) -> Report:
-        report = Report("Crra Basic Checks")
+    def _basic_checks_2(self, message, p) -> Report:
+    # this class must not inhereted anything
+        report = Report("CRRA Basic Checks 2")
         report.add(IsIn(message["productionStatusOfProcessedData"], [10, 11]))
+        return report
+
+    def _basic_checks(self, message, p) -> Report:
+        report = Report("CRRA Basic Checks")
         topd = message.get("typeOfProcessedData", int)
         report.add(IsIn(topd, [0, 1]))
-        if topd == 0:
-            report.add(Eq(message["step"], 0))
-        else:
-            report.add( IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
+
+        stream = message.get("stream", str)
+
+        if stream != "moda":
+            if topd == 0:
+                report.add(Eq(message["step"], 0))
+            else:
+                report.add( IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
+
         if message.get("paramId", int) != 260651:
           report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
 
@@ -63,6 +73,14 @@ class Crra(Uerra):
                 | IsMultipleOf(message["forecastTime"], 3)
             )
 
+        return report
+
+    def _from_start(self, message, p):
+        report = Report("CRRA From Start")
+        stream = message.get("stream", str)
+        if stream != "moda":
+            report.add(Eq(message["startStep"], 0))
+        report.add(self._statistical_process(message, p))
         return report
 
         # not registered in the lookup table

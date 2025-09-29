@@ -11,10 +11,10 @@
 from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt, Ne
 from grib_check.Report import Report
 
-from .Wmo import Wmo
+from .GeneralChecks import GeneralChecks
 
 
-class S2SRefcst(Wmo):
+class S2SRefcst(GeneralChecks):
     def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
 
