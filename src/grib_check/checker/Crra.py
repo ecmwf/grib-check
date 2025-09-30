@@ -37,7 +37,7 @@ class Crra(Uerra):
             else:
                 report.add( IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
 
-        if message.get("paramId", int) != 260651:
+        if message.get("paramId", int) not in [260651, 235072]:
           report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
 
         return super()._basic_checks(message, p).add(report)
@@ -130,25 +130,48 @@ class Crra(Uerra):
                 report = Report("CRRA Check Validity Datetime - monthly means")
                 report.add(Eq(message["productDefinitionTemplateNumber"], 8))
 
-                moda_lotr = [669, 693, 717, 741]
+                numberOfTimeRanges = message.get("numberOfTimeRanges", int).value()
+                moda_lotr1 = [669, 693, 717, 741]
+                moda_lotr2 = [672, 696, 720, 744]
+
                 if int(typeOfTimeIncrement[0]) != 1:
                     report.add( Fail( f"Invalid outer value of typeOfTimeIncrement({int(typeOfTimeIncrement[0])}) (Should be 1)"))
-                if int(lengthOfTimeRange[0]) not in moda_lotr:
-                    report.add( Fail( f"Invalid outer value of lengthOfTimeRange({int(lengthOfTimeRange[0])}) (Should be in {moda_lotr})"))
 
-                if month in [1,3,5,7,8,10,12]:
-                    day=31
-                elif month in [4,6,9,11]:
-                    day=30
-                elif month == 2:
-                    if year in [1992,1996,2000,2004,2008,2012,2016,2020,2024,2028,2032]:
-                        day=29
+                if numberOfTimeRanges in [1, 2]:
+
+                    if int(lengthOfTimeRange[0]) not in moda_lotr1:
+                        report.add( Fail( f"Invalid outer value of lengthOfTimeRange({int(lengthOfTimeRange[0])}) (Should be in {moda_lotr1})"))
+
+                    if month in [1,3,5,7,8,10,12]:
+                        day=31
+                    elif month in [4,6,9,11]:
+                        day=30
+                    elif month == 2:
+                        if year in [1992,1996,2000,2004,2008,2012,2016,2020,2024,2028,2032]:
+                            day=29
+                        else:
+                            day=28
+                    moda_validityDate = str(year) + str(month).zfill(2) + str(day).zfill(2)
+                    if str(saved_validityDate.value()) != moda_validityDate:
+                        report.add( Fail( f"Invalid {saved_validityDate} (Should be {moda_validityDate})"))
+
+                elif numberOfTimeRanges == 3:
+
+                    if int(lengthOfTimeRange[0]) not in moda_lotr2:
+                        report.add( Fail( f"Invalid outer value of lengthOfTimeRange({int(lengthOfTimeRange[0])}) (Should be in {moda_lotr2})"))
+                    if month == 11:
+                        month_next = 1
+                        year_next = year + 1
+                    elif month == 12:
+                        month_next = 2
+                        year_next = year + 1
                     else:
-                        day=28
-                moda_validityDate = str(year) + str(month).zfill(2) + str(day).zfill(2)
-                if str(saved_validityDate.value()) != moda_validityDate:
-                    # print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (cfg['filename'], cfg['field'], cfg['param'], validityDate, validityTime))
-                    report.add( Fail( f"Invalid {saved_validityDate} (Should be {moda_validityDate})"))
+                        month_next = month + 2
+                        year_next = year
+                    moda_validityDate = str(year_next) + str(month_next).zfill(2) + "01"
+                    if str(saved_validityDate.value()) != moda_validityDate:
+                        report.add( Fail( f"Invalid {saved_validityDate} (Should be {moda_validityDate})"))
+
             else:
 
                 # If we just set the stepRange (for non-instantaneous fields) to its
