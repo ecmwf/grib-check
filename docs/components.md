@@ -1,14 +1,13 @@
-# Development
+# Components
 
-## Running tests
-```bash
-  python -m pytest
-```
+This section describes the components used in GribCheck.
+
 ## Grib
 
-The Grib class is a wrapper around ecCodes.
+The Grib class represents all messages in a GRIB file.
+It can be used to iterate over all these messages in a Pythonic way.
 
-### Message
+## Message
 
 A message is a wrapper around the ecCodes handle, with the key difference that it provides automatic memory management.
 
@@ -24,7 +23,7 @@ print(f"message['stream'] = {message['stream']}")
 print(f"message.get('stream', int) = {message.get('stream', int)}")
 # message.get('stream', int) = 1035
 ```
-### KeyValue type
+## KeyValue type
 
 Values returned by a Message are stored in a KeyValue type.
 Each KeyValue contains the key name, the value (which can be a number or a string), and the corresponding data type.
@@ -64,27 +63,7 @@ print(f"{c} = {c.value()}")
 # a(5) + b(6) = 11
 ```
 
-### Check functions
-
-A check takes a message and parameters as arguments and returns a report.
-We can override checks from the base class simply by creating a new check with the same name.
-
-``` python
-    def check_overridden(self, message, p) -> Report:
-        report = Report("Simple Check")
-        return report
-```
-
-Sometimes, we want to extend tests defined in a base class.
-In such cases, we override the function from the base class but retain the results produced by the original function.
-One way to achieve this is by merging the reports and returning the combined result.
-
-``` python
-    def check_extended(self, message, p) -> Report:
-        report = Report("Extended check")
-        return super().check_extended(message, p).add(report)
-```
-### Report
+## Report
 
 A report serves as a container for various entities, such as assertions, informational messages, and nested reports.
 Each report has a status, which is determined by the statuses of the entities it contains.
@@ -96,7 +75,7 @@ Reports can also be nested, and the same rules for status propagation apply to n
         report.add(Ge(message['bitsPerValue'], 0))
 ```
 
-### Assertion
+## Assertion
 
 An assertion verifies whether values meet the expected conditions.
 For example, we can check whether `bitsPerValue` is a positive number.
