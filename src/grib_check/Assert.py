@@ -52,6 +52,9 @@ class Assert:
     def __and__(self, other):
         return And(self, other)
 
+    def __bool__(self):
+        return self.status()
+
     def _as_string(self, color=False) -> str:
         raise NotImplementedError
 
