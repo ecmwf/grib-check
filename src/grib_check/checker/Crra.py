@@ -10,6 +10,7 @@
 
 from grib_check.Assert import Eq, IsIn, IsMultipleOf, Fail
 from grib_check.Report import Report
+import datetime
 
 from .Uerra import Uerra
 
@@ -91,9 +92,10 @@ class Crra(Uerra):
         stepType = message.get("stepType", str)
         stream = message.get("stream", str)
 
-        month = message.get("month", int).value()
         year = message.get("year", int).value()
+        month = message.get("month", int).value()
         day = message.get("day", int).value()
+        saved_date = datetime.date(year, month, day)
 
         typeOfTimeIncrement = message.get_double_array("typeOfTimeIncrement")
         lengthOfTimeRange = message.get_double_array("lengthOfTimeRange")
@@ -131,29 +133,32 @@ class Crra(Uerra):
                 report.add(Eq(message["productDefinitionTemplateNumber"], 8))
 
                 numberOfTimeRanges = message.get("numberOfTimeRanges", int).value()
+                typeOfStatisticalProcessing = message.get("typeOfStatisticalProcessing", int).value()
                 moda_lotr1 = [669, 693, 717, 741]
                 moda_lotr2 = [672, 696, 720, 744]
+
+                last_date_in_month = datetime.date(year + int(month / 12), (month % 12) + 1, 1) - datetime.timedelta(days=1)
+                first_date_next_month = datetime.date(year + int(month / 12), (month % 12) + 1, 1)
+
 
                 if int(typeOfTimeIncrement[0]) != 1:
                     report.add( Fail( f"Invalid outer value of typeOfTimeIncrement({int(typeOfTimeIncrement[0])}) (Should be 1)"))
 
-                if numberOfTimeRanges in [1, 2]:
+                if numberOfTimeRanges == 1:
 
                     if int(lengthOfTimeRange[0]) not in moda_lotr1:
                         report.add( Fail( f"Invalid outer value of lengthOfTimeRange({int(lengthOfTimeRange[0])}) (Should be in {moda_lotr1})"))
 
-                    if month in [1,3,5,7,8,10,12]:
-                        day=31
-                    elif month in [4,6,9,11]:
-                        day=30
-                    elif month == 2:
-                        if year in [1992,1996,2000,2004,2008,2012,2016,2020,2024,2028,2032]:
-                            day=29
-                        else:
-                            day=28
-                    moda_validityDate = str(year) + str(month).zfill(2) + str(day).zfill(2)
+                    moda_validityDate = str(last_date_in_month).replace('-', '')
+
+#                   report.add(Eq(message["validityDate"], moda_validityDate)) #xxx
                     if str(saved_validityDate.value()) != moda_validityDate:
                         report.add( Fail( f"Invalid {saved_validityDate} (Should be {moda_validityDate})"))
+
+                elif numberOfTimeRanges == 2:
+
+                    if typeOfStatisticalProcessing in [1, 2, 3]:
+                        moda_validityDate = str(first_date_next_month).replace('-', '')
 
                 elif numberOfTimeRanges == 3:
 
