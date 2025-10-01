@@ -52,26 +52,17 @@ class Assert:
     def __and__(self, other):
         return And(self, other)
 
-    def __bool__(self):
-        return self.status()
+    def __bool__(self) -> bool:
+        return self._status
 
     def _as_string(self, color=False) -> str:
         raise NotImplementedError
-
-    def status(self) -> bool:
-        assert type(self._status) is bool or type(self._status) is np.bool_
-        return self._status
-
 
 class AssertTrue(Assert):
     def __init__(self, status, msg, comment=None):
         self._status = bool(status)
         self._comment = comment
         self.__msg = msg
-
-    def status(self) -> bool:
-        assert type(self._status) is bool
-        return self._status
 
     def _as_string(self, color=False) -> str:
         return f"{self.__msg}"
@@ -82,7 +73,7 @@ class And(Assert):
         self.__lsh = lhs
         self.__rsh = rhs
         self._comment = comment
-        self._status = self.__lsh.status() and self.__rsh.status()
+        self._status = bool(self.__lsh and self.__rsh)
 
     def _as_string(self, color=False) -> str:
         if color:
@@ -95,7 +86,7 @@ class Or(Assert):
     def __init__(self, lhs: Assert, rhs: Assert, comment=None):
         self.__lhs = lhs
         self.__rhs = rhs
-        self._status = self.__lhs.status() or self.__rhs.status()
+        self._status = bool(self.__lhs or self.__rhs)
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
