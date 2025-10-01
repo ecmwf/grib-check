@@ -59,10 +59,10 @@ class Report:
                 if self.__status is None:
                     if not failed_only:
                         output = "  " * level + f"{none_str}: {self.__name}\n"
-                elif self.__status is True:
+                elif self.__status is True or self.__status is np.bool_(True):
                     if not failed_only:
                         output = "  " * level + f"{pass_str}: {self.__name}\n"
-                elif self.__status is False:
+                elif self.__status is False or self.__status is np.bool_(False):
                     output = "  " * level + f"{fail_str}: {self.__name}\n"
                 else:
                     print(f"self.__status={self.__status}, type={type(self.__status)}")
