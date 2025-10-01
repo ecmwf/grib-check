@@ -3,7 +3,7 @@
 requires = [ "setuptools>=61", "wheel" ]
 
 [project]
-name = "grib_check"
+name = "grib-check"
 description = "Tools for checking GRIB files"
 readme = "README.md"
 license = { text = "Apache License Version 2.0" }
@@ -13,16 +13,16 @@ authors = [
 requires-python = ">=3.8"
 
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
+  "Development Status :: 3 - Alpha",
   "Intended Audience :: Enc Users/Desktop",
   "License :: OSI Approved :: Apache Software License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dynamic = [ "version" ]
@@ -36,8 +36,8 @@ urls.Issues = "https://github.com/ecmwf/grib-check/issues"
 urls.Repository = "https://github.com/ecmwf/grib-check"
 
 [project.scripts]
-grib_check = "grib_check.GribCheck:main"
-tigge_name = "grib_check.TiggeName:main"
+grib-check = "grib_check.GribCheck:main"
+tigge-name = "grib_check.TiggeName:main"
 
 [tool.setuptools.packages.find]
 include = [ "grib_check", "grib_check.*" ]
@@ -45,7 +45,7 @@ where = [ "src/", "./" ]
 
 [tool.setuptools.package-data]
 "grib_check.checker" = ["*"]
-recipe = ["*.jsonnet"]
+recipe = ["*.jsonnet", "*.libsonnet"]
 
 [tool.setuptools_scm]
 version_file = "src/grib_check/_version.py"

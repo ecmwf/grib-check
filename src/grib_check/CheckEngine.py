@@ -33,7 +33,10 @@ class CheckEngine:
             data = self.__parameter
             report = Report(f"{data['name']}")
             for check_func in data["checks"]:
-                report.add(self.__check_map[check_func](self.__message, data))
+                try:
+                    report.add(self.__check_map[check_func](self.__message, data))
+                except KeyError:
+                    report.add(Fail(f'Check function "{check_func}" not found'))
             return report
 
     def __init__(self, lookup_table: LookupTable):
@@ -64,7 +67,6 @@ class CheckEngine:
         report = Report()
         kv, store_report = self._test_store.get_element(message)
         if kv is not None:
-            kv["checks"] += ["basic_checks"]
             test = self._create_test(message, kv)
             report.add(store_report)
             report.add(test.run())

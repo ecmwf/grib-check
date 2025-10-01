@@ -170,11 +170,9 @@ class Wmo(CheckEngine):
                         and max_value != missing
                     ):
                         if min_value < mi1 or min_value > mi2:
-                            min1 = min_value if min_value < mi1 else mi1
-                            min2 = min_value if min_value > mi2 else mi2
                             report.add(
                                 Fail(
-                                    f"Minimum value {min_value} is not in range [{mi1}, {mi2}] => [{min1}, {min2}]"
+                                    f"Minimum value {min_value} is not in range [{mi1}, {mi2}]"
                                 )
                             )
                         else:
@@ -185,11 +183,9 @@ class Wmo(CheckEngine):
                             )
 
                         if max_value < ma1 or max_value > ma2:
-                            max1 = max_value if max_value < ma1 else ma1
-                            max2 = max_value if max_value > ma2 else ma2
                             report.add(
                                 Fail(
-                                    f"Maximum value {max_value} is not in range [{ma1}, {ma2}] => [{max1}, {max2}]"
+                                    f"Maximum value {max_value} is not in range [{ma1}, {ma2}]]"
                                 )
                             )
                         else:
