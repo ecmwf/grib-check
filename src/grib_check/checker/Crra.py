@@ -150,7 +150,8 @@ class Crra(Uerra):
                 # FIX(maee):
                 # if int(typeOfTimeIncrement[0]) != 1:
                 #     report.add( Fail( f"Invalid outer value of typeOfTimeIncrement({int(typeOfTimeIncrement[0])}) (Should be 1)"))
-                [report.add(Eq(typeOfTimeIncrement, 1, f'idx={idx}')) for idx, typeOfTimeIncrement in enumerate(typeOfTimeIncrements)]
+#               [report.add(Eq(typeOfTimeIncrement, 1, f'idx=0')) for idx, typeOfTimeIncrement in enumerate(typeOfTimeIncrements)]
+                [report.add(Eq(typeOfTimeIncrements[0], 1, f'idx=0'))]
 
                 if Eq(numberOfTimeRanges, 1):
                     # FIX(maee):
@@ -158,7 +159,7 @@ class Crra(Uerra):
                     #     report.add( Fail( f"Invalid outer value of lengthOfTimeRange({int(lengthOfTimeRange[0])}) (Should be in {moda_lotr1})"))
                     [report.add(IsIn(lengthOfTimeRange, moda_lotr1)) for lengthOfTimeRange in lengthOfTimeRanges]
 
-                    moda_validityDate = str(last_date_in_month).replace('-', '')
+                    moda_validityDate = int(str(last_date_in_month).replace('-', ''))
 
                     # Fix(maee):
 #                   report.add(Eq(message["validityDate"], moda_validityDate)) #xxx
