@@ -26,11 +26,18 @@ class Wpmip(Wmo):
             }
         )
 
-    def _basic_checks(self, message, p):
-        report = Report("Wpmip Basic Checks")
+    def _basic_checks_2(self, message, p):
+    # this must not inherit anything = WPMIP datasets specific setup only
+        report = Report("WPMIP Basic Checks 2")
 
         # WPMIP prod/test data
         report.add(IsIn(message["productionStatusOfProcessedData"], [16, 17]))
+
+        # Analysis, Forecast
+#       report.add(IsIn(message["typeOfProcessedData"], [0, 1])) #xxx not working as typeOfProcessedData is str!
+        topd = message.get("typeOfProcessedData", int)
+        if topd not in [0, 1]:  # Analysis, Forecast, Analysis and forecast products
+            report.add(Fail(f"{topd} not in [0, 1]"))
 
         # WPMIP centre/subCentre DGOV-577
         report.add(Eq(message["centre"], "323"))
@@ -47,12 +54,11 @@ class Wpmip(Wmo):
         #       # Only 00, 06 12 and 18 Cycle OK
         #       report.add(IsIn(message["hour"], [0, 6, 12, 18]))
 
-        report.add(Le(message["endStep"], 10 * 24))
+        report.add(Le(message["endStep"], 10 * 36))
         report.add(IsMultipleOf(message["step"], 6))
         report.add(self._check_date(message, p))
 
-        return super()._basic_checks(message, p).add(report)
-        # return report
+        return report
 
     def _pressure_level(self, message, p):
         report = Report("WPMIP Pressure level")
@@ -80,15 +86,7 @@ class Wpmip(Wmo):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
-        report = Report("Wpmip Statistical Process")
-
-        topd = message.get("typeOfProcessedData", int)
-
-        if topd in [0, 1]:  # Analysis, Forecast, Analysis and forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 8))
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-            return report
+        report = Report("WPMIP Statistical Process")
 
         if message.get("indicatorOfUnitOfTimeRange") == 11:  # six hours
             # Six hourly is OK
@@ -101,22 +99,6 @@ class Wpmip(Wmo):
         report.add(IsMultipleOf(message["endStep"], 6))
 
         return super()._statistical_process(message, p).add(report)
-
-    def _from_start(self, message, p) -> Report:
-        report = Report("Wpmip From Start")
-
-        return super()._from_start(message, p).add(report)
-
-    def _point_in_time(self, message, p) -> Report:
-        report = Report("Wpmip Point in Time")
-
-        topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]:  # Analysis, Forecast
-            report.add(Eq(message["productDefinitionTemplateNumber"], 0))
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-
-        return super()._point_in_time(message, p).add(report)
 
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")

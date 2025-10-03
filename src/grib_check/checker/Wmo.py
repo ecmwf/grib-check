@@ -101,14 +101,9 @@ class Wmo(CheckEngine):
 
         topd = message.get("typeOfProcessedData", int)
 
-        if topd.value() in [0, 1]:  # Analysis, Forecast
-            pass
-        elif topd == 2:  # Analysis and forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}")
-            )
-        elif topd in [3, 4]:  # Control forecast products
-            pass
+        if topd.value() in [0, 1, 2, 3, 4]:  
+        # Analysis, Forecast, Analysis and forecast products, # Control forecast products
+            report.add( Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
@@ -464,11 +459,12 @@ class Wmo(CheckEngine):
 
         return report
 
-    def _basic_checks_2(self, message, p):
-        report = Report("WMO Basic Checks 2")
-        # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
-        report.add(IsIn(message["typeOfProcessedData"], [2, 3, 4]))
-        return report
+#   def _basic_checks_2(self, message, p):
+#       pass
+#       report = Report("WMO Basic Checks 2")
+#       # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
+#       report.add(IsIn(message["typeOfProcessedData"], [2, 3, 4]))
+#       return report
 
     def _basic_checks(self, message, p):
         report = Report("WMO Basic checks")
@@ -582,17 +578,24 @@ class Wmo(CheckEngine):
         report = Report("WMO From STart")
         report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
+        if self.valueflg:
+        # should be merged into check_range def(?) xxx
+            end_step = message["endStep"]
+            min_value, max_value = message.minmax()
+            if end_step == 0:
+                report.add(
+                    AssertTrue(
+                        min_value == 0 and max_value() == 0,
+                        "min_value == 0 and max_value == 0",
+                   )
+                )
         return report
 
     def _point_in_time(self, message, p):
         report = Report("WMO Point in time")
         topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]:  # Analysis, Forecast
-            pass
-        elif topd == 2:  # Analysis and forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 0, f"topd={topd}")
-            )
+        if topd in [0, 1, 2]:  # Analysis, Forecast, Analysis and forecast products
+            report.add( Eq(message["productDefinitionTemplateNumber"], 0, f"topd={topd}"))
         elif topd == 3:  # Control forecast products
             report.add(Eq(message["perturbationNumber"], 0, f"topd={topd}"))
             report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
