@@ -92,6 +92,7 @@ class Crra(Uerra):
 
         stepType = message.get("stepType", str)
         stream = message.get("stream", str)
+        topd = message.get("typeOfProcessedData", int)
 
         year = message["year"]
         month = message["month"]
@@ -143,7 +144,18 @@ class Crra(Uerra):
                 moda_lotr1 = [669, 693, 717, 741]
                 moda_lotr2 = [672, 696, 720, 744]
 
+                if month == 11:
+                    month2 = 1
+                    year2 = year + 1
+                elif month == 12:
+                    month2 = 2
+                    year2 = year.value() + 1
+                else:
+                    month2 = month.value()
+                    year2 = year.value()
+
                 last_date_in_month = datetime.date(year.value() + int(month.value() / 12), (month.value() % 12) + 1, 1) - datetime.timedelta(days=1)
+                last_date_in_month2 = datetime.date(year2, month2, 1) - datetime.timedelta(days=1)
                 first_date_next_month = datetime.date(year.value() + int(month.value() / 12), (month.value() % 12) + 1, 1)
 
 
@@ -159,7 +171,10 @@ class Crra(Uerra):
                     #     report.add( Fail( f"Invalid outer value of lengthOfTimeRange({int(lengthOfTimeRange[0])}) (Should be in {moda_lotr1})"))
                     [report.add(IsIn(lengthOfTimeRange, moda_lotr1)) for lengthOfTimeRange in lengthOfTimeRanges]
 
-                    moda_validityDate = int(str(last_date_in_month).replace('-', ''))
+                    if topd == 0:
+                        moda_validityDate = int(str(last_date_in_month).replace('-', ''))
+                    elif topd == 1:
+                        moda_validityDate = int(str(last_date_in_month2).replace('-', ''))
 
                     # Fix(maee):
 #                   report.add(Eq(message["validityDate"], moda_validityDate)) #xxx
