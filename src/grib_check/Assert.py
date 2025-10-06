@@ -205,7 +205,7 @@ class Ge(Assert):
         self.__rhs = makeKV(rhs)
         try:
             self._status = self.__lsh >= self.__rhs
-        except Exception as e:
+        except TypeError:
             self._status = False
         self._comment = comment
 
@@ -220,7 +220,10 @@ class Le(Assert):
     def __init__(self, lsh, rhs, comment=None):
         self.__lsh = makeKV(lsh)
         self.__rhs = makeKV(rhs)
-        self._status = self.__lsh <= self.__rhs
+        try:
+            self._status = self.__lsh <= self.__rhs
+        except TypeError:
+            self._status = False
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
