@@ -63,12 +63,8 @@ class Wpmip(Wmo):
     def _pressure_level(self, message, p):
         report = Report("WPMIP Pressure level")
         levels = [
-            1,
             10,
-            20,
-            30,
             50,
-            70,
             100,
             150,
             200,
