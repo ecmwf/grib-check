@@ -31,6 +31,7 @@ from .Grib import Grib
 from .LookupTable import SimpleLookupTable
 from .Message import Message
 from .Report import Report
+from .ValueFormat import formatter
 
 signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on Ctrl+C
 
@@ -160,12 +161,8 @@ def main():
     parser = argparse.ArgumentParser()
     # parser.add_argument("-w", "--warnflg", help="warnings are treated as errors", action="store_true")
     # parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
-    parser.add_argument(
-        "-a", "--valueflg", help="check value ranges", action="store_true"
-    )
-    parser.add_argument(
-        "path", nargs="+", help="path to a GRIB file or directory", type=str
-    )
+    parser.add_argument("-a", "--valueflg", help="check value ranges", action="store_true")
+    parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
     parser.add_argument(
         "-t",
         "--convention",
@@ -183,29 +180,14 @@ def main():
         ],
     )
     parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
-    parser.add_argument(
-        "-l", "--report_verbosity", help="report depth", type=int, default=10
-    )
+    parser.add_argument("-l", "--report_verbosity", help="report depth", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
-    parser.add_argument(
-        "-p", "--parameters", help="path to parameters file", default=None
-    )
-    parser.add_argument(
-        "-c", "--color", help="use color in output", action="store_true"
-    )
-    parser.add_argument(
-        "-j", "--num_threads", help="number of threads", type=int, default=1
-    )
-    parser.add_argument(
-        "-b", "--failed_only", help="show only failed checks", action="store_true"
-    )
-    parser.add_argument(
-        "-f",
-        "--format",
-        help="output format",
-        choices=["short", "tree"],
-        default="tree",
-    )
+    parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
+    parser.add_argument("-c", "--color", help="use color in output", action="store_true")
+    parser.add_argument("-j", "--num_threads", help="number of threads", type=int, default=1)
+    parser.add_argument("-b", "--failed_only", help="show only failed checks", action="store_true")
+    parser.add_argument("-x", "--show_type", help="show value type", action="store_true")
+    parser.add_argument("-f", "--format", help="output format", choices=["short", "tree"], default="tree")
     args = parser.parse_args()
 
     if args.debug:
@@ -219,6 +201,8 @@ def main():
 
     logger = logging.getLogger(__name__)
     logger.info("Started")
+    if args.show_type:
+        formatter.set_format("{}:{}", show_type=True)
 
     grib_check = GribCheck(args)
     return grib_check.run()

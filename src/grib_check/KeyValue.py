@@ -8,8 +8,11 @@
 # nor does it submit to any jurisdiction.
 #
 
+from __future__ import annotations
+
 import logging
 from enum import Enum
+from .ValueFormat import formatter
 
 
 class OpType(Enum):
@@ -18,13 +21,21 @@ class OpType(Enum):
     NONE = 2
 
 
+def makeKV(value):
+    if type(value) is KeyValue:
+        return value
+    else:
+        return KeyValue(None, value)
+
+
 class KeyValue:
-    def __init__(self, key, value, level=0, last_op_type=OpType.NONE):
+    def __init__(self, key, value, level=0, last_op_type=OpType.NONE, key_suffix=None):
         self.logger = logging.getLogger(__class__.__name__)
         self.__key = key
         self.__value = value
         self.__level = level
         self.__last_op_type = last_op_type
+        self.__key_suffix = key_suffix  # e.g. "[0]" in key[0](value)
 
     def key(self):
         return self.__key
@@ -36,10 +47,14 @@ class KeyValue:
         return type(self.__value)
 
     def __str__(self):
-        if self.__level == 0:
-            return f"{self.__key}({self.__value})"
+        if self.__key is None:
+            return formatter.format(self.__value)
         else:
-            return f"{self.__key}"
+            key_str = f'{self.__key}{self.__key_suffix if self.__key_suffix != None else ""}'
+            if self.__level == 0:
+                return f"{key_str}({formatter.format(self.__value)})"
+            else:
+                return f"{key_str}"
 
     def __repr__(self):
         if self.__level == 0:
@@ -47,46 +62,34 @@ class KeyValue:
         else:
             return f"{self.__key}"
 
-    def __eq__(self, other):
-        if type(other) is KeyValue:
-            # return self.__value == other.__value and self.__key == other.__key and type(self.__value) == type(other.__value)
-            return self.__value == other.__value
-        else:
-            return self.__value == other
+    def __eq__(self, other: KeyValue) -> bool:
+        otherKV = makeKV(other)
+        return bool(self.__value == otherKV.__value)
 
-    def __ne__(self, other):
-        if type(other) is KeyValue:
-            return self.__value != other.__value
-        else:
-            return self.__value != other
+    def __ne__(self, other: KeyValue) -> bool:
+        otherKV = makeKV(other)
+        return bool(self.__value != otherKV.__value)
 
-    def __lt__(self, other):
-        if type(other) is KeyValue:
-            return self.__value < other.__value
-        else:
-            return self.__value < other
+    def __lt__(self, other: KeyValue) -> bool:
+        otherKV = makeKV(other)
+        return self.__value < otherKV.__value
 
-    def __le__(self, other):
-        if type(other) is KeyValue:
-            return self.__value <= other.__value
-        else:
-            return self.__value <= other
+    def __le__(self, other: KeyValue) -> bool:
+        otherKV = makeKV(other)
+        return self.__value <= otherKV.__value
 
-    def __gt__(self, other):
-        if type(other) is KeyValue:
-            return self.__value > other.__value
-        else:
-            return self.__value > other
+    def __gt__(self, other: KeyValue) -> bool:
+        otherKV = makeKV(other)
+        return self.__value > otherKV.__value
 
-    def __ge__(self, other):
-        if type(other) is KeyValue:
-            return self.__value >= other.__value
-        else:
-            return self.__value >= other
+    def __ge__(self, other: KeyValue) -> bool:
+        otherKV = makeKV(other)
+        return self.__value >= otherKV.__value
 
-    def __dash_op__(self, lhs, rhs, op, op_sign, op_type):
-        lhs_last_op_type = lhs.__last_op_type if type(lhs) is KeyValue else OpType.NONE
-        rhs_last_op_type = rhs.__last_op_type if type(rhs) is KeyValue else OpType.NONE
+    def __dash_op__(self, lhs: KeyValue, rhs: KeyValue, op, op_sign, op_type) -> KeyValue:
+        assert type(lhs) is KeyValue and type(rhs) is KeyValue, f"lhs and rhs must be KeyValue, got {type(lhs)} and {type(rhs)}"
+        lhs_last_op_type = lhs.__last_op_type
+        rhs_last_op_type = rhs.__last_op_type
 
         lhss = (
             f"({lhs})"
@@ -110,50 +113,42 @@ class KeyValue:
         if type(rhs) is KeyValue and rhs.__value is None:
             return KeyValue(k, None, self.__level + 1)
 
-        v1 = lhs.__value if type(lhs) is KeyValue else lhs
-        v2 = rhs.__value if type(rhs) is KeyValue else rhs
+        v1 = lhs.__value
+        v2 = rhs.__value
 
         return KeyValue(k, op(v1, v2), self.__level + 1, op_type)
 
-    def __add__(self, other):
-        return self.__dash_op__(self, other, lambda x, y: x + y, "+", OpType.DASH)
+    def __add__(self, other: KeyValue) -> KeyValue:
+        return self.__dash_op__(self, makeKV(other), lambda x, y: x + y, "+", OpType.DASH)
 
-    def __radd__(self, other):
-        return self.__dash_op__(other, self, lambda x, y: x + y, "+", OpType.DASH)
+    def __radd__(self, other: KeyValue) -> KeyValue:
+        return self.__dash_op__(makeKV(other), self, lambda x, y: x + y, "+", OpType.DASH)
 
-    def __sub__(self, other):
-        return self.__dash_op__(self, other, lambda x, y: x - y, "-", OpType.DASH)
+    def __sub__(self, other: KeyValue) -> KeyValue:
+        return self.__dash_op__(self, makeKV(other), lambda x, y: x - y, "-", OpType.DASH)
 
-    def __rsub__(self, other):
-        return self.__dash_op__(other, self, lambda x, y: x - y, "-", OpType.DASH)
+    def __rsub__(self, other: KeyValue) -> KeyValue:
+        return self.__dash_op__(makeKV(other), self, lambda x, y: x - y, "-", OpType.DASH)
 
-    def __mul__(self, other):
-        return self.__dash_op__(self, other, lambda x, y: x * y, "*", OpType.DOT)
+    def __mul__(self, other: KeyValue) -> KeyValue:
+        return self.__dash_op__(self, makeKV(other), lambda x, y: x * y, "*", OpType.DOT)
 
-    def __rmul__(self, other):
-        return self.__dash_op__(other, self, lambda x, y: x * y, "*", OpType.DOT)
+    def __rmul__(self, other: KeyValue) -> KeyValue:
+        return self.__dash_op__(makeKV(other), self, lambda x, y: x * y, "*", OpType.DOT)
 
-    def __truediv__(self, other):
-        return self.__dash_op__(self, other, lambda x, y: x / y, "/", OpType.DOT)
+    def __truediv__(self, other: KeyValue) -> KeyValue:
+        return self.__dash_op__(self, makeKV(other), lambda x, y: x / y, "/", OpType.DOT)
 
-    def __rtruediv__(self, other):
-        return self.__dash_op__(other, self, lambda x, y: x / y, "/", OpType.DOT)
+    def __rtruediv__(self, other: KeyValue) -> KeyValue:
+        return self.__dash_op__(makeKV(other), self, lambda x, y: x / y, "/", OpType.DOT)
 
-    def __mod__(self, other):
+    def __mod__(self, other) -> KeyValue:
         k = f"{self} % {other}" if self.__level == 0 else f"({self}) % {other}"
         if not (
             isinstance(self.__value, (int, float)) and isinstance(other, (int, float))
         ):
             return KeyValue(k, None, self.__level + 1)
-        v = (
-            None
-            if self.__value is None
-            else (
-                self.__value % other.__value
-                if type(other) is KeyValue
-                else self.__value % other
-            )
-        )
+        v = None if self.__value is None else self.__value % other
         return KeyValue(k, v, self.__level + 1)
 
     def __neg__(self):
@@ -162,12 +157,9 @@ class KeyValue:
         return KeyValue(k, v, self.__level + 1)
 
     def __rcontains__(self, other):
-        k = f"{self} in {other}"
-        v = (
-            self.__value in other.__value
-            if type(other) is KeyValue
-            else self.__value in other
-        )
+        otherKV = makeKV(other)
+        k = f"{self} in {otherKV.__value}"
+        v = self.__value in otherKV.__value
         return KeyValue(k, v, self.__level + 1)
 
     def __int__(self):
