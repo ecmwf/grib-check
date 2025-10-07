@@ -15,8 +15,8 @@ from .Wmo import Wmo
 
 
 class Uerra(Wmo):
-    def __init__(self, lookup_table, valueflg=False, check_validity=True):
-        super().__init__(lookup_table, valueflg=valueflg, check_validity=check_validity)
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
+        super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
 
     def _basic_checks_2(self, message, p) -> Report:
         report = Report("Uerra Basic Checks")

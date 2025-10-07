@@ -15,8 +15,8 @@ from .Wmo import Wmo
 
 
 class S2SRefcst(Wmo):
-    def __init__(self, lookup_table, valueflg=False):
-        super().__init__(lookup_table, valueflg=valueflg)
+    def __init__(self, lookup_table, check_limits=False):
+        super().__init__(lookup_table, check_limits=check_limits)
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("S2SRefcst Basic Checks")

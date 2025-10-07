@@ -17,8 +17,8 @@ from .Wmo import Wmo
 
 
 class Tigge(Wmo):
-    def __init__(self, lookup_table, valueflg=False, check_validity=True):
-        super().__init__(lookup_table, valueflg=valueflg, check_validity=check_validity)
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
+        super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
         self.register_checks(
             {

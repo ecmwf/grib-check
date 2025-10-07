@@ -32,7 +32,7 @@ from grib_check.Report import Report
 
 
 class Wmo(CheckEngine):
-    def __init__(self, lookup_table, valueflg=False, check_validity=True):
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table)
         self.logger = logging.getLogger(__class__.__name__)
 
@@ -62,7 +62,7 @@ class Wmo(CheckEngine):
         )
         self.last_n = 0
         self.values = None
-        self.valueflg = valueflg
+        self.check_limits = check_limits
         self.check_validity = check_validity
 
     # def register_check(self, name, func):
@@ -153,7 +153,7 @@ class Wmo(CheckEngine):
     def _check_range(self, message, p):
         report = Report("WMO Range check")
 
-        if self.valueflg:
+        if self.check_limits:
             # See ECC-437
             missing = message.get("missingValue", float)
             min_value, max_value = message.minmax()
@@ -196,7 +196,7 @@ class Wmo(CheckEngine):
                                 )
                             )
         else:
-            report.add("Check disabled. Use the option -a or --valueflg to enable it.")
+            report.add("Check disabled. Use the option -a or --check_limits to enable it.")
         return report
 
     # not registered in the lookup table
@@ -476,11 +476,11 @@ class Wmo(CheckEngine):
         report.add(Eq(message["editionNumber"], 2))
         report.add(Missing(message, "reserved") | Eq(message["reserved"], 0))
         if self.check_validity:
-            report.add(Eq(message["isMessageValid"], 1))
+            report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
         report.add(self._check_range(message, p))
 
-        if self.valueflg:
+        if self.check_limits:
             values_report = Report("Check values")
             count = 0
             try:

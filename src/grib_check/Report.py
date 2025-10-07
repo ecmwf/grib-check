@@ -160,15 +160,15 @@ class Report:
         if self.__name is None:
             self.__name = name
 
-    def as_string(self, max_level=None, color=False, failed_only=False, format=None):
-        if format == "short":
+    def as_string(self, max_level=None, color=False, failed_only=False, output_type=None):
+        if output_type == "short":
             return self.__as_string_short(self, color, failed_only, "")
-        elif format == "tree":
+        elif output_type == "tree":
             return self.__as_string_tree(
                 self.__entries, 0, max_level, color, failed_only
             )
         else:
-            raise NotImplementedError(f"Unknown format: {format}")
+            raise NotImplementedError(f"Unknown format: {output_type}")
 
     def status(self):
         return self.__status

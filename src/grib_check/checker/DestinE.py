@@ -15,8 +15,8 @@ from .Wmo import Wmo
 
 
 class DestinE(Wmo):
-    def __init__(self, lookup_table, valueflg=False, check_validity=True):
-        super().__init__(lookup_table, valueflg=valueflg, check_validity=check_validity)
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
+        super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.register_checks({"destine_limits": self._destine_limits})
 
     # Reuse / override checks

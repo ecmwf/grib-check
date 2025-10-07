@@ -46,10 +46,10 @@ def worker(filename, message_buffer, pos, checker, args):
 
     print(
         report.as_string(
-            max_level=args.report_verbosity,
+            max_level=args.report_depth,
             color=args.color,
             failed_only=args.failed_only,
-            format=args.format,
+            output_type=args.output_type,
         ),
         end="",
         flush=True,
@@ -95,43 +95,34 @@ class GribCheck:
         )
 
         if self.args.convention == "wmo":
-            checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check)
+            checker = Wmo(SimpleLookupTable(wmo_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "tigge":
-            checker = Tigge(
-                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check
-            )
+            checker = Tigge(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "wpmip":
-            checker = Wpmip(
-                SimpleLookupTable(wpmip_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check
-            )
+            checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "s2s":
-            checker = S2S(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check)
+            checker = S2S(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "s2s_refcst":
-            checker = S2SRefcst(
-                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check
-            )
+            checker = S2SRefcst(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "uerra":
-            checker = Uerra(
-                SimpleLookupTable(tigge_params, ignore_keys=["model"]),
-                valueflg=self.args.valueflg, check_validity=self.args.validity_check,
+            checker = Uerra(SimpleLookupTable(tigge_params, ignore_keys=["model"]),
+                check_limits=self.args.check_limits, check_validity=self.args.validity_check,
             )
         elif self.args.convention == "crra":
             checker = Crra(
                 SimpleLookupTable(tigge_params, ignore_keys=["model"]),
-                valueflg=self.args.valueflg, check_validity=self.args.validity_check,
+                check_limits=self.args.check_limits, check_validity=self.args.validity_check,
             )
         elif self.args.convention == "lam":
-            checker = Lam(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check)
+            checker = Lam(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "destine":
-            checker = DestinE(
-                SimpleLookupTable(destine_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check
-            )
+            checker = DestinE(SimpleLookupTable(destine_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         else:
             raise ValueError("Unknown data type")
 
-        if self.args.num_threads > 1:
+        if self.args.num_jobs > 1:
             results = []
-            with multiprocessing.Pool(processes=self.args.num_threads) as pool:
+            with multiprocessing.Pool(processes=self.args.num_jobs) as pool:
                 for filename in FileScanner(self.args.path):
                     grib = Grib(filename)
                     for pos, message in enumerate(grib):
@@ -158,14 +149,8 @@ class GribCheck:
 
 def main():
     parser = argparse.ArgumentParser()
-    # parser.add_argument("-w", "--warnflg", help="warnings are treated as errors", action="store_true")
-    # parser.add_argument("-z", "--zeroflg", help="return 0 to calling shell", action="store_true")
-    parser.add_argument(
-        "-a", "--valueflg", help="check value ranges", action="store_true"
-    )
-    parser.add_argument(
-        "path", nargs="+", help="path to a GRIB file or directory", type=str
-    )
+    parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
+    parser.add_argument("-L", "--check_limits", help="check value ranges (min/max limits)", action="store_true")
     parser.add_argument(
         "-t",
         "--convention",
@@ -182,31 +167,14 @@ def main():
             "wpmip",
         ],
     )
-    parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
-    parser.add_argument(
-        "-l", "--report_verbosity", help="report depth", type=int, default=10
-    )
+    # parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
+    parser.add_argument("-l", "--report_depth", help="report depth", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
-    parser.add_argument(
-        "-p", "--parameters", help="path to parameters file", default=None
-    )
-    parser.add_argument(
-        "-c", "--color", help="use color in output", action="store_true"
-    )
-    parser.add_argument(
-        "-j", "--num_threads", help="number of threads", type=int, default=1
-    )
-    parser.add_argument(
-        "-b", "--failed_only", help="show only failed checks", action="store_true"
-    )
-    parser.add_argument(
-        "-f",
-        "--format",
-        help="output format",
-        choices=["short", "tree"],
-        default="tree",
-    )
-    # Add an argument for validity check without short option
+    parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
+    parser.add_argument("-c", "--color", help="use color in output", action="store_true")
+    parser.add_argument("-j", "--num_jobs", help="number of jobs", type=int, default=1)
+    parser.add_argument("-f", "--failed_only", help="show only failed checks", action="store_true")
+    parser.add_argument("-o", "--output_type", help="output format", choices=["short", "tree"], default="tree")
     parser.add_argument(
         "--validity_check",
         help="perform validity check (experimental)",
