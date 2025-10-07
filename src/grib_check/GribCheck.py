@@ -149,12 +149,12 @@ class GribCheck:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", nargs="+", help="path to a GRIB file(s) or directory(s)", type=str)
+    parser.add_argument("path", nargs="+", help="path(s) to a GRIB file(s) or directory(s)", type=str)
     parser.add_argument("-L", "--check_limits", help="check value ranges (min/max limits)", action="store_true")
     parser.add_argument(
         "-C",
         "--convention",
-        help="data convention; wmo, destine and wpmip are experimental",
+        help="data convention. The following convetions are experimental: wmo, destine and wpmip.",
         choices=[
             "tigge",
             "s2s",
