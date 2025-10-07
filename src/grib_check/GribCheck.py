@@ -149,10 +149,10 @@ class GribCheck:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("path", nargs="+", help="path to a GRIB file or directory", type=str)
+    parser.add_argument("path", nargs="+", help="path to a GRIB file(s) or directory(s)", type=str)
     parser.add_argument("-L", "--check_limits", help="check value ranges (min/max limits)", action="store_true")
     parser.add_argument(
-        "-t",
+        "-C",
         "--convention",
         help="data convention; wmo, destine and wpmip are experimental",
         choices=[
@@ -167,7 +167,6 @@ def main():
             "wpmip",
         ],
     )
-    # parser.add_argument("-v", "--verbosity", help="increase log verbosity", default=0)
     parser.add_argument("-l", "--report_depth", help="report depth", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
     parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
@@ -175,6 +174,7 @@ def main():
     parser.add_argument("-j", "--num_jobs", help="number of jobs", type=int, default=1)
     parser.add_argument("-f", "--failed_only", help="show only failed checks", action="store_true")
     parser.add_argument("-o", "--output_type", help="output format", choices=["short", "tree"], default="tree")
+    parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.0")
     parser.add_argument(
         "--validity_check",
         help="perform validity check (experimental)",
