@@ -15,8 +15,8 @@ from .Uerra import Uerra
 
 
 class Crra(Uerra):
-    def __init__(self, lookup_table, valueflg=False):
-        super().__init__(lookup_table, valueflg=valueflg)
+    def __init__(self, lookup_table, valueflg=False, check_validity=True):
+        super().__init__(lookup_table, valueflg=valueflg, check_validity=check_validity)
 
     def basic_checks_2(self, message, p) -> Report:
         report = Report("Crra Basic Checks")

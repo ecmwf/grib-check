@@ -95,36 +95,36 @@ class GribCheck:
         )
 
         if self.args.convention == "wmo":
-            checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
+            checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check)
         elif self.args.convention == "tigge":
             checker = Tigge(
-                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg
+                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check
             )
         elif self.args.convention == "wpmip":
             checker = Wpmip(
-                SimpleLookupTable(wpmip_params), valueflg=self.args.valueflg
+                SimpleLookupTable(wpmip_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check
             )
         elif self.args.convention == "s2s":
-            checker = S2S(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
+            checker = S2S(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check)
         elif self.args.convention == "s2s_refcst":
             checker = S2SRefcst(
-                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg
+                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check
             )
         elif self.args.convention == "uerra":
             checker = Uerra(
                 SimpleLookupTable(tigge_params, ignore_keys=["model"]),
-                valueflg=self.args.valueflg,
+                valueflg=self.args.valueflg, check_validity=self.args.validity_check,
             )
         elif self.args.convention == "crra":
             checker = Crra(
                 SimpleLookupTable(tigge_params, ignore_keys=["model"]),
-                valueflg=self.args.valueflg,
+                valueflg=self.args.valueflg, check_validity=self.args.validity_check,
             )
         elif self.args.convention == "lam":
-            checker = Lam(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg)
+            checker = Lam(SimpleLookupTable(tigge_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check)
         elif self.args.convention == "destine":
             checker = DestinE(
-                SimpleLookupTable(destine_params), valueflg=self.args.valueflg
+                SimpleLookupTable(destine_params), valueflg=self.args.valueflg, check_validity=self.args.validity_check
             )
         else:
             raise ValueError("Unknown data type")
@@ -205,6 +205,12 @@ def main():
         help="output format",
         choices=["short", "tree"],
         default="tree",
+    )
+    # Add an argument for validity check without short option
+    parser.add_argument(
+        "--validity_check",
+        help="perform validity check (experimental)",
+        action="store_true",
     )
     args = parser.parse_args()
 

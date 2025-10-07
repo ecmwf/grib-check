@@ -32,7 +32,7 @@ from grib_check.Report import Report
 
 
 class Wmo(CheckEngine):
-    def __init__(self, lookup_table, valueflg=False):
+    def __init__(self, lookup_table, valueflg=False, check_validity=True):
         super().__init__(lookup_table)
         self.logger = logging.getLogger(__class__.__name__)
 
@@ -63,6 +63,7 @@ class Wmo(CheckEngine):
         self.last_n = 0
         self.values = None
         self.valueflg = valueflg
+        self.check_validity = check_validity
 
     # def register_check(self, name, func):
     #     if name in self._check_map:
@@ -474,6 +475,8 @@ class Wmo(CheckEngine):
         report = Report("WMO Basic checks")
         report.add(Eq(message["editionNumber"], 2))
         report.add(Missing(message, "reserved") | Eq(message["reserved"], 0))
+        if self.check_validity:
+            report.add(Eq(message["isMessageValid"], 1))
 
         report.add(self._check_range(message, p))
 

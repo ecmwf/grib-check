@@ -15,8 +15,8 @@ from .Wmo import Wmo
 
 
 class Lam(Wmo):
-    def __init__(self, lookup_table, valueflg=False):
-        super().__init__(lookup_table, valueflg=valueflg)
+    def __init__(self, lookup_table, valueflg=False, check_validity=True):
+        super().__init__(lookup_table, valueflg=valueflg, check_validity=check_validity)
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("Lam Basic Checks")

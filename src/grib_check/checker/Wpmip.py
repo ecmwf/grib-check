@@ -17,8 +17,8 @@ from .Wmo import Wmo
 
 
 class Wpmip(Wmo):
-    def __init__(self, lookup_table, valueflg=False):
-        super().__init__(lookup_table, valueflg=valueflg)
+    def __init__(self, lookup_table, valueflg=False, check_validity=True):
+        super().__init__(lookup_table, valueflg=valueflg, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
 
     def _basic_checks(self, message, p):
