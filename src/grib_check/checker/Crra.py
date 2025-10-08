@@ -117,19 +117,58 @@ class Crra(Uerra):
                 month = message["month"].value()
                 day = message["day"].value()
                 # saved_date = datetime.date(year, month, day)
+
                 numberOfTimeRanges = message["numberOfTimeRanges"]
                 lengthOfTimeRanges = [KeyValue("lengthOfTimeRange", v) for v in message.get_long_array("lengthOfTimeRange")]
-                typeOfTimeIncrements = [KeyValue("typeOfTimeIncrement", v) for v in message.get_long_array("typeOfTimeIncrement")]
                 typeOfStatisticalProcessings = [KeyValue("typeOfStatisticalProcessing", v) for v in message.get_long_array("typeOfStatisticalProcessing")]
+
+                typeOfTimeIncrements = [KeyValue("typeOfTimeIncrement", v) for v in message.get_long_array("typeOfTimeIncrement")]
+                indicatorOfUnitForTimeRanges = [KeyValue("indicatorOfUnitForTimeRange", v) for v in message.get_long_array("indicatorOfUnitForTimeRange")]
+                lengthOfTimeRanges = [KeyValue("lengthOfTimeRange", v) for v in message.get_long_array("lengthOfTimeRange")]
+                indicatorOfUnitForTimeIncrements = [KeyValue("indicatorOfUnitForTimeIncrement", v) for v in message.get_long_array("indicatorOfUnitForTimeIncrement")]
+                timeIncrements = [KeyValue("timeIncrement", v) for v in message.get_long_array("timeIncrement")]
+
                 validityDateBefore = message["validityDate"]
                 validityTimeBefore = message["validityTime"]
 
             # monthly/daily averages are archived under instant paramIds as param-db was not ready for all time-mean proper ones..
+            # https://confluence.ecmwf.int/display/DGOV/Support+page+for+DGOV-399+CARRA+daily+and+monthly+GRIB+headers
             if Eq(stream, "dame"):
 
                 report = Report("CRRA Check Validity Datetime - daily means")
-
-#               print(numberOfTimeRanges, typeOfStatisticalProcessings) # yyy
+                if typeOfStatisticalProcessings == [1,1]:
+                    report = Report("dame - daily_sum_fc")
+                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
+                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[1]), 2))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[1]), 1))]
+                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), 24))]
+                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[1]), 12))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[1]), 255))]
+                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 12))]
+                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
+                elif typeOfStatisticalProcessings == [2,2] or typeOfStatisticalProcessings == [3,3]:
+                    report = Report("dame - daily_max_fc")
+                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
+                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[1]), 2))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[1]), 1))]
+                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), 21))]
+                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[1]), 3))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[1]), 255))]
+                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
+                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
+                elif typeOfStatisticalProcessings == [0]:
+                    report = Report("dame - daily_mean_an / daily_mean_fc")
+                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
+                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), 21))]
+                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
+                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
+                else:
+                    report.add(Fail(f"Unsupported parameter in stream={stream}"))
 
 #               validityTime = int(message.get("validityTime", int).value()/100)
 #               validityDate = message.get("validityDate", str).value()
