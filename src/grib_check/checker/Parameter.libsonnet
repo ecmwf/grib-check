@@ -8,7 +8,6 @@
   Wmo: self.Parameter {
     checks+: [
       'basic_checks',
-      'basic_checks_2',
     ],
   },
 }

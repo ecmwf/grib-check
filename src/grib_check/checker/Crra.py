@@ -20,19 +20,13 @@ class Crra(Uerra):
     def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
 
-    def _basic_checks_2(self, message, p) -> Report:
-    # this class must not inhereted anything
-        report = Report("CRRA Basic Checks 2")
-        report.add(IsIn(message["productionStatusOfProcessedData"], [10, 11]))
-        return report
-
     def _basic_checks(self, message, p) -> Report:
         report = Report("CRRA Basic Checks")
+        report.add(IsIn(message["productionStatusOfProcessedData"], [10, 11]))
         topd = message.get("typeOfProcessedData", int)
         report.add(IsIn(topd, [0, 1]))
 
         stream = message.get("stream", str)
-
         if stream != "moda":
             if topd == 0:
                 report.add(Eq(message["step"], 0))
@@ -80,12 +74,31 @@ class Crra(Uerra):
     def _from_start(self, message, p):
         report = Report("CRRA From Start")
         stream = message.get("stream", str)
-        if stream != "moda":
+        if stream != "moda" and stream != "dame":
             report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
         return report
 
-        # not registered in the lookup table
+    def _statistical_process(self, message, p) -> Report:
+        report = Report("CRRA Statistical Process")
+
+        topd = message.get("typeOfProcessedData", int)
+        if topd.value() in [0, 1]:  # Analysis, Forecast
+            report.add( Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+        else:
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
+            return report
+
+        report.add(Eq(message["numberOfMissingInStatisticalProcess"], 0))
+        report.add(Eq(message["typeOfTimeIncrement"], 2))
+        # report.add(Eq(message["indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed"], 255))
+        report.add(Eq(message["minuteOfEndOfOverallTimeInterval"], 0))
+        report.add(Eq(message["secondOfEndOfOverallTimeInterval"], 0))
+
+        # xxx add all Paul's encoding options?
+
+        return report
+
     def _check_validity_datetime(self, message):
 
         report = Report("CRRA Check Validity Datetime")
@@ -94,43 +107,39 @@ class Crra(Uerra):
         stream = message.get("stream", str)
         topd = message.get("typeOfProcessedData", int)
 
-        year = message["year"]
-        month = message["month"]
-        day = message["day"]
-        # saved_date = datetime.date(year, month, day)
-
-        typeOfTimeIncrements = [KeyValue("typeOfTimeIncrement", v) for v in message.get_long_array("typeOfTimeIncrement")]
-        lengthOfTimeRanges = [KeyValue("lengthOfTimeRange", v) for v in message.get_long_array("lengthOfTimeRange")]
-
-        validityDateBefore = message["validityDate"]
-        validityTimeBefore = message["validityTime"]
 
         if Ne(stepType, "instant"):  # not instantaneous
             # Check only applies to accumulated, max etc.
             stepRange = message.get("stepRange", str)
 
+            if Eq(stream, "dame") or Eq(stream, "moda"):
+                year = message["year"].value()
+                month = message["month"].value()
+                day = message["day"].value()
+                # saved_date = datetime.date(year, month, day)
+                numberOfTimeRanges = message["numberOfTimeRanges"]
+                lengthOfTimeRanges = [KeyValue("lengthOfTimeRange", v) for v in message.get_long_array("lengthOfTimeRange")]
+                typeOfTimeIncrements = [KeyValue("typeOfTimeIncrement", v) for v in message.get_long_array("typeOfTimeIncrement")]
+                typeOfStatisticalProcessings = [KeyValue("typeOfStatisticalProcessing", v) for v in message.get_long_array("typeOfStatisticalProcessing")]
+                validityDateBefore = message["validityDate"]
+                validityTimeBefore = message["validityTime"]
 
             # monthly/daily averages are archived under instant paramIds as param-db was not ready for all time-mean proper ones..
             if Eq(stream, "dame"):
 
                 report = Report("CRRA Check Validity Datetime - daily means")
 
+#               print(numberOfTimeRanges, typeOfStatisticalProcessings) # yyy
+
 #               validityTime = int(message.get("validityTime", int).value()/100)
 #               validityDate = message.get("validityDate", str).value()
 #               dame_validityDate = str(year) + str(month).zfill(2) + str(day).zfill(2)
 
                 report.add(Eq(message["productDefinitionTemplateNumber"], 8))
-                # FIX(maee):
-#                 if int(typeOfTimeIncrement[0]) != 1:
-#                     report.add( Fail( f"Invalid outer value of typeOfTimeIncrement({int(typeOfTimeIncrement[0])}) (Should be 1)"))
-#                 if int(lengthOfTimeRange[0]) not in [21, 24]:
-#                     report.add( Fail( f"Invalid outer value of lengthOfTimeRange({int(lengthOfTimeRange[0])}) (Should be in [21, 24])"))
-# #               if validityTime not in [21, 24]:
-# #                   report.add( Fail( f"Invalid validityTime (Should be validityTime({validityTime}))"))
-# #               if validityDate != dame_validityDate:
-# #                   report.add( Fail( f"Invalid validityDate({validityDate}) (Should be {dame_validityDate})"))
-                [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrement), 1, f'idx={idx}')) for idx, typeOfTimeIncrement in enumerate(typeOfTimeIncrements)]
-                [report.add(IsIn(KeyValue("lengthOfTimeRange", lengthOfTimeRange), [21, 24], f'idx={idx}')) for idx, lengthOfTimeRange in enumerate(lengthOfTimeRanges)]
+#               [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrement), 1, f'idx={idx}')) for idx, typeOfTimeIncrement in enumerate(typeOfTimeIncrements)]
+                [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1, f'idx={0}'))]
+#               [report.add(IsIn(KeyValue("lengthOfTimeRange", lengthOfTimeRange), [21, 24], f'idx={idx}')) for idx, lengthOfTimeRange in enumerate(lengthOfTimeRanges)]
+                [report.add(IsIn(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), [21, 24], f'idx={0}'))]
                 # report.add(IsIn(validityTime, [21, 24]))
                 # report.add(Eq(validityDate, dame_validityDate))
 
@@ -146,22 +155,23 @@ class Crra(Uerra):
 
                 if month == 11:
                     month2 = 1
-                    year2 = year + 1
+                    year2 += 1
                 elif month == 12:
                     month2 = 2
-                    year2 = year.value() + 1
+                    year2 += 1
                 else:
-                    month2 = month.value()
-                    year2 = year.value()
+                    month2 = month + 2
+                    year2 = year
 
-                last_date_in_month = datetime.date(year.value() + int(month.value() / 12), (month.value() % 12) + 1, 1) - datetime.timedelta(days=1)
+                last_date_in_month = datetime.date(year + int(month / 12), (month % 12) + 1, 1) - datetime.timedelta(days=1)
+                last_date_in_month = int(str(last_date_in_month).replace('-', ''))
                 last_date_in_month2 = datetime.date(year2, month2, 1) - datetime.timedelta(days=1)
-                first_date_next_month = datetime.date(year.value() + int(month.value() / 12), (month.value() % 12) + 1, 1)
+                last_date_in_month2 = int(str(last_date_in_month2).replace('-', ''))
+                first_date_next_month = datetime.date(year + int(month / 12), (month % 12) + 1, 1)
+                first_date_next_month = int(str(first_date_next_month).replace('-', ''))
+                first_date_month2 = datetime.date(year2, month2, 1)
+                first_date_month2 = int(str(first_date_month2).replace('-', ''))
 
-
-                # FIX(maee):
-                # if int(typeOfTimeIncrement[0]) != 1:
-                #     report.add( Fail( f"Invalid outer value of typeOfTimeIncrement({int(typeOfTimeIncrement[0])}) (Should be 1)"))
 #               [report.add(Eq(typeOfTimeIncrement, 1, f'idx=0')) for idx, typeOfTimeIncrement in enumerate(typeOfTimeIncrements)]
                 [report.add(Eq(typeOfTimeIncrements[0], 1, f'idx=0'))]
 
@@ -172,41 +182,21 @@ class Crra(Uerra):
                     [report.add(IsIn(lengthOfTimeRange, moda_lotr1)) for lengthOfTimeRange in lengthOfTimeRanges]
 
                     if topd == 0:
-                        moda_validityDate = int(str(last_date_in_month).replace('-', ''))
+                        moda_validityDate = last_date_in_month
                     elif topd == 1:
-                        moda_validityDate = int(str(last_date_in_month2).replace('-', ''))
+                        moda_validityDate = last_date_in_month2
 
-                    # Fix(maee):
-#                   report.add(Eq(message["validityDate"], moda_validityDate)) #xxx
-                    # if str(validityDateBefore.value()) != moda_validityDate:
-                    #     report.add( Fail( f"Invalid {validityDateBefore} (Should be {moda_validityDate})"))
                     report.add(Eq(validityDateBefore, moda_validityDate))
 
                 elif Eq(numberOfTimeRanges, 2):
 
                     if typeOfStatisticalProcessing in [1, 2, 3]:
-                        moda_validityDate = str(first_date_next_month).replace('-', '')
+                        moda_validityDate = first_date_next_month
 
                 elif Eq(numberOfTimeRanges, 3):
-
-                    # Fix(maee):
-                    # if int(lengthOfTimeRange[0]) not in moda_lotr2:
-                    #     report.add( Fail( f"Invalid outer value of lengthOfTimeRange({int(lengthOfTimeRange[0])}) (Should be in {moda_lotr2})"))
-
-                    [report.add(IsIn(lengthOfTimeRange, moda_lotr2, f'idx={idx}')) for idx, lengthOfTimeRange in enumerate(lengthOfTimeRanges)]
-                    if Eq(month, 11):
-                        month_next = 1
-                        year_next = year.value() + 1
-                    elif Eq(month, 12):
-                        month_next = 2
-                        year_next = year.value() + 1
-                    else:
-                        month_next = month.value() + 2
-                        year_next = year
-                    moda_validityDate = str(year_next) + str(month_next).zfill(2) + "01"
-                    # Fix(maee):
-                    # if str(validityDateBefore.value()) != moda_validityDate:
-                    #     report.add( Fail( f"Invalid {validityDateBefore} (Should be {moda_validityDate})"))
+#                   [report.add(IsIn(lengthOfTimeRange, moda_lotr2, f'idx={idx}')) for idx, lengthOfTimeRange in enumerate(lengthOfTimeRanges)]
+                    [report.add(IsIn(lengthOfTimeRanges[0], moda_lotr2, f'idx={0}'))]
+                    moda_validityDate = first_date_month2
                     report.add(Eq(validityDateBefore, moda_validityDate))
 
             else:
@@ -216,16 +206,10 @@ class Crra(Uerra):
                 # keys to be correctly computed.
                 # Then we can compare the previous (possibly wrongly coded) value with
                 # the newly computed one
-                message.set("stepRange", stepRange)
 
+                message.set("stepRange", stepRange)
                 validityDate = message["validityDate"]
                 validityTime = message["validityTime"]
-
-                # Fix(maee):
-                # if validityDate != validityDateBefore or validityTime != validityTimeBefore:
-                #     # print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (cfg['filename'], cfg['field'], cfg['param'], validityDate, validityTime))
-                #     report.add( Fail( f"Invalid validity Date({validityDateBefore})/Time({validityTimeBefore}) (Should be {validityDate} and {validityTime})"))
-                #     # cfg['warning'] += 1
                 report.add(Eq(validityDate, validityDateBefore, f'Set stepRange={stepRange} has no effect on validityDate'))
                 report.add(Eq(validityTime, validityTimeBefore, f'Set stepRange={stepRange} has no effect on validityTime'))
 

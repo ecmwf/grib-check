@@ -102,11 +102,9 @@ class GeneralChecks(CheckEngine):
         topd = message.get("typeOfProcessedData", int)
 
         if topd.value() in [0, 1]:  # Analysis, Forecast
-            pass
+            report.add( Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
         elif topd == 2:  # Analysis and forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}")
-            )
+            report.add( Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
         elif topd in [3, 4]:  # Control forecast products
             pass
         else:
@@ -119,36 +117,33 @@ class GeneralChecks(CheckEngine):
         report.add(Eq(message["minuteOfEndOfOverallTimeInterval"], 0))
         report.add(Eq(message["secondOfEndOfOverallTimeInterval"], 0))
 
-        stream = message.get("stream", str)
-        if stream != "moda":
+        report.add(Eq(message["numberOfTimeRange"], 1))
 
-            report.add(Eq(message["numberOfTimeRange"], 1))
+        if message["indicatorOfUnitForTimeRange"] == 11:
+            # Six hourly is OK
+            report.add(
+                Eq(
+                    message["lengthOfTimeRange"] * 6 + message["startStep"],
+                    message["endStep"],
+                )
+            )
 
-            if message["indicatorOfUnitForTimeRange"] == 11:
-                # Six hourly is OK
-                report.add(
-                    Eq(
-                        message["lengthOfTimeRange"] * 6 + message["startStep"],
-                        message["endStep"],
-                    )
+        elif message["indicatorOfUnitForTimeRange"] == 10:
+            # Three hourly is OK
+            report.add(
+                Eq(
+                    message["lengthOfTimeRange"] * 3 + message["startStep"],
+                    message["endStep"],
                 )
-
-            elif message["indicatorOfUnitForTimeRange"] == 10:
-                # Three hourly is OK
-                report.add(
-                    Eq(
-                        message["lengthOfTimeRange"] * 3 + message["startStep"],
-                        message["endStep"],
-                    )
+            )
+        else:
+            report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
+            report.add(
+                Eq(
+                    message["lengthOfTimeRange"] + message["startStep"],
+                    message["endStep"],
                 )
-            else:
-                report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
-                report.add(
-                    Eq(
-                        message["lengthOfTimeRange"] + message["startStep"],
-                        message["endStep"],
-                    )
-                )
+            )
 
         return report
 
