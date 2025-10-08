@@ -82,7 +82,7 @@ class GribCheck:
             else f"{script_path}/checker/WpmipParameters.jsonnet"
         )
 
-        elif self.args.convention == "tigge":
+        if self.args.convention == "tigge":
             checker = Tigge(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "wpmip":
             checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
@@ -134,7 +134,7 @@ class GribCheck:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", nargs="+", help="path(s) to a GRIB file(s) or directory(s)", type=str)
-    parser.add_argument("-L", "--check_limits", help="check value ranges (min/max limits)", action="store_true")
+    parser.add_argument("-L", "--check-limits", help="check value ranges (min/max limits)", action="store_true")
     parser.add_argument(
         "-C",
         "--convention",
@@ -149,16 +149,16 @@ def main():
             "wpmip",
         ],
     )
-    parser.add_argument("-l", "--report_depth", help="report depth", type=int, default=10)
+    parser.add_argument("-l", "--report-depth", help="report depth", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
     parser.add_argument("-p", "--parameters", help="path to parameters file", default=None)
     parser.add_argument("-c", "--color", help="use color in output", action="store_true")
-    parser.add_argument("-j", "--num_jobs", help="number of jobs", type=int, default=1)
-    parser.add_argument("-f", "--failed_only", help="show only failed checks", action="store_true")
-    parser.add_argument("-o", "--output_type", help="output format", choices=["short", "tree"], default="tree")
+    parser.add_argument("-j", "--num-jobs", help="number of jobs", type=int, default=1)
+    parser.add_argument("-f", "--failed-only", help="show only failed checks", action="store_true")
+    parser.add_argument("-o", "--output-type", help="output format", choices=["short", "tree"], default="tree")
     parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.0")
     parser.add_argument(
-        "--validity_check",
+        "--validity-check",
         help="perform validity check (experimental)",
         action="store_true",
     )
