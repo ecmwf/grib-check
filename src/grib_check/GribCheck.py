@@ -18,13 +18,11 @@ import signal
 import sys
 
 from .checker.Crra import Crra
-from .checker.DestinE import DestinE
 from .checker.Lam import Lam
 from .checker.S2S import S2S
 from .checker.S2SRefcst import S2SRefcst
 from .checker.Tigge import Tigge
 from .checker.Uerra import Uerra
-from .checker.Wmo import Wmo
 from .checker.Wpmip import Wpmip
 from .FileScanner import FileScanner
 from .Grib import Grib
@@ -83,19 +81,7 @@ class GribCheck:
             if self.args.parameters is not None
             else f"{script_path}/checker/WpmipParameters.jsonnet"
         )
-        destine_params = (
-            self.args.parameters
-            if self.args.parameters is not None
-            else f"{script_path}/checker/DestineParameters.jsonnet"
-        )
-        wmo_params = (
-            self.args.parameters
-            if self.args.parameters is not None
-            else f"{script_path}/checker/WmoParameters.jsonnet"
-        )
 
-        if self.args.convention == "wmo":
-            checker = Wmo(SimpleLookupTable(wmo_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "tigge":
             checker = Tigge(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "wpmip":
@@ -115,8 +101,6 @@ class GribCheck:
             )
         elif self.args.convention == "lam":
             checker = Lam(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
-        elif self.args.convention == "destine":
-            checker = DestinE(SimpleLookupTable(destine_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         else:
             raise ValueError("Unknown data type")
 
@@ -154,7 +138,7 @@ def main():
     parser.add_argument(
         "-C",
         "--convention",
-        help="data convention. The following conventions are experimental: wmo, destine and wpmip.",
+        help="data convention. The following conventions are experimental: wpmip.",
         choices=[
             "tigge",
             "s2s",
@@ -162,8 +146,6 @@ def main():
             "uerra",
             "crra",
             "lam",
-            "wmo",
-            "destine",
             "wpmip",
         ],
     )
@@ -186,7 +168,7 @@ def main():
         print("Debug mode")
         logging.basicConfig(
             filename="grib_check.log",
-            format="%(asctime)s %(name)s %(levelname)-8s %(thread)d %(message)s",
+            format="%(asctime)s %(name)s %(levelname)-8s %(process)d %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
             level=logging.DEBUG,
         )
