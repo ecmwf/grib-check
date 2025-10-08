@@ -158,7 +158,7 @@ def main():
     parser.add_argument("-f", "--failed-only", help="show only failed checks", action="store_true")
     parser.add_argument("-o", "--output-type", help="output format", choices=["short", "tree"], default="tree")
     parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.0")
-    parser.add_argument("-t", "--show_type", help="show value type", action="store_true")
+    parser.add_argument("-t", "--show-type", help="show value type", action="store_true")
     parser.add_argument(
         "--validity-check",
         help="perform validity check (experimental)",
