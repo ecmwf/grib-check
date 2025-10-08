@@ -154,7 +154,7 @@ def main():
     parser.add_argument(
         "-C",
         "--convention",
-        help="data convention. The following convetions are experimental: wmo, destine and wpmip.",
+        help="data convention. The following conventions are experimental: wmo, destine and wpmip.",
         choices=[
             "tigge",
             "s2s",
