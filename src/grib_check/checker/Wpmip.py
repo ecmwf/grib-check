@@ -45,7 +45,7 @@ class Wpmip(Wmo):
 
         # to use MARS new key "model"
         report.add(Le(message["backgroundProcess"], 255))
-        report.add(Le(message["generatingProcessIdentifier"], 2))
+        report.add(Le(message["generatingProcessIdentifier"], 4))
 
         # CCSDS compression
         # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/
