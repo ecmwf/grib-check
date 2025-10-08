@@ -57,3 +57,12 @@ class TestIndexedLookupTable:
         x = -(a + b)
         assert x.key() == "-(a(5) + b(10))"
         assert x.value() == -(5 + 10)
+
+    def test_key_suffix(self):
+        a = KeyValue("a", 5, key_suffix="[0]")
+        b = KeyValue("b", 10, key_suffix="[1]")
+        c = KeyValue("c", 15, key_suffix="[2]")
+
+        x = a + b * c
+        assert x.key() == "a[0](5) + b[1](10) * c[2](15)"
+        assert x.value() == 5 + 10 * 15

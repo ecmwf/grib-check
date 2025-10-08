@@ -134,16 +134,16 @@ class Wmo(CheckEngine):
             # Three hourly is OK
             report.add(
                 Eq(
-                    message["lengthOfTimeRange"] * 3 + message["startStep"],
-                    message["endStep"],
+                    message["lengthOfTimeRange"] * 3 + message.get("startStep", int),
+                    message.get("endStep", int)
                 )
             )
         else:
             report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
             report.add(
                 Eq(
-                    message["lengthOfTimeRange"] + message["startStep"],
-                    message["endStep"],
+                    message["lengthOfTimeRange"] + message.get("startStep", int),
+                    message.get("endStep", int),
                 )
             )
 
@@ -212,7 +212,7 @@ class Wmo(CheckEngine):
         west = message.get("longitudeOfFirstGridPointInDegrees", float)
         east = message.get("longitudeOfLastGridPointInDegrees", float)
 
-        if Ne(n, self.last_n).status():
+        if Ne(n, self.last_n):
             try:
                 self.values = get_gaussian_latitudes(n.value())
             except TypeError as e:
@@ -311,7 +311,7 @@ class Wmo(CheckEngine):
             # Do not assume maximum of pl array is 4N! not true for octahedral
             expected_lon2 = 360.0 - 360.0 / max_pl
 
-            if not EqDbl(east, expected_lon2, tolerance).status():
+            if not EqDbl(east, expected_lon2, tolerance):
                 report.add(
                     Fail(
                         f"east actual={east} expected={expected_lon2} diff={expected_lon2-east}"
@@ -450,7 +450,7 @@ class Wmo(CheckEngine):
             saved_validityDate = message["validityDate"]
             saved_validityTime = message["validityTime"]
 
-            message.set("stepRange", stepRange)
+            # message.set("stepRange", stepRange)
 
             validityDate = message["validityDate"]
             validityTime = message["validityTime"]
@@ -515,7 +515,7 @@ class Wmo(CheckEngine):
 
         report.add(Eq(message["minute"], 0))
         report.add(Eq(message["second"], 0))
-        report.add(Ge(message["startStep"], 0))
+        report.add(Ge(message["startStep"], "0"))
 
         # TODO: validate local usage. Empty for now xxx
         # report.add(Eq(message, "section2.sectionLength", 5)

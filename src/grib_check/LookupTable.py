@@ -52,7 +52,7 @@ class SimpleLookupTable(LookupTable):
                 if self.ignore_keys is not None and pair["key"] in self.ignore_keys:
                     count_ignore += 1
                     continue
-                if pair["value"] == message.get(pair["key"], type(pair["value"])):
+                if message.get(pair["key"], type(pair["value"])) == pair["value"]:
                     count += 1
             if count == len(row["pairs"]) - count_ignore:
                 params.append((count, row))

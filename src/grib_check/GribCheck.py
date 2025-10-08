@@ -29,6 +29,7 @@ from .Grib import Grib
 from .LookupTable import SimpleLookupTable
 from .Message import Message
 from .Report import Report
+from .ValueFormat import formatter
 
 signal.signal(signal.SIGINT, lambda x, y: sys.exit(0))  # Disable traceback on Ctrl+C
 
@@ -157,6 +158,7 @@ def main():
     parser.add_argument("-f", "--failed-only", help="show only failed checks", action="store_true")
     parser.add_argument("-o", "--output-type", help="output format", choices=["short", "tree"], default="tree")
     parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.0")
+    parser.add_argument("-t", "--show_type", help="show value type", action="store_true")
     parser.add_argument(
         "--validity-check",
         help="perform validity check (experimental)",
@@ -175,6 +177,8 @@ def main():
 
     logger = logging.getLogger(__name__)
     logger.info("Started")
+    if args.show_type:
+        formatter.set_format("{}:{}", show_type=True)
 
     grib_check = GribCheck(args)
     return grib_check.run()

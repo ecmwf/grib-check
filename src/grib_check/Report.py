@@ -59,10 +59,10 @@ class Report:
                 if self.__status is None:
                     if not failed_only:
                         output = "  " * level + f"{none_str}: {self.__name}\n"
-                elif self.__status is True:
+                elif self.__status is True or self.__status is np.bool_(True):
                     if not failed_only:
                         output = "  " * level + f"{pass_str}: {self.__name}\n"
-                elif self.__status is False:
+                elif self.__status is False or self.__status is np.bool_(False):
                     output = "  " * level + f"{fail_str}: {self.__name}\n"
                 else:
                     print(f"self.__status={self.__status}, type={type(self.__status)}")
@@ -82,7 +82,7 @@ class Report:
                         )
                     elif isinstance(entry, Assert):
                         msg = entry.as_string(color)
-                        status = entry.status()
+                        status = bool(entry)
                         if not failed_only or not status:
                             # output += "  " * (level + shift) + f'{pass_str if status else fail_str}: {msg}\n'
                             tmp = (
@@ -122,7 +122,7 @@ class Report:
             if isinstance(entry, Report):
                 output += self.__as_string_short(entry, color, failed_only, path)
             elif isinstance(entry, Assert):
-                status = entry.status()
+                status = bool(entry)
                 if not failed_only or not status:
                     if status is True:
                         if color:
@@ -190,16 +190,16 @@ class Report:
         assert isinstance(entry, Assert) or type(entry) is Report or type(entry) is str
         if isinstance(entry, Assert):
             if self.__status is None:
-                self.__status = entry.status()
+                self.__status = bool(entry)
             else:
-                if entry.status() is not None:
-                    self.__status = self.__status and entry.status()
+                if entry is not None:
+                    self.__status = self.__status and bool(entry)
         elif isinstance(entry, Report):
             if self.__status is None:
-                self.__status = entry.status()
+                self.__status = bool(entry)
             else:
-                if entry.status() is not None:
-                    self.__status = self.__status and entry.status()
+                if entry is not None:
+                    self.__status = self.__status and bool(entry)
         elif type(entry) is RWarning:
             self.__status = self.__status or None
         elif type(entry) is RError:
@@ -208,11 +208,8 @@ class Report:
             self.__status = None
             pass
 
-        assert (
-            type(self.__status) is bool
-            or type(self.__status) is np.bool_
-            or self.__status is None
-        )
+        assert type(self.__status) is bool or type(self.__status) is np.bool_ or self.__status is None, f"self.__status={self.__status}, type={type(self.__status)}"
+        
         self.__entries.append(entry)
 
         return self
