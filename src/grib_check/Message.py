@@ -14,6 +14,7 @@ import numpy as np
 from eccodes import (
     codes_get,
     codes_get_double_array,
+    codes_get_long_array,
     codes_get_message,
     codes_get_size,
     codes_is_missing,
@@ -105,6 +106,9 @@ class Message:
 
     def get_double_array(self, key) -> np.ndarray:
         return codes_get_double_array(self.__h, key)
+
+    def get_long_array(self, key) -> np.ndarray:
+        return codes_get_long_array(self.__h, key)
 
     def get_buffer(self) -> bytes:
         return codes_get_message(self.__h)

@@ -31,7 +31,7 @@ from grib_check.Grib import get_gaussian_latitudes
 from grib_check.Report import Report
 
 
-class Wmo(CheckEngine):
+class GeneralChecks(CheckEngine):
     def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table)
         self.logger = logging.getLogger(__class__.__name__)
@@ -83,7 +83,7 @@ class Wmo(CheckEngine):
     #         return self._check_map[name]
 
     def _check_date(self, message, p):
-        report = Report("WMO Check Date")
+        report = Report("Check Date")
         # todo check for how many years back the reforecast is done? Is it coded in the grib???
         # Check if the date is OK
         date = message["date"]
@@ -97,7 +97,7 @@ class Wmo(CheckEngine):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
-        report = Report("WMO Statistical Process")
+        report = Report("Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
 
@@ -113,44 +113,48 @@ class Wmo(CheckEngine):
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
 
-        report.add(Eq(message["numberOfTimeRange"], 1))
         report.add(Eq(message["numberOfMissingInStatisticalProcess"], 0))
         report.add(Eq(message["typeOfTimeIncrement"], 2))
         # report.add(Eq(message["indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed"], 255))
         report.add(Eq(message["minuteOfEndOfOverallTimeInterval"], 0))
         report.add(Eq(message["secondOfEndOfOverallTimeInterval"], 0))
 
-        if message["indicatorOfUnitForTimeRange"] == 11:
-            # Six hourly is OK
-            report.add(
-                Eq(
-                    message["lengthOfTimeRange"] * 6 + message["startStep"],
-                    message["endStep"],
-                )
-            )
+        stream = message.get("stream", str)
+        if stream != "moda":
 
-        elif message["indicatorOfUnitForTimeRange"] == 10:
-            # Three hourly is OK
-            report.add(
-                Eq(
-                    message["lengthOfTimeRange"] * 3 + message["startStep"],
-                    message["endStep"],
+            report.add(Eq(message["numberOfTimeRange"], 1))
+
+            if message["indicatorOfUnitForTimeRange"] == 11:
+                # Six hourly is OK
+                report.add(
+                    Eq(
+                        message["lengthOfTimeRange"] * 6 + message["startStep"],
+                        message["endStep"],
+                    )
                 )
-            )
-        else:
-            report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
-            report.add(
-                Eq(
-                    message["lengthOfTimeRange"] + message["startStep"],
-                    message["endStep"],
+
+            elif message["indicatorOfUnitForTimeRange"] == 10:
+                # Three hourly is OK
+                report.add(
+                    Eq(
+                        message["lengthOfTimeRange"] * 3 + message["startStep"],
+                        message["endStep"],
+                    )
                 )
-            )
+            else:
+                report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
+                report.add(
+                    Eq(
+                        message["lengthOfTimeRange"] + message["startStep"],
+                        message["endStep"],
+                    )
+                )
 
         return report
 
     # not registered in the lookup table
     def _check_range(self, message, p):
-        report = Report("WMO Range check")
+        report = Report("Range check")
 
         if self.valueflg:
             # See ECC-437
@@ -200,7 +204,7 @@ class Wmo(CheckEngine):
 
     # not registered in the lookup table
     def _gaussian_grid(self, message):
-        report = Report("WMO Gaussian grid")
+        report = Report("Gaussian grid")
 
         tolerance = 1.0 / 1000000.0  # angular tolerance for grib2: micro degrees
         n = message["numberOfParallelsBetweenAPoleAndTheEquator"]  # This is the key N
@@ -340,7 +344,7 @@ class Wmo(CheckEngine):
 
     # not registered in the lookup table
     def _latlon_grid(self, message):
-        report = Report("WMO latlon grid")
+        report = Report("latlon grid")
 
         # tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
         data_points = message["numberOfDataPoints"]
@@ -427,7 +431,7 @@ class Wmo(CheckEngine):
     # not registered in the lookup table
     def _check_packing(self, message):
         # ECC-1009: Warn if not using simple packing
-        report = Report("WMO Check packing")
+        report = Report("Check packing")
         report.add(Eq(message["packingType"], "grid_simple"))
         return report
 
@@ -439,7 +443,7 @@ class Wmo(CheckEngine):
         # Then we can compare the previous (possibly wrongly coded) value with
         # the newly computed one
 
-        report = Report("WMO Check Validity Datetime")
+        report = Report("Check Validity Datetime")
         stepType = message.get("stepType", str)
 
         if stepType != "instant":  # not instantaneous
@@ -465,13 +469,13 @@ class Wmo(CheckEngine):
         return report
 
     def _basic_checks_2(self, message, p):
-        report = Report("WMO Basic Checks 2")
+        report = Report("Basic Checks 2")
         # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
         report.add(IsIn(message["typeOfProcessedData"], [2, 3, 4]))
         return report
 
     def _basic_checks(self, message, p):
-        report = Report("WMO Basic checks")
+        report = Report("Basic checks")
         report.add(Eq(message["editionNumber"], 2))
         report.add(Missing(message, "reserved") | Eq(message["reserved"], 0))
 
@@ -507,12 +511,13 @@ class Wmo(CheckEngine):
         # Section 1
 
         report.add(Ge(message["gribMasterTablesVersionNumber"], 4))
-        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
         report.add(Eq(message["significanceOfReferenceTime"], 1))
 
         report.add(Eq(message["minute"], 0))
         report.add(Eq(message["second"], 0))
-        report.add(Ge(message["startStep"], 0))
+        stream = message.get("stream", str)
+        if stream != "moda":
+            report.add(Ge(message["startStep"], 0))
 
         # TODO: validate local usage. Empty for now xxx
         # report.add(Eq(message, "section2.sectionLength", 5)
@@ -559,7 +564,7 @@ class Wmo(CheckEngine):
         return report
 
     def _daily_average(self, message, p):
-        report = Report("WMO Daily Average")
+        report = Report("Daily Average")
         start_step = message["startStep"]
         end_step = message["endStep"]
         report.add(Eq(start_step, end_step - 24))
@@ -579,13 +584,13 @@ class Wmo(CheckEngine):
         return report
 
     def _from_start(self, message, p):
-        report = Report("WMO From STart")
+        report = Report("From Start")
         report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
         return report
 
     def _point_in_time(self, message, p):
-        report = Report("WMO Point in time")
+        report = Report("Point in time")
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]:  # Analysis, Forecast
             pass
@@ -605,7 +610,7 @@ class Wmo(CheckEngine):
         return report
 
     def _given_thickness(self, message, p):
-        report = Report("WMO Given thickness")
+        report = Report("Given thickness")
         report.add(Ne(message["typeOfSecondFixedSurface"], 255))
         report.add(Exists(message, "scaleFactorOfSecondFixedSurface"))
         report.add(Exists(message, "scaledValueOfSecondFixedSurface"))
@@ -616,28 +621,28 @@ class Wmo(CheckEngine):
         return report
 
     def _has_bitmap(self, message, p):
-        report = Report("WMO Has bitmap")
+        report = Report("Has bitmap")
         report.add(Eq(message["bitMapIndicator"], 0))
         return report
 
     def _has_soil_layer(self, message, p):
-        report = Report("WMO Has soil layer")
+        report = Report("Has soil layer")
         report.add(Eq(message["topLevel"], message["bottomLevel"] - 1))
         report.add(Le(message["level"], 14))  # max in UERRA
         return report
 
     def _has_soil_level(self, message, p):
-        report = Report("WMO Has soil level")
+        report = Report("Has soil level")
         report.add(Eq(message["topLevel"], message["bottomLevel"]))
         report.add(Le(message["level"], 14))  # max in UERRA
         return report
 
     def _height_level(self, message, p):
-        report = Report("WMO Height level")
+        report = Report("Height level")
         return report
 
     def _given_level(self, message, p):
-        report = Report("WMO Given level")
+        report = Report("Given level")
         report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Exists(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Exists(message, "scaledValueOfFirstFixedSurface"))
@@ -647,7 +652,7 @@ class Wmo(CheckEngine):
         return report
 
     def _potential_temperature_level(self, message, p):
-        report = Report("WMO Potential temperature level")
+        report = Report("Potential temperature level")
         report.add(
             Eq(
                 message["level"],
@@ -658,7 +663,7 @@ class Wmo(CheckEngine):
         return report
 
     def _potential_vorticity_level(self, message, p):
-        report = Report("WMO Potential vorticity level")
+        report = Report("Potential vorticity level")
         report.add(
             Eq(
                 message["level"],
@@ -669,7 +674,7 @@ class Wmo(CheckEngine):
         return report
 
     def _predefined_level(self, message, p):
-        report = Report("WMO Predefined level")
+        report = Report("Predefined level")
         report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
@@ -679,7 +684,7 @@ class Wmo(CheckEngine):
         return report
 
     def _predefined_thickness(self, message, p):
-        report = Report("WMO Predefined thickness")
+        report = Report("Predefined thickness")
         report.add(Ne(message["typeOfFirstFixedSurface"], 255))
         report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
         report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
@@ -689,19 +694,19 @@ class Wmo(CheckEngine):
         return report
 
     def _resolution_s2s(self, message, p):
-        report = Report("WMO Resolution S2S")
+        report = Report("Resolution S2S")
         report.add(Eq(message["iDirectionIncrement"], 1500000))
         report.add(Eq(message["jDirectionIncrement"], 1500000))
         return report
 
     def _resolution_s2s_ocean(self, message, p):
-        report = Report("WMO Resolution S2S Ocean")
+        report = Report("Resolution S2S Ocean")
         report.add(Eq(message["iDirectionIncrement"], 1000000))
         report.add(Eq(message["jDirectionIncrement"], 1000000))
         return report
 
     def _since_prev_pp(self, message, p):
-        report = Report("WMO Since previous post-processing")
+        report = Report("Since previous post-processing")
         report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
         report.add(
             Eq(message["endStep"], message["startStep"] + message["lengthOfTimeRange"])
@@ -711,7 +716,7 @@ class Wmo(CheckEngine):
         return report
 
     def _six_hourly(self, message, p):
-        report = Report("WMO Six hourly")
+        report = Report("Six hourly")
         if message["indicatorOfUnitForTimeRange"] == 11:
             report.add(Eq(message["lengthOfTimeRange"], 1))
         else:
@@ -723,7 +728,7 @@ class Wmo(CheckEngine):
         return report
 
     def _three_hourly(self, message, p):
-        report = Report("WMO Three hourly")
+        report = Report("Three hourly")
         if message["indicatorOfUnitForTimeRange"] == 11:
             report.add(Eq(message["lengthOfTimeRange"], 1))
         else:

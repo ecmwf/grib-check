@@ -24,7 +24,8 @@ from .checker.S2S import S2S
 from .checker.S2SRefcst import S2SRefcst
 from .checker.Tigge import Tigge
 from .checker.Uerra import Uerra
-from .checker.Wmo import Wmo
+#from .checker.Wmo import Wmo
+from .checker.GeneralChecks import GeneralChecks
 from .checker.Wpmip import Wpmip
 from .FileScanner import FileScanner
 from .Grib import Grib
@@ -73,6 +74,11 @@ class GribCheck:
         crra: climate reanalysis
         """
         script_path = os.path.dirname(os.path.realpath(__file__))
+        wmo_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/WmoParameters.jsonnet"
+        )
         tigge_params = (
             self.args.parameters
             if self.args.parameters is not None
@@ -83,19 +89,24 @@ class GribCheck:
             if self.args.parameters is not None
             else f"{script_path}/checker/WpmipParameters.jsonnet"
         )
+        crra_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/CrraParameters.jsonnet"
+        )
         destine_params = (
             self.args.parameters
             if self.args.parameters is not None
             else f"{script_path}/checker/DestineParameters.jsonnet"
         )
-        wmo_params = (
+        all_params = (
             self.args.parameters
             if self.args.parameters is not None
-            else f"{script_path}/checker/WmoParameters.jsonnet"
+            else f"{script_path}/checker/GeneralChecksParameters.jsonnet"
         )
 
         if self.args.convention == "wmo":
-            checker = Wmo(SimpleLookupTable(wmo_params), valueflg=self.args.valueflg)
+            checker = Wmo(SimpleLookupTable(all_params), valueflg=self.args.valueflg)
         elif self.args.convention == "tigge":
             checker = Tigge(
                 SimpleLookupTable(tigge_params), valueflg=self.args.valueflg
@@ -117,7 +128,7 @@ class GribCheck:
             )
         elif self.args.convention == "crra":
             checker = Crra(
-                SimpleLookupTable(tigge_params, ignore_keys=["model"]),
+                SimpleLookupTable(crra_params, ignore_keys=["model"]),
                 valueflg=self.args.valueflg,
             )
         elif self.args.convention == "lam":

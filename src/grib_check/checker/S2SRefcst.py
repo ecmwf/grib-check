@@ -11,10 +11,10 @@
 from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt, Ne
 from grib_check.Report import Report
 
-from .Wmo import Wmo
+from .GeneralChecks import GeneralChecks
 
 
-class S2SRefcst(Wmo):
+class S2SRefcst(GeneralChecks):
     def __init__(self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
 
@@ -29,6 +29,8 @@ class S2SRefcst(Wmo):
         report.add(IsMultipleOf(message["step"], 6))
 
         report.add(self._check_date(message, p))
+
+        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
 
         return super()._basic_checks(message, p).add(report)
 
