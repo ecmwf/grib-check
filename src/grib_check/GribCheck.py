@@ -104,13 +104,6 @@ class GribCheck:
             else f"{script_path}/checker/GeneralChecksParameters.jsonnet"
         )
 
-        if self.args.convention == "wmo":
-            checker = Wmo(SimpleLookupTable(all_params), valueflg=self.args.valueflg)
-        elif self.args.convention == "tigge":
-            checker = Tigge(
-                SimpleLookupTable(tigge_params), valueflg=self.args.valueflg
-            )
-
         if self.args.convention == "tigge":
             checker = Tigge(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "wpmip":
@@ -125,8 +118,8 @@ class GribCheck:
             )
         elif self.args.convention == "crra":
             checker = Crra(
-                SimpleLookupTable(crra_params, ignore_keys=["model"]),
-                valueflg=self.args.valueflg,
+                SimpleLookupTable(tigge_params, ignore_keys=["model"]),
+                check_limits=self.args.check_limits, check_validity=self.args.validity_check,
             )
         elif self.args.convention == "lam":
             checker = Lam(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
