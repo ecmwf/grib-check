@@ -1,6 +1,6 @@
 ## Adding a new GRIB convention
 
-To explain how to add a new GRIB convention, we'll walk through a scenario where we introduce a project called "destine". 
+To explain how to add a new GRIB convention, we'll walk through a scenario where we introduce a project called "my_project". 
 This project will inherit the WMO checks and define additional custom checks.
 Starting with the WMO checks is a good idea because they represent a universal set of checks that apply to all GRIB messages.
 By extending them, you begin with a solid foundation.
@@ -13,29 +13,29 @@ If you want to reuse a check, you can call the base class method and add your ow
 It's demonstrated in the code below in the `_point_in_time()` method.
 If you want to create a new check, you can define it in the `Destiny` class.
 The check needs to be registered in the constructor using `self.register_checks()`.
-The `_destine_limits()` method is an example of a new check that we created.
+The `_my_project_limits()` method is an example of a new check that we created.
 
 ``` python
 from checker.Wmo import Wmo
 from Assert import Le, Lt, Ne, Eq, Fail, IsIn, IsMultipleOf
 from Report import Report
 
-class DestinE(Wmo):
+class MyProject(Wmo):
     def __init__( self, lookup_table, valueflg=False):
         super().__init__(lookup_table, valueflg=valueflg)
         self.register_checks({
-            "destine_limits": self._destine_limits
+            "my_project_limits": self._my_project_limits
         })
 
     # Reuse / override checks
     def _point_in_time(self, message, p) -> Report:
-        report = Report("Point In Time (DestinE)")
+        report = Report("Point In Time (MyProject)")
         report.add(IsMultipleOf(message["step"], 3))
         return super()._point_in_time(message, p).add(report)
 
     # Create new checks
-    def _destine_limits(self, message, p) -> Report:
-        report = Report("DestinE Limits")
+    def _my_project_limits(self, message, p) -> Report:
+        report = Report("MyProject Limits")
         report.add(Le(message["step"], 30))
         report.add(IsIn(message["forecastTime"], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
         report.add(IsIn(message["indicatorOfUnitOfTimeRange"], [0, 1]))
@@ -47,12 +47,12 @@ Add Destiny option in GribCheck.py
 ``` python
 # ...
 # ...
-from checker.Destiny import DestinE
-      elif self.args.convention == "destine":
+from checker.Destiny import MyProject
+      elif self.args.convention == "my_project":
 # ...
           checker = Destiny(param_file=self.args.parameters, valueflg=self.args.valueflg)
 # ...
-    parser.add_argument("-t", "--convention", help="convention to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam", "wmo", "destine"], default="wmo")
+    parser.add_argument("-t", "--convention", help="convention to check", choices=["tigge", "s2s", "s2s_refcst", "uerra", "crra", "lam"], default="tigge")
 # ...
 
 ```
@@ -75,7 +75,7 @@ Add a new JSON file `./checker/WmoParameters.json` in the parameters directory.
       ],
       "checks": [
           "point_in_time",
-          "destine_limits"
+          "my_project_limits"
     ]
   }
 ]
@@ -85,7 +85,7 @@ In this way, we apply the `point_in_time` check from WMO and extend it with our 
 To start the checks, use the following command:
 
 ``` bash
-grib-check -t destine /path/to/file.grib2
+grib-check -t my_project /path/to/file.grib2
 ```
 
 ### Parameters

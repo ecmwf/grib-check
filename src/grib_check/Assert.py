@@ -14,9 +14,8 @@ import logging
 # from Message import Message
 import math
 
-import numpy as np
-
 from .TermColor import TermColor
+from .KeyValue import makeKV
 
 
 class Assert:
@@ -52,26 +51,17 @@ class Assert:
     def __and__(self, other):
         return And(self, other)
 
-    def __bool__(self):
-        return self.status()
+    def __bool__(self) -> bool:
+        return self._status
 
     def _as_string(self, color=False) -> str:
         raise NotImplementedError
-
-    def status(self) -> bool:
-        assert type(self._status) is bool or type(self._status) is np.bool_
-        return self._status
-
 
 class AssertTrue(Assert):
     def __init__(self, status, msg, comment=None):
         self._status = bool(status)
         self._comment = comment
         self.__msg = msg
-
-    def status(self) -> bool:
-        assert type(self._status) is bool
-        return self._status
 
     def _as_string(self, color=False) -> str:
         return f"{self.__msg}"
@@ -82,7 +72,7 @@ class And(Assert):
         self.__lsh = lhs
         self.__rsh = rhs
         self._comment = comment
-        self._status = self.__lsh.status() and self.__rsh.status()
+        self._status = bool(self.__lsh and self.__rsh)
 
     def _as_string(self, color=False) -> str:
         if color:
@@ -95,7 +85,7 @@ class Or(Assert):
     def __init__(self, lhs: Assert, rhs: Assert, comment=None):
         self.__lhs = lhs
         self.__rhs = rhs
-        self._status = self.__lhs.status() or self.__rhs.status()
+        self._status = bool(self.__lhs or self.__rhs)
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
@@ -107,9 +97,9 @@ class Or(Assert):
 
 class IsIn(Assert):
     def __init__(self, actual, expected, comment=None):
-        self.__actual = actual
-        self.__expected = expected
-        self._status = self.__actual.value() in self.__expected
+        self.__actual = makeKV(actual)
+        self.__expected = makeKV(expected)
+        self._status = self.__actual.value() in self.__expected.value()
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
@@ -121,7 +111,7 @@ class IsIn(Assert):
 
 class IsMultipleOf(Assert):
     def __init__(self, actual, multiplier, comment=None):
-        self.__actual = actual
+        self.__actual = makeKV(actual)
         self.__multiplier = multiplier
         self.__mod_value = self.__actual % self.__multiplier
         self._status = self.__mod_value == 0
@@ -129,9 +119,9 @@ class IsMultipleOf(Assert):
 
     def _as_string(self, color=False) -> str:
         if color:
-            return f"{self.__mod_value} == 0"
+            return f"{self.__mod_value} == {makeKV(0)}"
         else:
-            return f"{self.__mod_value} == 0"
+            return f"{self.__mod_value} == {makeKV(0)}"
 
 
 class Missing(Assert):
@@ -168,8 +158,8 @@ class Exists(Assert):
 
 class Eq(Assert):
     def __init__(self, lsh, rhs, comment=None):
-        self.__lsh = lsh
-        self.__rhs = rhs
+        self.__lsh = makeKV(lsh)
+        self.__rhs = makeKV(rhs)
         self._status = self.__lsh == self.__rhs
         self._comment = comment
 
@@ -182,8 +172,8 @@ class Eq(Assert):
 
 class EqDbl(Assert):
     def __init__(self, lsh, rhs, tolerance, comment=None):
-        self.__lsh = lsh
-        self.__rhs = rhs
+        self.__lsh = makeKV(lsh)
+        self.__rhs = makeKV(rhs)
         self.__tolerance = tolerance
         self._status = math.fabs((self.__lsh - self.__rhs).value()) <= self.__tolerance
         self._comment = comment
@@ -197,8 +187,8 @@ class EqDbl(Assert):
 
 class Ne(Assert):
     def __init__(self, lsh, rhs, comment=None):
-        self.__lsh = lsh
-        self.__rhs = rhs
+        self.__lsh = makeKV(lsh)
+        self.__rhs = makeKV(rhs)
         self._status = self.__lsh != self.__rhs
         self._comment = comment
 
@@ -211,9 +201,12 @@ class Ne(Assert):
 
 class Ge(Assert):
     def __init__(self, lsh, rhs, comment=None):
-        self.__lsh = lsh
-        self.__rhs = rhs
-        self._status = self.__lsh >= self.__rhs
+        self.__lsh = makeKV(lsh)
+        self.__rhs = makeKV(rhs)
+        try:
+            self._status = self.__lsh >= self.__rhs
+        except TypeError:
+            self._status = False
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
@@ -225,9 +218,12 @@ class Ge(Assert):
 
 class Le(Assert):
     def __init__(self, lsh, rhs, comment=None):
-        self.__lsh = lsh
-        self.__rhs = rhs
-        self._status = self.__lsh <= self.__rhs
+        self.__lsh = makeKV(lsh)
+        self.__rhs = makeKV(rhs)
+        try:
+            self._status = self.__lsh <= self.__rhs
+        except TypeError:
+            self._status = False
         self._comment = comment
 
     def _as_string(self, color=False) -> str:
@@ -239,8 +235,8 @@ class Le(Assert):
 
 class Gt(Assert):
     def __init__(self, lsh, rhs, comment=None):
-        self.__lsh = lsh
-        self.__rhs = rhs
+        self.__lsh = makeKV(lsh)
+        self.__rhs = makeKV(rhs)
         self._status = self.__lsh > self.__rhs
         self._comment = comment
 
@@ -253,8 +249,8 @@ class Gt(Assert):
 
 class Lt(Assert):
     def __init__(self, lsh, rhs, comment=None):
-        self.__lsh = lsh
-        self.__rhs = rhs
+        self.__lsh = makeKV(lsh)
+        self.__rhs = makeKV(rhs)
         self._status = self.__lsh < self.__rhs
         self._comment = comment
 

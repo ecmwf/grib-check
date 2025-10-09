@@ -17,8 +17,8 @@ from .GeneralChecks import GeneralChecks
 
 
 class Tigge(GeneralChecks):
-    def __init__(self, lookup_table, valueflg=False):
-        super().__init__(lookup_table, valueflg=valueflg)
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
+        super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
         self.register_checks(
             {

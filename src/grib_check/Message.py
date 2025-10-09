@@ -129,7 +129,7 @@ class Message:
         except Exception:
             return
 
-        bitmap = not Eq(self, "bitMapIndicator", 255).status()
+        bitmap = not Eq(self, "bitMapIndicator", 255)
 
         if bitmap:
             missing = self.get("missingValue")
