@@ -530,7 +530,10 @@ class GeneralChecks(CheckEngine):
         if dtn in [0, 1]:
             # dtn == 1: rotated latlon
             report.add(self._latlon_grid(message))
+        elif dtn == 20:  # Polar stereographic projection
+            report.add("Polar stereographic projection checks not implemented!")
         elif dtn == 30:  # Lambert conformal
+            report.add("Lambert conformal projection checks not implemented!")
             # lambert_grid(h); # TODO xxx
             # print("warning: Lambert grid - geometry checking not implemented yet!")
             # report.add(Eq(message["scanningMode"], 64)) # M-F data used to have it wrong.. but it might depends on other projection set up as well!
