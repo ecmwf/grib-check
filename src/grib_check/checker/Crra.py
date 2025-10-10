@@ -90,7 +90,6 @@ class Crra(Uerra):
             return report
 
         report.add(Eq(message["numberOfMissingInStatisticalProcess"], 0))
-        report.add(Eq(message["typeOfTimeIncrement"], 2))
         # report.add(Eq(message["indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed"], 255))
         report.add(Eq(message["minuteOfEndOfOverallTimeInterval"], 0))
         report.add(Eq(message["secondOfEndOfOverallTimeInterval"], 0))
@@ -124,6 +123,11 @@ class Crra(Uerra):
                     month2 = month + 2
                     year2 = year
 
+                same_day = int(str(datetime.date(year, month, day)).replace('-', ''))
+                next_day1 = datetime.date(year, month, day) + datetime.timedelta(days=1)
+                next_day1 = int(str(next_day1).replace('-', ''))
+                next_day2 = datetime.date(year, month, day) + datetime.timedelta(days=2)
+                next_day2 = int(str(next_day2).replace('-', ''))
                 last_date_month0 = datetime.date(year + int(month / 12), (month % 12) + 1, 1) - datetime.timedelta(days=1)
                 last_date_month0 = int(str(last_date_month0).replace('-', ''))
                 last_date_month1 = datetime.date(year2, month2, 1) - datetime.timedelta(days=1)
@@ -152,17 +156,21 @@ class Crra(Uerra):
 
                 report = Report("CRRA Check Validity Datetime - daily means")
                 if typeOfStatisticalProcessings == [0]:
-                    report = Report("dame - daily_mean_an / daily_mean_fc")
-                    dame_validityDate = last_date_month0
+                    report = Report("dame - daily_mean_an/fc")
+                    dame_validityDate = same_day
                     dame_validityTime = 21
+                    if topd == 0:
+                        dame_validityDate = same_day
+                    elif topd == 1:
+                        dame_validityDate = next_day1
                     [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
                     [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
                     [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), 21))]
                     [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
                 elif typeOfStatisticalProcessings == [1,1]:
-                    report = Report("dame - daily_sum_fc")
-                    dame_validityDate = first_date_month1
+                    report = Report("dame - daily_sum_an/fc")
+                    dame_validityDate = next_day2
                     dame_validityTime = 0
                     [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
                     [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[1]), 2))]
@@ -175,8 +183,8 @@ class Crra(Uerra):
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 12))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
                 elif typeOfStatisticalProcessings == [2,2] or typeOfStatisticalProcessings == [3,3]:
-                    report = Report("dame - daily_min/max_fc")
-                    dame_validityDate = first_date_month1
+                    report = Report("dame - daily_min/max_an/fc")
+                    dame_validityDate = next_day1
                     dame_validityTime = 0
                     [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
                     [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[1]), 2))]
@@ -202,7 +210,7 @@ class Crra(Uerra):
                 moda_lotr2 = [672, 696, 720, 744]
 
                 if typeOfStatisticalProcessings == [0]:
-                    report = Report("moda - monthly_mean_an / monthly_mean_fc")
+                    report = Report("moda - monthly_mean_an/fc")
                     if topd == 0:
                         moda_validityDate = last_date_month0
                     elif topd == 1:
@@ -214,7 +222,7 @@ class Crra(Uerra):
                     [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
                 elif typeOfStatisticalProcessings == [2,2] or typeOfStatisticalProcessings == [3,3]:
-                    report = Report("moda - monthly_min/max_fc")
+                    report = Report("moda - monthly_min/max_an/fc")
                     moda_validityDate = first_date_month1
                     moda_validityTime = 0
                     [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
@@ -228,7 +236,7 @@ class Crra(Uerra):
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
                 elif typeOfStatisticalProcessings == [0,1,1]:
-                    report = Report("moda - monthly_daysum_fc")
+                    report = Report("moda - monthly_daysum_an/fc")
                     moda_validityDate = first_date_month2
                     moda_validityTime = 0
                     [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
