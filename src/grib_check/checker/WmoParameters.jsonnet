@@ -1695,15 +1695,15 @@ local templates = import 'Parameter.libsonnet';
       { key: 'values', min: [0, 1e-10], max: [0.9999, 100.00001] },
     ],
     pairs+: [
+      { key: 'paramId', value: 3075 },
       { key: 'discipline', value: 0 },
       { key: 'parameterCategory', value: 6 },
       { key: 'parameterNumber', value: 5 },
-      { key: 'typeOfFirstFixedSurface', value: 1 },
-      { key: 'typeOfSecondFixedSurface', value: 8 },
+//    { key: 'typeOfFirstFixedSurface', value: 1 },
     ],
     checks+: [
       'point_in_time',
-      'predefined_thickness',
+      'predefined_level',
     ],
   },
   templates.Wmo {
@@ -1712,15 +1712,15 @@ local templates = import 'Parameter.libsonnet';
       { key: 'values', min: [0, 1e-10], max: [0.9999, 100.00001] },
     ],
     pairs+: [
+      { key: 'paramId', value: 3074 },
       { key: 'discipline', value: 0 },
       { key: 'parameterCategory', value: 6 },
       { key: 'parameterNumber', value: 4 },
-      { key: 'typeOfFirstFixedSurface', value: 1 },
-      { key: 'typeOfSecondFixedSurface', value: 8 },
+//    { key: 'typeOfFirstFixedSurface', value: 1 },
     ],
     checks+: [
       'point_in_time',
-      'predefined_thickness',
+      'predefined_level',
     ],
   },
   templates.Wmo {
@@ -1729,15 +1729,15 @@ local templates = import 'Parameter.libsonnet';
       { key: 'values', min: [0, 1e-10], max: [0.9999, 100.00001] },
     ],
     pairs+: [
+      { key: 'paramId', value: 3073 },
       { key: 'discipline', value: 0 },
       { key: 'parameterCategory', value: 6 },
       { key: 'parameterNumber', value: 3 },
-      { key: 'typeOfFirstFixedSurface', value: 1 },
-      { key: 'typeOfSecondFixedSurface', value: 8 },
+//    { key: 'typeOfFirstFixedSurface', value: 1 },
     ],
     checks+: [
       'point_in_time',
-      'predefined_thickness',
+      'predefined_level',
     ],
   },
   templates.Wmo {
@@ -1746,15 +1746,15 @@ local templates = import 'Parameter.libsonnet';
       { key: 'values', min: [0, 1e-10], max: [0.9999, 400.00001] },
     ],
     pairs+: [
+      { key: 'paramId', value: 3073 },
       { key: 'discipline', value: 0 },
       { key: 'parameterCategory', value: 6 },
       { key: 'parameterNumber', value: 3 },
-      { key: 'typeOfFirstFixedSurface', value: 1 },
-      { key: 'typeOfSecondFixedSurface', value: 8 },
+//    { key: 'typeOfFirstFixedSurface', value: 1 },
     ],
     checks+: [
       'point_in_time',
-      'predefined_thickness',
+      'predefined_level',
     ],
   },
   templates.Wmo {
@@ -2037,6 +2037,42 @@ local templates = import 'Parameter.libsonnet';
       'point_in_time',
       'given_level',
       'pressure_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'wind_speed_ml',
+    expected+: [
+      { key: 'values', min: [0, 10], max: [10, 150] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 10 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 105 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'wind_direction_ml',
+    expected+: [
+      { key: 'values', min: [0, 1], max: [359, 360.1] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 3031 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 0 },
+      { key: 'typeOfFirstFixedSurface', value: 105 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_level',
     ],
   },
   templates.Wmo {
@@ -2323,10 +2359,10 @@ local templates = import 'Parameter.libsonnet';
       { key: 'values', min: [-0.001, 1], max: [0.1, 100] },
     ],
     pairs+: [
-      { key: 'paramId', value: 174008 },
+      { key: 'paramId', value: 231010 },
       { key: 'discipline', value: 2 },
       { key: 'parameterCategory', value: 0 },
-      { key: 'parameterNumber', value: 34 },
+      { key: 'parameterNumber', value: 51 },
       { key: 'typeOfFirstFixedSurface', value: 1 },
       { key: 'typeOfStatisticalProcessing', value: 1 },
     ],
@@ -2952,6 +2988,44 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
+    name: 'wind_speed_pl',
+    expected+: [
+      { key: 'values', min: [0, 10], max: [10, 150] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 10 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 100 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_level',
+      'pressure_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'wind_direction_pl',
+    expected+: [
+      { key: 'values', min: [0, 1], max: [359, 360.1] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 3031 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 0 },
+      { key: 'typeOfFirstFixedSurface', value: 100 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_level',
+      'pressure_level',
+    ],
+  },
+  templates.Wmo {
     name: 'specific_rain_water_content_pl',
     expected+: [
       { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
@@ -3547,6 +3621,24 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
+    name: 'snow_cover_sfc',
+    expected+: [
+      { key: 'values', min: [0, 0], max: [0, 100] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 260038 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 1 },
+      { key: 'parameterNumber', value: 42 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+    ],
+    checks+: [
+      'point_in_time',
+      'predefined_level',
+      'has_bitmap',
+    ],
+  },
+  templates.Wmo {
     name: 'snow_albedo_sfc',
     expected+: [
       { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
@@ -3636,6 +3728,22 @@ local templates = import 'Parameter.libsonnet';
     checks+: [
       'point_in_time',
       'predefined_level',
+      'has_bitmap',
+    ],
+  },
+  templates.Wmo {
+    name: 'volumetric_soil_ice',
+    expected+: [
+      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 260644 },
+      { key: 'discipline', value: 2 },
+      { key: 'parameterCategory', value: 0 },
+      { key: 'parameterNumber', value: 38 },
+    ],
+    checks+: [
+      'point_in_time',
       'has_bitmap',
     ],
   },
