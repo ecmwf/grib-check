@@ -1670,26 +1670,26 @@ local templates = import 'Parameter.libsonnet';
       'resolution_s2s',
     ],
   },
-  templates.Wmo {
-    name: 'snow_albedo_sfc.glob',
-    expected+: [
-      { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
-    ],
-    pairs+: [
-      { key: 'model', value: 'glob' },
-      { key: 'paramId', value: 228032 },
-      { key: 'typeOfStatisticalProcessing', value: 0 },
-      { key: 'discipline', value: 0 },
-      { key: 'parameterCategory', value: 19 },
-      { key: 'parameterNumber', value: 19 },
-      { key: 'typeOfFirstFixedSurface', value: 1 },
-    ],
-    checks+: [
-      'daily_average',
-      'predefined_level',
-      'has_bitmap',
-    ],
-  },
+//templates.Wmo {
+ // name: 'snow_albedo_sfc.glob',
+//  expected+: [
+//    { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
+//  ],
+//  pairs+: [
+//    { key: 'model', value: 'glob' },
+//    { key: 'paramId', value: 228032 },
+//    { key: 'typeOfStatisticalProcessing', value: 0 },
+//    { key: 'discipline', value: 0 },
+//    { key: 'parameterCategory', value: 19 },
+//    { key: 'parameterNumber', value: 19 },
+//    { key: 'typeOfFirstFixedSurface', value: 1 },
+ // ],
+ // checks+: [
+//    'daily_average',
+//    'predefined_level',
+//    'has_bitmap',
+//  ],
+//},
   templates.Wmo {
     name: 'high_cloud_cover_sfc',
     expected+: [
@@ -2878,6 +2878,44 @@ local templates = import 'Parameter.libsonnet';
     checks+: [
       'point_in_time',
       'has_bitmap',
+    ],
+  },
+  templates.Wmo {
+    name: 'wind_speed_ml',
+    expected+: [
+      { key: 'values', min: [0, 10], max: [10, 150] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 10 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 105 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_level',
+      'height_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'wind_direction_ml',
+    expected+: [
+      { key: 'values', min: [0, 1], max: [359, 360.1] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 3031 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 0 },
+      { key: 'typeOfFirstFixedSurface', value: 105 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_level',
+      'height_level',
     ],
   },
   templates.Wmo {

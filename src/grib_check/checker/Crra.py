@@ -8,10 +8,12 @@
 # nor does it submit to any jurisdiction.
 #
 
+import logging
+import datetime
+
 from grib_check.Assert import Eq, IsIn, IsMultipleOf, Fail, Le, Ne
 from grib_check.Report import Report
 from grib_check.KeyValue import KeyValue
-import datetime
 
 from .Uerra import Uerra
 
@@ -19,6 +21,12 @@ from .Uerra import Uerra
 class Crra(Uerra):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
+        self.logger = logging.getLogger(__class__.__name__)
+        self.register_checks(
+            {
+                "pressure_level": self._pressure_level,
+            }
+        )
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("CRRA Basic Checks")
@@ -278,7 +286,7 @@ class Crra(Uerra):
 
 
     def _pressure_level(self, message, p) -> Report:
-        report = Report("Crra Pressure Level")
+        report = Report("CRRA Pressure Level")
         levels = [
             1000,
             975,
@@ -311,4 +319,10 @@ class Crra(Uerra):
             1,
         ]
         report.add(IsIn(message["level"], levels, "invalid pressure level"))
+        return report
+
+    def _height_level(self, message, p) -> Report:
+        report = Report("CRRA Height Level")
+        levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1250, 1500, 2000, 2500, 3000]
+        report.add(IsIn(message["level"], levels, "invalid height level"))
         return report

@@ -34,12 +34,65 @@ wmo_params +
       { key: 'discipline', value: 0 },
       { key: 'parameterCategory', value: 1 },
       { key: 'parameterNumber', value: 60 },
-//    { key: 'typeOfFirstFixedSurface', value: 1 },
-//    { key: 'typeOfFirstFixedSurface', value: 103 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
     ],
     checks+: [
       'point_in_time',
       'predefined_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'high_cloud_cover_sfc.rr',
+    expected+: [
+      { key: 'values', min: [0, 1e-10], max: [0.9999, 100.00001] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 3075 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 6 },
+      { key: 'parameterNumber', value: 5 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+      { key: 'typeOfSecondFixedSurface', value: 8 },
+    ],
+    checks+: [
+      'point_in_time',
+      'predefined_thickness',
+    ],
+  },
+  templates.Wmo {
+    name: 'medium_cloud_cover_sfc.rr',
+    expected+: [
+      { key: 'values', min: [0, 1e-10], max: [0.9999, 100.00001] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 3074 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 6 },
+      { key: 'parameterNumber', value: 4 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+      { key: 'typeOfSecondFixedSurface', value: 8 },
+    ],
+    checks+: [
+      'point_in_time',
+      'predefined_thickness',
+    ],
+  },
+  templates.Wmo {
+    name: 'low_cloud_cover_sfc.rr',
+    expected+: [
+      { key: 'values', min: [0, 1e-10], max: [0.9999, 100.00001] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 3073 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 6 },
+      { key: 'parameterNumber', value: 3 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+      { key: 'typeOfSecondFixedSurface', value: 8 },
+    ],
+    checks+: [
+      'point_in_time',
+      'predefined_thickness',
     ],
   },
   templates.Wmo {
@@ -114,6 +167,47 @@ wmo_params +
     checks+: [
       'from_start',
       'predefined_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'surface_runoff.rr',
+    expected+: [
+      { key: 'values', min: [-0.001, 1], max: [0.1, 100] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 174008 },
+      { key: 'discipline', value: 2 },
+      { key: 'parameterCategory', value: 0 },
+      { key: 'parameterNumber', value: 34 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+      { key: 'typeOfStatisticalProcessing', value: 1 },
+    ],
+    checks+: [
+      'from_start',
+      'predefined_level',
+      'has_bitmap',
+    ],
+  },
+  templates.Wmo {
+    name: 'volumetric_soil_ice_layer.rr',
+    expected+: [
+      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 260644 },
+      { key: 'discipline', value: 2 },
+      { key: 'parameterCategory', value: 0 },
+      { key: 'parameterNumber', value: 38 },
+      { key: 'typeOfFirstFixedSurface', value: 151 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+      { key: 'typeOfSecondFixedSurface', value: 151 },
+      { key: 'scaleFactorOfSecondFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_thickness',
+      'has_bitmap',
+      'has_soil_layer',
     ],
   },
 ]
