@@ -52,3 +52,13 @@ class TestAssert:
             str(report2)
             == "FAIL: Test report 2\n  FAIL: Some error message and Some success message\n"
         )
+
+
+    def test_string(self):
+        report = Report("Test report")
+        print("\n")
+        report.add(Fail("Some error message"))
+        report.add("A message")
+
+        print(report)
+        assert (report.status() == False)

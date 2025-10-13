@@ -205,7 +205,6 @@ class Report:
         elif type(entry) is RError:
             self.__status = self.__status or False
         elif type(entry) is str:
-            self.__status = None
             pass
 
         assert type(self.__status) is bool or type(self.__status) is np.bool_ or self.__status is None, f"self.__status={self.__status}, type={type(self.__status)}"
