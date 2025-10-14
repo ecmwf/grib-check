@@ -58,7 +58,7 @@ class TestAssert:
         report.add(Fail("Some error message"))
         report.add("A message")
 
-        assert (report.status() == False)
+        assert (report.status() is False)
 
     def test_add_failed_report(self):
         report1 = Report("Report 1")
@@ -70,4 +70,4 @@ class TestAssert:
         report.add(report1)
         report.add(report2)
 
-        assert (report.status() == False)
+        assert (report.status() is False)

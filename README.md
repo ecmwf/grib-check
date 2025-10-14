@@ -34,11 +34,10 @@ It provides a set of checks that can be applied to GRIB messages, ensuring that 
 
 ## Installation
 
-Installing GribCheck is straightforward. You can clone the repository and install it using pip.
-
 ``` bash
 pip install grib-check
 ```
+
 ## Usage
 
 To use GribCheck, you need to specify the GRIB convention you want to check.

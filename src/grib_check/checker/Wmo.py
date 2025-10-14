@@ -445,7 +445,7 @@ class Wmo(CheckEngine):
 
         if stepType != "instant":  # not instantaneous
             # Check only applies to accumulated, max etc.
-            stepRange = message.get("stepRange", str)
+            # stepRange = message.get("stepRange", str)
 
             saved_validityDate = message["validityDate"]
             saved_validityTime = message["validityTime"]

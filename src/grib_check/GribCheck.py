@@ -93,8 +93,7 @@ class GribCheck:
             checker = S2SRefcst(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "uerra":
             checker = Uerra(SimpleLookupTable(tigge_params, ignore_keys=["model"]),
-                check_limits=self.args.check_limits, check_validity=self.args.validity_check,
-            )
+                            check_limits=self.args.check_limits, check_validity=self.args.validity_check,)
         elif self.args.convention == "crra":
             checker = Crra(
                 SimpleLookupTable(tigge_params, ignore_keys=["model"]),

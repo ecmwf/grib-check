@@ -23,7 +23,6 @@ class ValueFormat:
         self.__fmt = fmt
 
     def format(self, value=5):
-
         if type(value) is list:
             types = set(self.__type_map[type(v)] for v in value)
             if len(types) == 1:
@@ -32,7 +31,6 @@ class ValueFormat:
                 type_str = "mixed"
         else:
             type_str = self.__type_map.get(type(value), "?")
-
 
         if self.__show_type:
             return self.__fmt.format(value, type_str)
