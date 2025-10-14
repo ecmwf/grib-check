@@ -57,6 +57,7 @@ class Assert:
     def _as_string(self, color=False) -> str:
         raise NotImplementedError
 
+
 class AssertTrue(Assert):
     def __init__(self, status, msg, comment=None):
         self._status = bool(status)

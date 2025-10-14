@@ -51,7 +51,7 @@ class KeyValue:
         if self.__key is None:
             return formatter.format(self.__value)
         else:
-            key_str = f'{self.__key}{self.__key_suffix if self.__key_suffix != None else ""}'
+            key_str = f'{self.__key}{self.__key_suffix if self.__key_suffix is not None else ""}'
             if self.__level == 0:
                 return f"{key_str}({formatter.format(self.__value)})"
             else:
