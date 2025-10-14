@@ -14,7 +14,7 @@ requires-python = ">=3.8"
 
 classifiers = [
   "Development Status :: 3 - Alpha",
-  "Intended Audience :: Enc Users/Desktop",
+  "Intended Audience :: End Users/Desktop",
   "License :: OSI Approved :: Apache Software License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
