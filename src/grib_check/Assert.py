@@ -14,8 +14,8 @@ import logging
 # from Message import Message
 import math
 
-from .TermColor import TermColor
 from .KeyValue import makeKV
+from .TermColor import TermColor
 
 
 class Assert:
