@@ -53,7 +53,6 @@ The library currently supports the following conventions:
 
 Experimental conventions that are under development include:
 
-- wmo : General checks required by [World Meteorological Organization (WMO)](https://public.wmo.int/en)
 - wpmip : [Weather Prediction Model Intercomparison Project (WP-MIP)](https://www.wcrp-esmo.org/activities/wp-mip/)
 
 You can specify the convention using the `-t` or `--convention` command-line argument.

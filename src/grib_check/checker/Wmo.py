@@ -32,7 +32,7 @@ from grib_check.Report import Report
 
 
 class Wmo(CheckEngine):
-    def __init__(self, lookup_table, valueflg=False):
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table)
         self.logger = logging.getLogger(__class__.__name__)
 
@@ -62,7 +62,8 @@ class Wmo(CheckEngine):
         )
         self.last_n = 0
         self.values = None
-        self.valueflg = valueflg
+        self.check_limits = check_limits
+        self.check_validity = check_validity
 
     # def register_check(self, name, func):
     #     if name in self._check_map:
@@ -133,16 +134,16 @@ class Wmo(CheckEngine):
             # Three hourly is OK
             report.add(
                 Eq(
-                    message["lengthOfTimeRange"] * 3 + message["startStep"],
-                    message["endStep"],
+                    message["lengthOfTimeRange"] * 3 + message.get("startStep", int),
+                    message.get("endStep", int)
                 )
             )
         else:
             report.add(Eq(message["indicatorOfUnitForTimeRange"], 1))
             report.add(
                 Eq(
-                    message["lengthOfTimeRange"] + message["startStep"],
-                    message["endStep"],
+                    message["lengthOfTimeRange"] + message.get("startStep", int),
+                    message.get("endStep", int),
                 )
             )
 
@@ -152,7 +153,7 @@ class Wmo(CheckEngine):
     def _check_range(self, message, p):
         report = Report("WMO Range check")
 
-        if self.valueflg:
+        if self.check_limits:
             # See ECC-437
             missing = message.get("missingValue", float)
             min_value, max_value = message.minmax()
@@ -195,7 +196,7 @@ class Wmo(CheckEngine):
                                 )
                             )
         else:
-            report.add("Check disabled. Use the option -a or --valueflg to enable it.")
+            report.add("Check disabled. Use the option -a or --check_limits to enable it.")
         return report
 
     # not registered in the lookup table
@@ -211,7 +212,7 @@ class Wmo(CheckEngine):
         west = message.get("longitudeOfFirstGridPointInDegrees", float)
         east = message.get("longitudeOfLastGridPointInDegrees", float)
 
-        if Ne(n, self.last_n).status():
+        if Ne(n, self.last_n):
             try:
                 self.values = get_gaussian_latitudes(n.value())
             except TypeError as e:
@@ -310,7 +311,7 @@ class Wmo(CheckEngine):
             # Do not assume maximum of pl array is 4N! not true for octahedral
             expected_lon2 = 360.0 - 360.0 / max_pl
 
-            if not EqDbl(east, expected_lon2, tolerance).status():
+            if not EqDbl(east, expected_lon2, tolerance):
                 report.add(
                     Fail(
                         f"east actual={east} expected={expected_lon2} diff={expected_lon2-east}"
@@ -449,7 +450,7 @@ class Wmo(CheckEngine):
             saved_validityDate = message["validityDate"]
             saved_validityTime = message["validityTime"]
 
-            message.set("stepRange", stepRange)
+            # message.set("stepRange", stepRange)
 
             validityDate = message["validityDate"]
             validityTime = message["validityTime"]
@@ -474,10 +475,12 @@ class Wmo(CheckEngine):
         report = Report("WMO Basic checks")
         report.add(Eq(message["editionNumber"], 2))
         report.add(Missing(message, "reserved") | Eq(message["reserved"], 0))
+        if self.check_validity:
+            report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
         report.add(self._check_range(message, p))
 
-        if self.valueflg:
+        if self.check_limits:
             values_report = Report("Check values")
             count = 0
             try:
@@ -512,7 +515,7 @@ class Wmo(CheckEngine):
 
         report.add(Eq(message["minute"], 0))
         report.add(Eq(message["second"], 0))
-        report.add(Ge(message["startStep"], 0))
+        report.add(Ge(message["startStep"], "0"))
 
         # TODO: validate local usage. Empty for now xxx
         # report.add(Eq(message, "section2.sectionLength", 5)

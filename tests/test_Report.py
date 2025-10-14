@@ -52,3 +52,22 @@ class TestAssert:
             str(report2)
             == "FAIL: Test report 2\n  FAIL: Some error message and Some success message\n"
         )
+
+    def test_add_string(self):
+        report = Report("Test report")
+        report.add(Fail("Some error message"))
+        report.add("A message")
+
+        assert (report.status() == False)
+
+    def test_add_failed_report(self):
+        report1 = Report("Report 1")
+        report1.add(Fail("Bad message"))
+        report2 = Report("Report 2")
+        report2.add(Pass("Good message"))
+
+        report = Report("Top report")
+        report.add(report1)
+        report.add(report2)
+
+        assert (report.status() == False)
