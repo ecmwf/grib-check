@@ -25,7 +25,8 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dynamic = [ "version" ]
+# dynamic = [ "version" ]
+version = "0.0.1"
 dependencies = [
   "eccodes>=2.27.0", "jsonnet"
 ]
