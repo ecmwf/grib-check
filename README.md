@@ -29,8 +29,12 @@
 > The project is made available as-is, with no guarantee of support.
 > However, bug reports and community contributions are encouraged and appreciated.
 
-GribCheck is a Python library designed for validating GRIB files.
-It provides a set of checks that can be applied to GRIB messages, ensuring that they conform to specific standards and expectations.
+GribCheck is a Python tool that validates **project-specific** conventions of GRIB files.
+It performs a **limited set of checks** on GRIB messages to ensure they comply with the project's **internal standards** and expectations.
+
+Please note that GribCheck is not a general-purpose GRIB validator.
+For instance, it does not verify whether a file fully complies with the WMO GRIB standard or whether it is a technically valid GRIB file.
+
 
 ## Installation
 
@@ -54,11 +58,11 @@ Experimental conventions that are under development include:
 
 - wpmip : [Weather Prediction Model Intercomparison Project (WP-MIP)](https://www.wcrp-esmo.org/activities/wp-mip/)
 
-You can specify the convention using the `-t` or `--convention` command-line argument.
+You can specify the convention using the `-C` or `--convention` command-line argument.
 For example, to check a GRIB file of type "tigge", you would run the following command:
 
 ``` bash
-grib-check -t tigge /path/to/file.grib2
+grib-check -C tigge /path/to/file.grib2
 ```
 
 The output provides the result of each check performed on the GRIB messages in the file. 
