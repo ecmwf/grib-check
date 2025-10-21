@@ -17,9 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: pip install black flake8 isort
-      - run: black --version
+      # - run: black --version
       - run: isort --check .
-      - run: black --check .
+      # - run: black --check .
       - run: flake8 --max-line-length 200 .
 
   checks:

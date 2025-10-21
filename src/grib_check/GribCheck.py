@@ -114,8 +114,7 @@ class GribCheck:
             checker = S2SRefcst(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "uerra":
             checker = Uerra(SimpleLookupTable(tigge_params, ignore_keys=["model"]),
-                check_limits=self.args.check_limits, check_validity=self.args.validity_check,
-            )
+                            check_limits=self.args.check_limits, check_validity=self.args.validity_check,)
         elif self.args.convention == "crra":
             checker = Crra(
                 SimpleLookupTable(crra_params, ignore_keys=["model"]),
@@ -154,7 +153,10 @@ class GribCheck:
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="""GribCheck is a tool that validates project-specific conventions of GRIB files.
+It performs a set of checks on GRIB messages to ensure they comply with the project's internal standards and expectations.
+    """)
+
     parser.add_argument("path", nargs="+", help="path(s) to a GRIB file(s) or directory(s)", type=str)
     parser.add_argument("-L", "--check-limits", help="check value ranges (min/max limits)", action="store_true")
     parser.add_argument(
@@ -170,6 +172,8 @@ def main():
             "lam",
             "wpmip",
         ],
+        required=True,
+        type=str,
     )
     parser.add_argument("-l", "--report-depth", help="report depth", type=int, default=10)
     parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
@@ -178,11 +182,11 @@ def main():
     parser.add_argument("-j", "--num-jobs", help="number of jobs", type=int, default=1)
     parser.add_argument("-f", "--failed-only", help="show only failed checks", action="store_true")
     parser.add_argument("-o", "--output-type", help="output format", choices=["short", "tree"], default="tree")
-    parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.0")
+    parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.1")
     parser.add_argument("-t", "--show-type", help="show value type", action="store_true")
     parser.add_argument(
         "--validity-check",
-        help="perform validity check (experimental)",
+        help='check validity of messages using the "isMessageValid" key provided by ecCodes. (experimental)',
         action="store_true",
     )
     args = parser.parse_args()

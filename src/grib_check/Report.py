@@ -206,7 +206,7 @@ class Report:
             pass
 
         assert type(self.__status) is bool or type(self.__status) is np.bool_ or self.__status is None, f"self.__status={self.__status}, type={type(self.__status)}"
-        
+
         self.__entries.append(entry)
 
         return self
