@@ -38,7 +38,7 @@ class Wpmip(GeneralChecks):
 
         # to use MARS new key "model"
         report.add(Le(message["backgroundProcess"], 255))
-        report.add(Le(message["generatingProcessIdentifier"], 2))
+        report.add(Le(message["generatingProcessIdentifier"], 4))
 
         # CCSDS compression
         # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/
@@ -47,7 +47,7 @@ class Wpmip(GeneralChecks):
         #       # Only 00, 06 12 and 18 Cycle OK
         #       report.add(IsIn(message["hour"], [0, 6, 12, 18]))
 
-        report.add(Le(message["endStep"], 10 * 24))
+        report.add(Le(message["endStep"], 10 * 36))
         report.add(IsMultipleOf(message["step"], 6))
         report.add(self._check_date(message, p))
 
@@ -57,12 +57,8 @@ class Wpmip(GeneralChecks):
     def _pressure_level(self, message, p):
         report = Report("WPMIP Pressure level")
         levels = [
-            1,
             10,
-            20,
-            30,
             50,
-            70,
             100,
             150,
             200,
@@ -80,15 +76,7 @@ class Wpmip(GeneralChecks):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
-        report = Report("Wpmip Statistical Process")
-
-        topd = message.get("typeOfProcessedData", int)
-
-        if topd in [0, 1]:  # Analysis, Forecast, Analysis and forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 8))
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-            return report
+        report = Report("WPMIP Statistical Process")
 
         if message.get("indicatorOfUnitOfTimeRange") == 11:  # six hours
             # Six hourly is OK
@@ -101,22 +89,6 @@ class Wpmip(GeneralChecks):
         report.add(IsMultipleOf(message["endStep"], 6))
 
         return super()._statistical_process(message, p).add(report)
-
-    def _from_start(self, message, p) -> Report:
-        report = Report("Wpmip From Start")
-
-        return super()._from_start(message, p).add(report)
-
-    def _point_in_time(self, message, p) -> Report:
-        report = Report("Wpmip Point in Time")
-
-        topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]:  # Analysis, Forecast
-            report.add(Eq(message["productDefinitionTemplateNumber"], 0))
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-
-        return super()._point_in_time(message, p).add(report)
 
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")

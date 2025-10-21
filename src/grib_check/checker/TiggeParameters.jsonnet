@@ -568,7 +568,7 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'time_integrated_surface_latent_heat_flux_sfc',
     expected+: [
-      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+      { key: 'values', min: [-3e+7, -1e+4], max: [2e+3, 8e+7] },
     ],
     pairs+: [
       { key: 'paramId', value: 147 },
