@@ -103,9 +103,9 @@ class GeneralChecks(CheckEngine):
         topd = message.get("typeOfProcessedData", int)
 
         if topd.value() in [0, 1]:  # Analysis, Forecast
-            report.add( Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
         elif topd == 2:  # Analysis and forecast products
-            report.add( Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
         elif topd in [3, 4]:  # Control forecast products
             pass
         else:

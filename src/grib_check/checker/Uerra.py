@@ -19,7 +19,7 @@ class Uerra(GeneralChecks):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
 
     def _basic_checks_2(self, message, p) -> Report:
-    # this class must not inhereted anything
+        # this class must not inhereted anything
         report = Report("UERRA Basic Checks 2")
 
         report.add(IsIn(message["productionStatusOfProcessedData"], [8, 9]))
@@ -30,7 +30,7 @@ class Uerra(GeneralChecks):
         if message["typeOfProcessedData"] == 0:
             report.add(Eq(message["step"], 0))
         else:
-            report.add( IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3)) 
+            report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
         report.add(self._check_date(message, p))
 
         return report
@@ -38,12 +38,13 @@ class Uerra(GeneralChecks):
     def _basic_checks(self, message, p) -> Report:
         report = Report("UERRA Basic Checks")
         if message.get("class", str) != 'rr' and message.get("class", str) != 'ci':
-          report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
-        report.add(Le(message["hour"], 24))
+            report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
 
+        report.add(Le(message["hour"], 24))
         stream = message.get("stream", str)
+
         if stream != "moda":
-            report.add( IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
+            report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
 
         return super()._basic_checks(message, p).add(report)
 
@@ -83,7 +84,7 @@ class Uerra(GeneralChecks):
 
         stream = message.get("stream", str)
         if stream != "moda":
-          report.add( IsIn(message["endStep"], [1, 2, 4, 5]) | IsMultipleOf(message["endStep"], 3))
+            report.add(IsIn(message["endStep"], [1, 2, 4, 5]) | IsMultipleOf(message["endStep"], 3))
 
         return super()._statistical_process(message, p).add(report)
 

@@ -11,7 +11,14 @@
 import logging
 import datetime
 
-from grib_check.Assert import Eq, IsIn, IsMultipleOf, Fail, Le, Ne
+from grib_check.Assert import (
+    Eq,
+    IsIn,
+    IsMultipleOf,
+    Fail,
+    Le,
+    Ne,
+)
 from grib_check.Report import Report
 from grib_check.KeyValue import KeyValue
 
@@ -39,10 +46,10 @@ class Crra(Uerra):
             if topd == 0:
                 report.add(Eq(message["step"], 0))
             else:
-                report.add( IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
+                report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
 
         if message.get("paramId", int) not in [260651, 235072]:
-          report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
+            report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
 
         return super()._basic_checks(message, p).add(report)
 
@@ -53,9 +60,9 @@ class Crra(Uerra):
         stream = message.get("stream", str)
         if topd in [0, 1]:  # Analysis, Forecast
             if stream == "dame" or stream == "moda":
-              report.add(Eq(message["productDefinitionTemplateNumber"], 8))
+                report.add(Eq(message["productDefinitionTemplateNumber"], 8))
             else:
-              report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
+                report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
 #       elif topd == 2:  # Analysis and forecast products
 #           pass
         elif topd == 3:  # Control forecast products
@@ -92,7 +99,7 @@ class Crra(Uerra):
 
         topd = message.get("typeOfProcessedData", int)
         if topd.value() in [0, 1]:  # Analysis, Forecast
-            report.add( Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+            report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
@@ -111,7 +118,6 @@ class Crra(Uerra):
         stepType = message.get("stepType", str)
         stream = message.get("stream", str)
         topd = message.get("typeOfProcessedData", int)
-
 
         if Ne(stepType, "instant"):  # not instantaneous
             # Check only applies to accumulated, max etc.
@@ -145,7 +151,7 @@ class Crra(Uerra):
                 first_date_month2 = datetime.date(year2, month2, 1)
                 first_date_month2 = int(str(first_date_month2).replace('-', ''))
 
-                numberOfTimeRanges = message["numberOfTimeRanges"]
+                # numberOfTimeRanges = message["numberOfTimeRanges"]
                 lengthOfTimeRanges = [KeyValue("lengthOfTimeRange", v) for v in message.get_long_array("lengthOfTimeRange")]
                 typeOfStatisticalProcessings = [KeyValue("typeOfStatisticalProcessing", v) for v in message.get_long_array("typeOfStatisticalProcessing")]
 
@@ -176,7 +182,7 @@ class Crra(Uerra):
                     [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), 21))]
                     [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
-                elif typeOfStatisticalProcessings == [1,1]:
+                elif typeOfStatisticalProcessings == [1, 1]:
                     report = Report("dame - daily_sum_an/fc")
                     dame_validityDate = next_day2
                     dame_validityTime = 0
@@ -190,7 +196,7 @@ class Crra(Uerra):
                     [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[1]), 255))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 12))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
-                elif typeOfStatisticalProcessings == [2,2] or typeOfStatisticalProcessings == [3,3]:
+                elif typeOfStatisticalProcessings == [2, 2] or typeOfStatisticalProcessings == [3, 3]:
                     report = Report("dame - daily_min/max_an/fc")
                     dame_validityDate = next_day1
                     dame_validityTime = 0
@@ -229,7 +235,7 @@ class Crra(Uerra):
                     [report.add(IsIn(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), moda_lotr1))]
                     [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
-                elif typeOfStatisticalProcessings == [2,2] or typeOfStatisticalProcessings == [3,3]:
+                elif typeOfStatisticalProcessings == [2, 2] or typeOfStatisticalProcessings == [3, 3]:
                     report = Report("moda - monthly_min/max_an/fc")
                     moda_validityDate = first_date_month1
                     moda_validityTime = 0
@@ -243,7 +249,7 @@ class Crra(Uerra):
                     [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[1]), 255))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
                     [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
-                elif typeOfStatisticalProcessings == [0,1,1]:
+                elif typeOfStatisticalProcessings == [0, 1, 1]:
                     report = Report("moda - monthly_daysum_an/fc")
                     moda_validityDate = first_date_month2
                     moda_validityTime = 0
@@ -283,7 +289,6 @@ class Crra(Uerra):
                 report.add(Eq(validityTime, validityTimeBefore, f'Set stepRange={stepRange} has no effect on validityTime'))
 
         return report
-
 
     def _pressure_level(self, message, p) -> Report:
         report = Report("CRRA Pressure Level")
