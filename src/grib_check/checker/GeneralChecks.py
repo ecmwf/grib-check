@@ -590,7 +590,7 @@ class GeneralChecks(CheckEngine):
         report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
 
-        endStep = message["endStep"]
+        endStep = message.get("endStep", int)
         if endStep != 0:
             min_value, max_value = message.minmax()
             report.add(self._check_range(message, p, min_value=min_value/endStep, max_value=max_value/endStep))

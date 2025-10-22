@@ -13,6 +13,7 @@ import logging
 import numpy as np
 from eccodes import (
     codes_get,
+    codes_set,
     codes_get_double_array,
     codes_get_long_array,
     codes_get_message,
@@ -90,9 +91,10 @@ class Message:
             codes_release(self.__h)
 
     def set(self, key, value):
-        if type(value) is KeyValue:
-            value = value.value()
-        codes_set_string(self.__h, key, value)
+        try:
+            codes_set(self.__h, key, value)
+        except Exception:
+            self.logger.debug(f"KeyError: {key}={value}")
 
     def get(self, key, datatype=None) -> KeyValue:
         try:

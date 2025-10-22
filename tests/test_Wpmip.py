@@ -8,46 +8,32 @@
 # nor does it submit to any jurisdiction.
 #
 
-from grib_check.Assert import Fail
 from grib_check.checker.Wpmip import Wpmip
 from grib_check.Grib import Grib
-from grib_check.Report import Report
+from grib_check.LookupTable import SimpleLookupTable
 
-
-def dummy(a, b):
-    report = Report()
-    report.add(Fail("dummy"))
-    return report
-
+import os
 
 class TestWpmip:
 
-    def test_wpmip_paramId_176(self):
-        check_map = {
-            "from_start": dummy,
-            "predefined_level": dummy,
-        }
+    def test_wpmip_paramId_176_good(self):
+        self.src_path = f"{os.path.dirname(os.path.realpath(__file__))}/../src/grib_check"
+        wpmip_params = (f"{self.src_path}/checker/WpmipParameters.jsonnet")
+        checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=False, check_validity=False)
 
-        parameter = {
-            "name": "time_integrated_surface_net_solar_radiation_sfc.wpmip",
-            "min1": -1e+5,
-            "min2": 1e+05,
-            "max1": 1e+05,
-            "max2": 8e+06,
-            "pairs": [
-                {"key": "paramId", "key_type": "int", "value_long": 176},
-                {"key": "discipline", "key_type": "int", "value_long": 0},
-                {"key": "parameterCategory", "key_type": "int", "value_long": 4},
-                {"key": "parameterNumber", "key_type": "int", "value_long": 9},
-                {
-                    "key": "typeOfFirstFixedSurface",
-                    "key_type": "int",
-                    "value_long": 1,
-                },
-            ],
-            "checks": ["from_start", "predefined_level"],
-        }
+        grib = Grib("./tests/wpmip/wpmip_ecmf_sfc_ssr.grib")
+        message = next(grib)
+        report = checker.validate(message)
+        assert report.status() is True
 
-        for message in Grib("./tests/wpmip/wpmip_ecmf_sfc_ssr.grib"):
-            test = Wpmip.DefaultTest(message, parameter, check_map)
-            test.run()
+
+    def test_wpmip_paramId_176_stepUnits(self):
+        self.src_path = f"{os.path.dirname(os.path.realpath(__file__))}/../src/grib_check"
+        wpmip_params = (f"{self.src_path}/checker/WpmipParameters.jsonnet")
+        checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=False, check_validity=False)
+
+        grib = Grib("./tests/wpmip/wpmip_ecmf_sfc_ssr.grib")
+        message = next(grib)
+        message.set("stepUnits", 0)
+        report = checker.validate(message)
+        assert report.status() is False
