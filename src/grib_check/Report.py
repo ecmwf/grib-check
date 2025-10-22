@@ -192,23 +192,21 @@ class Report:
             if self.__status is None:
                 self.__status = bool(entry)
             else:
-                if entry is not None:
-                    self.__status = self.__status and bool(entry)
+                if bool(entry) is False:
+                    self.__status = False
         elif isinstance(entry, Report):
             if self.__status is None:
-                self.__status = bool(entry)
+                self.__status = entry.status()
+            elif entry.status() is False:
+                self.__status = False
             else:
-                if entry is not None:
-                    self.__status = self.__status and bool(entry)
-        elif type(entry) is RWarning:
-            self.__status = self.__status or None
-        elif type(entry) is RError:
-            self.__status = self.__status or False
+                if entry.status() is not None:
+                    self.__status = self.__status and entry.status()
         elif type(entry) is str:
             pass
 
         assert type(self.__status) is bool or type(self.__status) is np.bool_ or self.__status is None, f"self.__status={self.__status}, type={type(self.__status)}"
-        
+
         self.__entries.append(entry)
 
         return self

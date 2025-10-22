@@ -14,8 +14,8 @@ import logging
 # from Message import Message
 import math
 
-from .TermColor import TermColor
 from .KeyValue import makeKV
+from .TermColor import TermColor
 
 
 class Assert:
@@ -56,6 +56,7 @@ class Assert:
 
     def _as_string(self, color=False) -> str:
         raise NotImplementedError
+
 
 class AssertTrue(Assert):
     def __init__(self, status, msg, comment=None):

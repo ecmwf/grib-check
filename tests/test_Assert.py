@@ -32,7 +32,6 @@ class TestAssert:
         assert a
         assert f"{eq1} and {eq1}" == a.as_string()
 
-
     def test_or(self):
         kv1 = KeyValue("stream", "eefo")
         kv2 = KeyValue("stream", "nai")
