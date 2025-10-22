@@ -14,24 +14,21 @@ from grib_check.LookupTable import SimpleLookupTable
 
 import os
 
+src_path = f"{os.path.dirname(os.path.realpath(__file__))}/../src/grib_check"
+
+
 class TestWpmip:
-
     def test_wpmip_paramId_176_good(self):
-        self.src_path = f"{os.path.dirname(os.path.realpath(__file__))}/../src/grib_check"
-        wpmip_params = (f"{self.src_path}/checker/WpmipParameters.jsonnet")
+        wpmip_params = (f"{src_path}/checker/WpmipParameters.jsonnet")
         checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=False, check_validity=False)
-
         grib = Grib("./tests/wpmip/wpmip_ecmf_sfc_ssr.grib")
         message = next(grib)
         report = checker.validate(message)
         assert report.status() is True
 
-
     def test_wpmip_paramId_176_stepUnits(self):
-        self.src_path = f"{os.path.dirname(os.path.realpath(__file__))}/../src/grib_check"
-        wpmip_params = (f"{self.src_path}/checker/WpmipParameters.jsonnet")
+        wpmip_params = (f"{src_path}/checker/WpmipParameters.jsonnet")
         checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=False, check_validity=False)
-
         grib = Grib("./tests/wpmip/wpmip_ecmf_sfc_ssr.grib")
         message = next(grib)
         message.set("stepUnits", 0)
