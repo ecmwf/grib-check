@@ -149,13 +149,14 @@ class GeneralChecks(CheckEngine):
         return report
 
     # not registered in the lookup table
-    def _check_range(self, message, p):
+    def _check_range(self, message, p, min_value=None, max_value=None):
         report = Report("Range check")
 
         if self.check_limits:
             # See ECC-437
             missing = message.get("missingValue", float)
-            min_value, max_value = message.minmax()
+            if min_value is None or max_value is None:
+                min_value, max_value = message.minmax()
 
             for entry in p["expected"]:
                 if entry["key"] == "values":
@@ -588,6 +589,12 @@ class GeneralChecks(CheckEngine):
         report = Report("From Start")
         report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
+
+        endStep = message["endStep"]
+        if endStep != 0:
+            min_value, max_value = message.minmax()
+            report.add(self._check_range(message, p, min_value=min_value/endStep, max_value=max_value/endStep))
+
         return report
 
     def _point_in_time(self, message, p):

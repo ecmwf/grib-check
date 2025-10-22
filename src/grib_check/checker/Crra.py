@@ -15,6 +15,7 @@ from grib_check.Assert import (
     Eq,
     IsIn,
     IsMultipleOf,
+    Pass,
     Fail,
     Le,
     Ne,
@@ -92,6 +93,15 @@ class Crra(Uerra):
         if stream != "moda" and stream != "dame":
             report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
+
+        endStep = message["endStep"]
+        if endStep == 0:
+            min_value, max_value = message.minmax()
+            if min_value == 0 and max_value == 0:
+                report.add(Pass(f"min and max are both {KeyValue(None, 0)} for {endStep}"))
+            else:
+                report.add(Fail(f"min and max should both be {KeyValue(None, 0)} for {endStep} but are {KeyValue(None, min_value)} and {KeyValue(None, max_value)}"))
+
         return report
 
     def _statistical_process(self, message, p) -> Report:
