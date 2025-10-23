@@ -4,7 +4,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: '10_meter_u_velocity_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-100, -1], max: [1, 100] },
     ],
     pairs+: [
@@ -25,7 +24,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: '10_meter_u_velocity_sfc.lam',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-100, -1], max: [1, 100] },
     ],
     pairs+: [
@@ -46,7 +44,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: '10_meter_u_velocity_sfc.lam.mogreps-mo-eua',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'suiteName', value: 1 },
       { key: 'values', min: [-100, 10], max: [-10, 100] },
     ],
@@ -88,7 +85,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: '10_meter_v_velocity_sfc.lam.mogreps-mo-eua',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'suiteName', value: 1 },
       { key: 'values', min: [-100, 10], max: [-10, 100] },
     ],
@@ -111,7 +107,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'convective_available_potential_energy_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [0, 10], max: [0, 17000] },
     ],
     pairs+: [
@@ -130,7 +125,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'convective_available_potential_energy_sfc.lam',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [0, 100], max: [0, 17000] },
     ],
     pairs+: [
@@ -150,7 +144,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'convective_available_potential_energy_sfc.lam.glameps-hirlamcons-eu',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'suiteName', value: 9 },
       { key: 'values', min: [-1000, 10], max: [0, 17000] },
     ],
@@ -172,7 +165,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'convective_inhibition_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-60000, 0], max: [-10, 5] },
     ],
     pairs+: [
@@ -191,7 +183,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'convective_inhibition_sfc.lam',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-60000, 1], max: [-10, 4000] },
     ],
     pairs+: [
@@ -211,7 +202,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'field_capacity_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [1e+99, -1e+99], max: [99, -99] },
     ],
     pairs+: [
@@ -252,7 +242,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'land_sea_mask_sfc.lam.hirlam-dmi-eu',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'suiteName', value: 11 },
       { key: 'values', min: [-0.001, 0], max: [1, 1.11] },
     ],
@@ -290,7 +279,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'potential_temperature_pv',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [220, 265], max: [380, 1200] },
     ],
     pairs+: [
@@ -309,7 +297,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'potential_vorticity_pt',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-0.005, -1e-06], max: [1e-06, 0.002] },
     ],
     pairs+: [
@@ -346,7 +333,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'snow_fall_water_equivalent_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
     ],
     pairs+: [
@@ -366,7 +352,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_moisture_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-1e-19, 0], max: [450, 800] },
     ],
     pairs+: [
@@ -390,7 +375,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_temperature_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [200, 230], max: [300, 350] },
     ],
     pairs+: [
@@ -413,7 +397,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'specific_humidity_pl',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-0.1, 0.001], max: [5e-05, 0.1] },
     ],
     pairs+: [
@@ -432,7 +415,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'sunshine_duration_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [0, 0], max: [3600.00000001, 3600.00000001] },
     ],
     pairs+: [
@@ -467,7 +449,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_air_dew_point_temperature_sfc.lam',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [110, 290], max: [270, 350] },
     ],
     pairs+: [
@@ -488,7 +469,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_air_dew_point_temperature_sfc.lam',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'suiteName', value: 1 },
       { key: 'values', min: [110, 290], max: [270, 350] },
     ],
@@ -511,7 +491,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_air_maximum_temperature_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [160, 255], max: [300, 380] },
     ],
     pairs+: [
@@ -531,7 +510,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_air_minimum_temperature_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [160, 260], max: [300, 330] },
     ],
     pairs+: [
@@ -551,7 +529,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_air_maximum_temperature_sfc.ammc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'centre', value: 1 },
       { key: 'values', min: [175, 240], max: [300, 10000] },
     ],
@@ -591,7 +568,7 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'time_integrated_surface_latent_heat_flux_sfc',
     expected+: [
-      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+      { key: 'values', min: [-3e+7, -1e+4], max: [2e+3, 8e+7] },
     ],
     pairs+: [
       { key: 'paramId', value: 147 },
@@ -645,7 +622,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'time_integrated_surface_net_thermal_radiation_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
     ],
     pairs+: [
@@ -665,7 +641,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'time_integrated_surface_net_thermal_radiation_downwards_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
     ],
     pairs+: [
@@ -685,7 +660,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'time_integrated_surface_sensible_heat_flux_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
     ],
     pairs+: [
@@ -705,7 +679,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'total_cloud_cover_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [0, 1e-10], max: [100, 100.00001] },
     ],
     pairs+: [
@@ -724,7 +697,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'total_precipitation_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-0.05, 0.1], max: [0.0, 100.0] },
     ],
     pairs+: [
@@ -744,7 +716,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'total_precipitation_sfc.lam',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-0.05, 0.1], max: [0.0, 400.0] },
     ],
     pairs+: [
@@ -764,7 +735,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'large_scale_precipitation_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-0.05, 0.1], max: [0.0, 100.0] },
     ],
     pairs+: [
@@ -784,7 +754,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'large_scale_precipitation_sfc.lam',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-0.05, 0.1], max: [0.0, 400.0] },
     ],
     pairs+: [
@@ -804,7 +773,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'wilting_point_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [1e+99, -1e+99], max: [99, -99] },
     ],
     pairs+: [
@@ -828,7 +796,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'maximum_wind_gust.lam',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [0, 15], max: [0, 150] },
     ],
     pairs+: [
@@ -850,7 +817,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'maximum_wind_gust.lam.mogreps',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'suiteName', value: 1 },
       { key: 'values', min: [0, 20], max: [0, 800] },
     ],
@@ -945,7 +911,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'temperature_pl',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [150, 275], max: [200, 330] },
     ],
     pairs+: [
@@ -965,7 +930,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'temperature_pl.ammc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'centre', value: 1 },
       { key: 'values', min: [-999, 260], max: [200, 350] },
     ],
@@ -1005,7 +969,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'v_velocity_pl',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-200, -2], max: [2, 200] },
     ],
     pairs+: [
@@ -1025,7 +988,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'u_velocity_pv',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-120, -30], max: [70, 120] },
     ],
     pairs+: [
@@ -1044,7 +1006,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'v_velocity_pv',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-120, -50], max: [55, 120] },
     ],
     pairs+: [
@@ -1081,7 +1042,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_type_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [0, 1], max: [5, 10] },
     ],
     pairs+: [
@@ -1101,7 +1061,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_pressure_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [48000, 80000], max: [101500, 115000] },
     ],
     pairs+: [
@@ -1120,7 +1079,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'eastward_turbulent_surface_stress_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
     ],
     pairs+: [
@@ -1140,7 +1098,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'northward_turbulent_surface_stress_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
     ],
     pairs+: [
@@ -1160,7 +1117,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'water_runoff_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-0.001, 5], max: [0.3, 30] },
     ],
     pairs+: [
@@ -1181,7 +1137,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'sea_ice_cover_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
     ],
     pairs+: [
@@ -1201,7 +1156,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'snow_density_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
     ],
     pairs+: [
@@ -1221,7 +1175,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'sea_surface_temperature_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [200, 290], max: [260, 320] },
     ],
     pairs+: [
@@ -1241,7 +1194,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'convective_available_potential_energy_sfc.glob.s2',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'values', min: [0, 10], max: [0, 17000] },
     ],
@@ -1265,7 +1217,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'total_column_water_sfc.s2',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'values', min: [-3.0, 2], max: [30, 150] },
     ],
@@ -1304,7 +1255,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_air_temperature_sfc.glob.s2',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'values', min: [170, 290], max: [270, 360] },
     ],
@@ -1327,7 +1277,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_air_dew_point_temperature_sfc',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [30, 290], max: [270, 350] },
     ],
     pairs+: [
@@ -1386,7 +1335,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_moisture_top_20_cm_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-1e-17, 70], max: [100, 1500] },
     ],
     pairs+: [
@@ -1412,7 +1360,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_moisture_top_100_cm_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-1e-15, 70], max: [380, 1400] },
     ],
     pairs+: [
@@ -1438,7 +1385,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_temperature_top_20_cm_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [180, 240], max: [300, 350] },
     ],
     pairs+: [
@@ -1464,7 +1410,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_temperature_top_20_cm_sfc.glob.rums',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'centre', value: 1 },
       { key: 'values', min: [0, 250], max: [300, 350] },
     ],
@@ -1492,7 +1437,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_temperature_top_100_cm_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [190, 240], max: [300, 350] },
     ],
     pairs+: [
@@ -1518,7 +1462,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_temperature_top_100_cm_sfc.glob.s2.rums',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'centre', value: 1 },
       { key: 'values', min: [0, 250], max: [300, 350] },
@@ -1549,7 +1492,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'snow_depth_water_equivalent_sfc.glob.s2',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'values', min: [-1e-05, 0], max: [100, 15000] },
     ],
@@ -1570,7 +1512,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'snow_depth_water_equivalent_sfc.glob.s2.cwao',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'centre', value: 1 },
       { key: 'values', min: [-4e-19, 0], max: [100, 40000] },
@@ -1595,7 +1536,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'total_cloud_cover_sfc.glob.s2',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'values', min: [-0.1, 5], max: [90.0, 101.0] },
     ],
@@ -1619,7 +1559,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'total_cloud_cover_sfc.glob.s2.lfpw',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'centre', value: 1 },
       { key: 'step', value: 1 },
@@ -1647,7 +1586,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'convective_precipitation_sfc.glob',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'values', min: [-0.05, 0.1], max: [0.0, 100.0] },
     ],
     pairs+: [
@@ -1667,7 +1605,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'sea_ice_cover_sfc.glob.s2',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
     ],
@@ -1691,7 +1628,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'snow_density_sfc.glob.s2',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
     ],
@@ -1714,7 +1650,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'sea_surface_temperature_sfc.glob.s2',
     expected+: [
-      { key: 'model', value: 0 },
       { key: 'class', value: 0 },
       { key: 'values', min: [180, 290], max: [260, 320] },
     ],
@@ -1735,27 +1670,26 @@ local templates = import 'Parameter.libsonnet';
       'resolution_s2s',
     ],
   },
-  templates.Wmo {
-    name: 'snow_albedo_sfc.glob',
-    expected+: [
-      { key: 'model', value: 0 },
-      { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
-    ],
-    pairs+: [
-      { key: 'model', value: 'glob' },
-      { key: 'paramId', value: 228032 },
-      { key: 'typeOfStatisticalProcessing', value: 0 },
-      { key: 'discipline', value: 0 },
-      { key: 'parameterCategory', value: 19 },
-      { key: 'parameterNumber', value: 19 },
-      { key: 'typeOfFirstFixedSurface', value: 1 },
-    ],
-    checks+: [
-      'daily_average',
-      'predefined_level',
-      'has_bitmap',
-    ],
-  },
+//templates.Wmo {
+ // name: 'snow_albedo_sfc.glob',
+//  expected+: [
+//    { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
+//  ],
+//  pairs+: [
+//    { key: 'model', value: 'glob' },
+//    { key: 'paramId', value: 228032 },
+//    { key: 'typeOfStatisticalProcessing', value: 0 },
+//    { key: 'discipline', value: 0 },
+//    { key: 'parameterCategory', value: 19 },
+//    { key: 'parameterNumber', value: 19 },
+//    { key: 'typeOfFirstFixedSurface', value: 1 },
+ // ],
+ // checks+: [
+//    'daily_average',
+//    'predefined_level',
+//    'has_bitmap',
+//  ],
+//},
   templates.Wmo {
     name: 'high_cloud_cover_sfc',
     expected+: [
@@ -2944,6 +2878,44 @@ local templates = import 'Parameter.libsonnet';
     checks+: [
       'point_in_time',
       'has_bitmap',
+    ],
+  },
+  templates.Wmo {
+    name: 'wind_speed_ml',
+    expected+: [
+      { key: 'values', min: [0, 10], max: [10, 150] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 10 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 105 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_level',
+      'height_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'wind_direction_ml',
+    expected+: [
+      { key: 'values', min: [0, 1], max: [359, 360.1] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 3031 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 0 },
+      { key: 'typeOfFirstFixedSurface', value: 105 },
+      { key: 'scaleFactorOfFirstFixedSurface', value: 0 },
+    ],
+    checks+: [
+      'point_in_time',
+      'given_level',
+      'height_level',
     ],
   },
   templates.Wmo {

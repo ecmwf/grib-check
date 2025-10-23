@@ -8,13 +8,26 @@
 # nor does it submit to any jurisdiction.
 #
 
-from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt, Ne
+from grib_check.Assert import (
+    Eq,
+    EqDbl,
+    Fail,
+    Ge,
+    Gt,
+    IsIn,
+    IsMultipleOf,
+    Le,
+    Lt,
+    Ne,
+    Pass,
+)
+from grib_check.KeyValue import KeyValue
 from grib_check.Report import Report
 
-from .Wmo import Wmo
+from .GeneralChecks import GeneralChecks
 
 
-class S2S(Wmo):
+class S2S(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
 
@@ -22,6 +35,8 @@ class S2S(Wmo):
         report = Report("S2S Basic Checks")
         report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
         report.add(IsMultipleOf(message.get("step", int), 6))
+
+        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
 
         return super()._basic_checks(message, p).add(report)
 
@@ -59,8 +74,14 @@ class S2S(Wmo):
 
     def _from_start(self, message, p) -> Report:
         report = Report("S2S From Start")
-        if message["endStep"] != 0:
-            report.add(self._check_range(message, p))
+        endStep = message["endStep"]
+        if endStep == 0:
+            min_value, max_value = message.minmax()
+            if min_value == 0 and max_value == 0:
+                report.add(Pass(f"min and max are both {KeyValue(None, 0)} for {endStep}"))
+            else:
+                report.add(Fail(f"min and max should both be {KeyValue(None, 0)} for {endStep} but are {KeyValue(None, min_value)} and {KeyValue(None, max_value)}"))
+
         return super()._from_start(message, p).add(report)
 
     def _point_in_time(self, message, p) -> Report:

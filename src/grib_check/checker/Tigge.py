@@ -10,13 +10,14 @@
 
 import logging
 
-from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Ne
+from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Ne, Pass
+from grib_check.KeyValue import KeyValue
 from grib_check.Report import Report
 
-from .Wmo import Wmo
+from .GeneralChecks import GeneralChecks
 
 
-class Tigge(Wmo):
+class Tigge(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
@@ -28,12 +29,12 @@ class Tigge(Wmo):
 
     def _basic_checks(self, message, p):
         report = Report("Tigge Basic Checks")
+        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
         # Only 00, 06 12 and 18 Cycle OK
         report.add(IsIn(message["hour"], [0, 6, 12, 18]))
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
         report.add(Le(message["endStep"], 30 * 24))
         report.add(IsMultipleOf(message["step"], 6))
-
         report.add(self._check_date(message, p))
 
         return super()._basic_checks(message, p).add(report)
@@ -72,10 +73,15 @@ class Tigge(Wmo):
 
     def _from_start(self, message, p) -> Report:
         report = Report("Tigge From Start")
-        if message.get("endStep") != 0:
-            report.add(self._check_range(message, p))
+        endStep = message["endStep"]
+        if endStep == 0:
+            min_value, max_value = message.minmax()
+            if min_value == 0 and max_value == 0:
+                report.add(Pass(f"min and max are both {KeyValue(None, 0)} for {endStep}"))
+            else:
+                report.add(Fail(f"min and max should both be {KeyValue(None, 0)} for {endStep} but are {KeyValue(None, min_value)} and {KeyValue(None, max_value)}"))
 
-        return super()._statistical_process(message, p).add(report)
+        return super()._from_start(message, p).add(report)
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("Tigge Point in Time")
@@ -113,7 +119,7 @@ class Tigge(Wmo):
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
-        return super()._statistical_process(message, p).add(report)
+        return super()._point_in_time(message, p).add(report)
 
     def _height_level(self, message, p) -> Report:
         report = Report("Tigge Height Level")

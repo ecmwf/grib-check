@@ -6,6 +6,8 @@
     expected: [],
   },
   Wmo: self.Parameter {
-    checks+: ['basic_checks'],
+    checks+: [
+      'basic_checks',
+    ],
   },
 }

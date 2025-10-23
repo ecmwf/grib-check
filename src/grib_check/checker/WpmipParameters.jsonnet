@@ -1,9 +1,9 @@
 local templates = import 'Parameter.libsonnet';
 [
   templates.Wmo {
-    name: 'total_precipitation_sfc',
+    name: 'total_precipitation_sfc.wpmip',
     expected+: [
-      { key: 'values', min: [-0.05, 0.1], max: [0.0, 0.0] },
+      { key: 'values', min: [-0.05, 0.1], max: [0.0, 500.0] },
     ],
     pairs+: [
       { key: 'paramId', value: 228228 },
@@ -19,7 +19,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'orography_sfc',
+    name: 'orography_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-1300, 0], max: [1000, 8888] },
     ],
@@ -36,7 +36,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'mean_sea_level_pressure_sfc',
+    name: 'mean_sea_level_pressure_sfc.wpmip',
     expected+: [
       { key: 'values', min: [88000, 104000], max: [98000, 115000] },
     ],
@@ -53,7 +53,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'time_integrated_surface_net_thermal_radiation_downwards_sfc',
+    name: 'time_integrated_surface_net_thermal_radiation_downwards_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
     ],
@@ -71,9 +71,9 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'time_integral_of_top_net_solar_radiation_flux_sfc',
+    name: 'time_integral_of_top_net_solar_radiation_flux_sfc.wpmip',
     expected+: [
-      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+      { key: 'values', min: [-1e+5, 1e+05], max: [1e+05, 8e+06] },
     ],
     pairs+: [
       { key: 'paramId', value: 178 },
@@ -89,9 +89,9 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'time_integrated_top_net_thermal_radiation_sfc',
+    name: 'time_integrated_top_net_thermal_radiation_sfc.wpmip',
     expected+: [
-      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+      { key: 'values', min: [-4e+06, -8e+5], max: [-1.8e+6, -2e+5] },
     ],
     pairs+: [
       { key: 'paramId', value: 179 },
@@ -107,9 +107,27 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'time_integrated_surface_sensible_heat_flux_sfc',
+    name: 'time_integrated_top_solar_radiation_sfc.wpmip',
     expected+: [
-      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+      { key: 'values', min: [0.0, 100000000.0], max: [0.0, 100000000.0] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 212 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 4 },
+      { key: 'parameterNumber', value: 7 },
+      { key: 'typeOfStatisticalProcessing', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 8 },
+    ],
+    checks+: [
+      'from_start',
+      'predefined_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'time_integrated_surface_sensible_heat_flux_sfc.wpmip',
+    expected+: [
+      { key: 'values', min: [-1e+8, 0], max: [0, 1e+8] },
     ],
     pairs+: [
       { key: 'paramId', value: 146 },
@@ -125,9 +143,9 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'time_integrated_surface_latent_heat_flux_sfc',
+    name: 'time_integrated_surface_latent_heat_flux_sfc.wpmip',
     expected+: [
-      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+      { key: 'values', min: [-3e+7, -1e+4], max: [2e+3, 8e+7] },
     ],
     pairs+: [
       { key: 'paramId', value: 147 },
@@ -143,7 +161,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'land_sea_mask_sfc',
+    name: 'land_sea_mask_sfc.wpmip',
     expected+: [
       { key: 'values', min: [0, 0], max: [1, 1] },
     ],
@@ -160,9 +178,9 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'time_integrated_surface_net_solar_radiation_sfc',
+    name: 'time_integrated_surface_net_solar_radiation_sfc.wpmip',
     expected+: [
-      { key: 'values', min: [-10, 100000.0], max: [100000.0, 10000000.0] },
+      { key: 'values', min: [-1e+5, 1e+05], max: [1e+05, 8e+06] },
     ],
     pairs+: [
       { key: 'paramId', value: 176 },
@@ -178,7 +196,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'surface_pressure_sfc',
+    name: 'surface_pressure_sfc.wpmip',
     expected+: [
       { key: 'values', min: [48000, 80000], max: [101500, 115000] },
     ],
@@ -195,7 +213,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: '2_metre_specific_humidity_sfc',
+    name: '2_metre_specific_humidity_sfc.wpmip',
     expected+: [
       { key: 'values', min: [0, 2], max: [0, 2] },
     ],
@@ -214,7 +232,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'sea_surface_temperature_sfc',
+    name: 'sea_surface_temperature_sfc.wpmip',
     expected+: [
       { key: 'values', min: [170, 290], max: [270, 360] },
     ],
@@ -231,7 +249,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'sea_ice_area_fraction_sfc',
+    name: 'sea_ice_area_fraction_sfc.wpmip',
     expected+: [
       { key: 'values', min: [0, 1], max: [0, 1] },
     ],
@@ -248,7 +266,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'surface_air_temperature_sfc',
+    name: 'surface_air_temperature_sfc.wpmip',
     expected+: [
       { key: 'values', min: [170, 290], max: [270, 360] },
     ],
@@ -265,7 +283,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'surface_air_dew_point_temperature_sfc',
+    name: 'surface_air_dew_point_temperature_sfc.wpmip',
     expected+: [
       { key: 'values', min: [30, 290], max: [270, 350] },
     ],
@@ -282,7 +300,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'total_cloud_cover_sfc',
+    name: 'total_cloud_cover_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-0.1, 5], max: [90.0, 101.0] },
     ],
@@ -299,7 +317,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'low_cloud_cover_sfc',
+    name: 'low_cloud_cover_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-0.1, 5], max: [90.0, 101.0] },
     ],
@@ -313,7 +331,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'high_cloud_cover_sfc',
+    name: 'high_cloud_cover_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-0.1, 5], max: [90.0, 101.0] },
     ],
@@ -327,7 +345,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'medium_cloud_cover_sfc',
+    name: 'medium_cloud_cover_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-0.1, 5], max: [90.0, 101.0] },
     ],
@@ -341,9 +359,9 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'short_wave_(solar)_radiation_downwards_sfc',
+    name: 'time_integrated_short_wave_(solar)_radiation_downwards_sfc.wpmip',
     expected+: [
-      { key: 'values', min: [30, 290], max: [270, 350] },
+      { key: 'values', min: [-10, 1.6e+05], max: [1e+06, 1e+07] },
     ],
     pairs+: [
       { key: 'paramId', value: 169 },
@@ -354,12 +372,27 @@ local templates = import 'Parameter.libsonnet';
       { key: 'typeOfStatisticalProcessing', value: 1 },
     ],
     checks+: [
-      'point_in_time',
+      'from_start',
       'predefined_level',
     ],
   },
   templates.Wmo {
-    name: '10_meter_u_velocity_sfc',
+    name: 'sea_ice_thickness_sfc.wpmip',
+    expected+: [
+      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 262000 },
+      { key: 'discipline', value: 10 },
+      { key: 'parameterCategory', value: 2 },
+      { key: 'parameterNumber', value: 1 },
+    ],
+    checks+: [
+      'point_in_time',
+    ],
+  },
+  templates.Wmo {
+    name: '10_meter_u_velocity_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-100, -1], max: [1, 100] },
     ],
@@ -378,7 +411,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: '10_meter_v_velocity_sfc',
+    name: '10_meter_v_velocity_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-100, -1], max: [1, 100] },
     ],
@@ -397,7 +430,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'time_integrated_surface_net_thermal_radiation_sfc',
+    name: 'time_integrated_surface_net_thermal_radiation_sfc.wpmip',
     expected+: [
       { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
     ],
@@ -415,9 +448,9 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'geopotential_pl',
+    name: 'geopotential_pl.wpmip',
     expected+: [
-      { key: 'values', min: [-5000, 306000], max: [2000, 350000] },
+      { key: 'values', min: [-5000, 40000], max: [200, 40000] },
     ],
     pairs+: [
       { key: 'paramId', value: 156 },
@@ -433,7 +466,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'geopotential_pl',
+    name: 'geopotential_pl.wpmip',
     expected+: [
       { key: 'values', min: [-5000, 306000], max: [2000, 350000] },
     ],
@@ -450,7 +483,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'temperature_pl',
+    name: 'temperature_pl.wpmip',
     expected+: [
       { key: 'values', min: [150, 275], max: [200, 330] },
     ],
@@ -468,7 +501,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'u_velocity_pl',
+    name: 'u_velocity_pl.wpmip',
     expected+: [
       { key: 'values', min: [-250, 5], max: [1, 250] },
     ],
@@ -486,7 +519,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'v_velocity_pl',
+    name: 'v_velocity_pl.wpmip',
     expected+: [
       { key: 'values', min: [-200, -2], max: [2, 200] },
     ],
@@ -504,7 +537,7 @@ local templates = import 'Parameter.libsonnet';
     ],
   },
   templates.Wmo {
-    name: 'specific_humidity_pl',
+    name: 'specific_humidity_pl.wpmip',
     expected+: [
       { key: 'values', min: [-0.1, 0.01], max: [0, 0.1] },
     ],

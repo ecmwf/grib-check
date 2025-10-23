@@ -11,15 +11,17 @@
 from grib_check.Assert import AssertTrue, Eq, Fail, IsIn, IsMultipleOf, Le
 from grib_check.Report import Report
 
-from .Wmo import Wmo
+from .GeneralChecks import GeneralChecks
 
 
-class Uerra(Wmo):
+class Uerra(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
 
     def _basic_checks_2(self, message, p) -> Report:
-        report = Report("Uerra Basic Checks")
+        # this class must not inhereted anything
+        report = Report("UERRA Basic Checks 2")
+
         report.add(IsIn(message["productionStatusOfProcessedData"], [8, 9]))
         report.add(Le(message["endStep"], 30))
         report.add(
@@ -28,20 +30,22 @@ class Uerra(Wmo):
         if message["typeOfProcessedData"] == 0:
             report.add(Eq(message["step"], 0))
         else:
-            report.add(
-                IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3)
-            )
-
+            report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
         report.add(self._check_date(message, p))
 
         return report
 
     def _basic_checks(self, message, p) -> Report:
-        report = Report("Uerra Basic Checks")
+        report = Report("UERRA Basic Checks")
+        if message.get("class", str) != 'rr' and message.get("class", str) != 'ci':
+            report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
+
         report.add(Le(message["hour"], 24))
-        report.add(
-            IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3)
-        )
+        stream = message.get("stream", str)
+
+        if stream != "moda":
+            report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
+
         return super()._basic_checks(message, p).add(report)
 
     def _from_start(self, message, p) -> Report:
@@ -77,9 +81,10 @@ class Uerra(Wmo):
             report.add(Le(message["forecastTime"], 30))
 
         report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
-        report.add(
-            IsIn(message["endStep"], [1, 2, 4, 5]) | IsMultipleOf(message["endStep"], 3)
-        )
+
+        stream = message.get("stream", str)
+        if stream != "moda":
+            report.add(IsIn(message["endStep"], [1, 2, 4, 5]) | IsMultipleOf(message["endStep"], 3))
 
         return super()._statistical_process(message, p).add(report)
 
@@ -140,11 +145,11 @@ class Uerra(Wmo):
             20,
             10,
         ]
-        report.add(IsIn(message["level"], levels, "invalid pressure level"))
+        report.add(IsIn(message["level"], levels, "valid pressure level"))
         return report
 
     def _height_level(self, message, p) -> Report:
         report = Report("Uerra Height Level")
         levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
-        report.add(IsIn(message["level"], levels, "invalid height level"))
+        report.add(IsIn(message["level"], levels, "valid height level"))
         return report

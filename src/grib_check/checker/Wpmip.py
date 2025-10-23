@@ -10,16 +10,21 @@
 
 import logging
 
-from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Ne
+from grib_check.Assert import Eq, IsIn, IsMultipleOf, Le, Ne
 from grib_check.Report import Report
 
-from .Wmo import Wmo
+from .GeneralChecks import GeneralChecks
 
 
-class Wpmip(Wmo):
+class Wpmip(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
+        self.register_checks(
+            {
+                "pressure_level": self._pressure_level,
+            }
+        )
 
     def _basic_checks(self, message, p):
         report = Report("Wpmip Basic Checks")
@@ -27,9 +32,13 @@ class Wpmip(Wmo):
         # WPMIP prod/test data
         report.add(IsIn(message["productionStatusOfProcessedData"], [16, 17]))
 
+        # WPMIP centre/subCentre DGOV-577
+        report.add(Eq(message["centre"], "323"))
+        report.add(Ne(message["subCentre"], 0))
+
         # to use MARS new key "model"
-        report.add(Eq(message["backgroundProcess"], 1))
-        report.add(Eq(message["generatingProcessIdentifier"], 3))
+        report.add(Le(message["backgroundProcess"], 255))
+        report.add(Le(message["generatingProcessIdentifier"], 4))
 
         # CCSDS compression
         # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/
@@ -38,7 +47,7 @@ class Wpmip(Wmo):
         #       # Only 00, 06 12 and 18 Cycle OK
         #       report.add(IsIn(message["hour"], [0, 6, 12, 18]))
 
-        report.add(Le(message["endStep"], 10 * 24))
+        report.add(Le(message["endStep"], 10 * 36))
         report.add(IsMultipleOf(message["step"], 6))
         report.add(self._check_date(message, p))
 
@@ -48,12 +57,8 @@ class Wpmip(Wmo):
     def _pressure_level(self, message, p):
         report = Report("WPMIP Pressure level")
         levels = [
-            1,
             10,
-            20,
-            30,
             50,
-            70,
             100,
             150,
             200,
@@ -71,17 +76,7 @@ class Wpmip(Wmo):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
-        report = Report("Wpmip Statistical Process")
-
-        topd = message.get("typeOfProcessedData", int)
-
-        if topd in [0, 1, 2]:  # Analysis, Forecast, Analysis and forecast products
-            pass
-        elif topd in [3, 4]:  # Control forecast products, Perturbed forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 11))
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-            return report
+        report = Report("WPMIP Statistical Process")
 
         if message.get("indicatorOfUnitOfTimeRange") == 11:  # six hours
             # Six hourly is OK
@@ -94,51 +89,6 @@ class Wpmip(Wmo):
         report.add(IsMultipleOf(message["endStep"], 6))
 
         return super()._statistical_process(message, p).add(report)
-
-    def _from_start(self, message, p) -> Report:
-        report = Report("Wpmip From Start")
-        if message.get("endStep") != 0:
-            report.add(self._check_range(message, p))
-
-        return super()._from_start(message, p).add(report)
-
-    def _point_in_time(self, message, p) -> Report:
-        report = Report("Wpmip Point in Time")
-
-        topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]:  # Analysis, Forecast
-            if message.get("productDefinitionTemplateNumber") == 1:
-                report.add(
-                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd = {topd}")
-                )
-                report.add(
-                    Le(
-                        message["perturbationNumber"],
-                        message.get("numberOfForecastsInEnsemble"),
-                        f"topd = {topd}",
-                    )
-                )
-        elif topd == 2:  # Analysis and forecast products
-            pass
-        elif topd == 3:  # Control forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}")
-            )
-        elif topd == 4:  # Perturbed forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 1, f"topd = {topd}")
-            )
-            report.add(
-                Le(
-                    message["perturbationNumber"],
-                    message["numberOfForecastsInEnsemble"] - 1,
-                    f"topd = {topd}",
-                )
-            )
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-
-        return super()._point_in_time(message, p).add(report)
 
     def _latlon_grid(self, message):
         report = Report(f"{__class__.__name__}.latlon_grid")
