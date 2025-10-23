@@ -18,7 +18,6 @@ import signal
 import sys
 
 from .checker.Crra import Crra
-from .checker.GeneralChecks import GeneralChecks
 from .checker.Lam import Lam
 from .checker.S2S import S2S
 from .checker.S2SRefcst import S2SRefcst
@@ -73,11 +72,6 @@ class GribCheck:
         crra: climate reanalysis
         """
         script_path = os.path.dirname(os.path.realpath(__file__))
-        wmo_params = (
-            self.args.parameters
-            if self.args.parameters is not None
-            else f"{script_path}/checker/WmoParameters.jsonnet"
-        )
         tigge_params = (
             self.args.parameters
             if self.args.parameters is not None
@@ -92,16 +86,6 @@ class GribCheck:
             self.args.parameters
             if self.args.parameters is not None
             else f"{script_path}/checker/CrraParameters.jsonnet"
-        )
-        destine_params = (
-            self.args.parameters
-            if self.args.parameters is not None
-            else f"{script_path}/checker/DestineParameters.jsonnet"
-        )
-        all_params = (
-            self.args.parameters
-            if self.args.parameters is not None
-            else f"{script_path}/checker/GeneralChecksParameters.jsonnet"
         )
 
         if self.args.convention == "tigge":

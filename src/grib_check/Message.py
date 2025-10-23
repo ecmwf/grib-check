@@ -24,7 +24,6 @@ from eccodes import (
     codes_new_from_message,
     codes_release,
     codes_set,
-    codes_set_string,
 )
 
 from .Assert import Eq
