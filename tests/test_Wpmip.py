@@ -18,7 +18,7 @@ src_path = f"{os.path.dirname(os.path.realpath(__file__))}/../src/grib_check"
 
 
 class TestWpmip:
-    def test_wpmip_paramId_176_good(self):
+    def test_wpmip_param_ssr_good(self):
         wpmip_params = (f"{src_path}/checker/WpmipParameters.jsonnet")
         checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=False, check_validity=False)
         grib = Grib("./tests/wpmip/wpmip_ecmf_sfc_ssr.grib")
@@ -26,11 +26,10 @@ class TestWpmip:
         report = checker.validate(message)
         assert report.status() is True
 
-    def test_wpmip_paramId_176_stepUnits(self):
+    def test_wpmip_param_tp_ranges_good(self):
         wpmip_params = (f"{src_path}/checker/WpmipParameters.jsonnet")
-        checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=False, check_validity=False)
-        grib = Grib("./tests/wpmip/wpmip_ecmf_sfc_ssr.grib")
+        checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=True, check_validity=False)
+        grib = Grib("./tests/wpmip/wpmip_cwao_sfc_tp.grib")
         message = next(grib)
-        message.set("stepUnits", 0)
         report = checker.validate(message)
-        assert report.status() is False
+        assert report.status() is True

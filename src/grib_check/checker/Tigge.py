@@ -81,7 +81,7 @@ class Tigge(GeneralChecks):
             else:
                 report.add(Fail(f"min and max should both be {KeyValue(None, 0)} for {endStep} but are {KeyValue(None, min_value)} and {KeyValue(None, max_value)}"))
 
-        return super()._statistical_process(message, p).add(report)
+        return super()._from_start(message, p).add(report)
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("Tigge Point in Time")
@@ -119,7 +119,7 @@ class Tigge(GeneralChecks):
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
-        return super()._statistical_process(message, p).add(report)
+        return super()._point_in_time(message, p).add(report)
 
     def _height_level(self, message, p) -> Report:
         report = Report("Tigge Height Level")

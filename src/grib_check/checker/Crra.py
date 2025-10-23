@@ -333,11 +333,11 @@ class Crra(Uerra):
             2,
             1,
         ]
-        report.add(IsIn(message["level"], levels, "invalid pressure level"))
+        report.add(IsIn(message["level"], levels, "valid pressure level"))
         return report
 
     def _height_level(self, message, p) -> Report:
         report = Report("CRRA Height Level")
         levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1250, 1500, 2000, 2500, 3000]
-        report.add(IsIn(message["level"], levels, "invalid height level"))
+        report.add(IsIn(message["level"], levels, "valid height level"))
         return report

@@ -478,7 +478,14 @@ class GeneralChecks(CheckEngine):
         if self.check_validity:
             report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
-        report.add(self._check_range(message, p))
+        # check min/max ranges
+        if self._from_start:
+            endStep = message.get("endStep", int)
+            if endStep != 0:
+                min_value, max_value = message.minmax()
+                report.add(self._check_range(message, p, min_value=min_value/endStep, max_value=max_value/endStep))
+        else:
+            report.add(self._check_range(message, p))
 
         if self.check_limits:
             values_report = Report("Check values")
@@ -578,9 +585,6 @@ class GeneralChecks(CheckEngine):
                     "min_value == 0 and max_value == 0",
                 )
             )
-        #       else:
-        #           report.add(self._check_range(message, p))
-
         report.add(self._statistical_process(message, p))
 
         return report
@@ -589,11 +593,6 @@ class GeneralChecks(CheckEngine):
         report = Report("From Start")
         report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
-
-        endStep = message.get("endStep", int)
-        if endStep != 0:
-            min_value, max_value = message.minmax()
-            report.add(self._check_range(message, p, min_value=min_value/endStep, max_value=max_value/endStep))
 
         return report
 
@@ -720,7 +719,6 @@ class GeneralChecks(CheckEngine):
             Eq(message["endStep"], message["startStep"] + message["lengthOfTimeRange"])
         )
         report.add(self._statistical_process(message, p))
-        #       report.add(self._check_range(message, p))
         return report
 
     def _six_hourly(self, message, p):
@@ -732,7 +730,6 @@ class GeneralChecks(CheckEngine):
         report.add(Eq(message["endStep"], message["startStep"] + 6))
 
         report.add(self._statistical_process(message, p))
-        #       report.add(self._check_range(message, p))
         return report
 
     def _three_hourly(self, message, p):
@@ -744,5 +741,4 @@ class GeneralChecks(CheckEngine):
         report.add(Eq(message["endStep"], message["startStep"] + 3))
 
         report.add(self._statistical_process(message, p))
-        #       report.add(self._check_range(message, p))
         return report
