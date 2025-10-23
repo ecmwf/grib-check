@@ -8,11 +8,11 @@
 # nor does it submit to any jurisdiction.
 #
 
-from grib_check.Assert import Eq, Pass, Fail, IsIn, IsMultipleOf, Le, Ne
+from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le, Ne, Pass
+from grib_check.KeyValue import KeyValue
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
-from grib_check.KeyValue import KeyValue
 
 
 class Lam(GeneralChecks):

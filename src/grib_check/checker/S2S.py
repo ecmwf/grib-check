@@ -8,11 +8,23 @@
 # nor does it submit to any jurisdiction.
 #
 
-from grib_check.Assert import Eq, EqDbl, Pass, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt, Ne
+from grib_check.Assert import (
+    Eq,
+    EqDbl,
+    Fail,
+    Ge,
+    Gt,
+    IsIn,
+    IsMultipleOf,
+    Le,
+    Lt,
+    Ne,
+    Pass,
+)
+from grib_check.KeyValue import KeyValue
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
-from grib_check.KeyValue import KeyValue
 
 
 class S2S(GeneralChecks):

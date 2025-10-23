@@ -13,7 +13,6 @@ import logging
 import numpy as np
 from eccodes import (
     codes_get,
-    codes_set,
     codes_get_double_array,
     codes_get_long_array,
     codes_get_message,
@@ -24,6 +23,7 @@ from eccodes import (
     codes_keys_iterator_next,
     codes_new_from_message,
     codes_release,
+    codes_set,
     codes_set_string,
 )
 

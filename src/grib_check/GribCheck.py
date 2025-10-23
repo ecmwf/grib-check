@@ -18,12 +18,12 @@ import signal
 import sys
 
 from .checker.Crra import Crra
+from .checker.GeneralChecks import GeneralChecks
 from .checker.Lam import Lam
 from .checker.S2S import S2S
 from .checker.S2SRefcst import S2SRefcst
 from .checker.Tigge import Tigge
 from .checker.Uerra import Uerra
-from .checker.GeneralChecks import GeneralChecks
 from .checker.Wpmip import Wpmip
 from .FileScanner import FileScanner
 from .Grib import Grib

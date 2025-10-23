@@ -8,20 +8,20 @@
 # nor does it submit to any jurisdiction.
 #
 
-import logging
 import datetime
+import logging
 
 from grib_check.Assert import (
     Eq,
+    Fail,
     IsIn,
     IsMultipleOf,
-    Pass,
-    Fail,
     Le,
     Ne,
+    Pass,
 )
-from grib_check.Report import Report
 from grib_check.KeyValue import KeyValue
+from grib_check.Report import Report
 
 from .Uerra import Uerra
 
