@@ -38,7 +38,7 @@ class Report:
         self.__logger = logging.getLogger(__name__)
         self.__pass_str = "PASS"
         self.__fail_str = "FAIL"
-        self.__none_str = "    "
+        self.__none_str = "----"
         self.__status = None
         self.__name = name
 
