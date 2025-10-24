@@ -149,14 +149,18 @@ class GeneralChecks(CheckEngine):
         return report
 
     # not registered in the lookup table
-    def _check_range(self, message, p, min_value=None, max_value=None):
+    def _check_range(self, message, p):
         report = Report("Range check")
 
         if self.check_limits:
+            endStep = message.get("endStep", int)
+
             # See ECC-437
             missing = message.get("missingValue", float)
-            if min_value is None or max_value is None:
-                min_value, max_value = message.minmax()
+            min_value, max_value = message.minmax()
+            if endStep != 0:
+                min_value /= endStep
+                max_value /= endStep
 
             for entry in p["expected"]:
                 if entry["key"] == "values":
@@ -196,7 +200,7 @@ class GeneralChecks(CheckEngine):
                                 )
                             )
         else:
-            report.add("Check disabled. Use the option -a or --check_limits to enable it.")
+            report.add("Check disabled. Use the option -L or --check_limits to enable it.")
         return report
 
     # not registered in the lookup table
@@ -478,14 +482,7 @@ class GeneralChecks(CheckEngine):
         if self.check_validity:
             report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
-        # check min/max ranges
-        if self._from_start:
-            endStep = message.get("endStep", int)
-            if endStep != 0:
-                min_value, max_value = message.minmax()
-                report.add(self._check_range(message, p, min_value=min_value/endStep, max_value=max_value/endStep))
-        else:
-            report.add(self._check_range(message, p))
+        report.add(self._check_range(message, p))
 
         if self.check_limits:
             values_report = Report("Check values")

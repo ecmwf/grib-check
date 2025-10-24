@@ -122,11 +122,11 @@ class S2SRefcst(GeneralChecks):
 
         return super()._statistical_process(message, p).add(report)
 
-    def _from_start(self, message, p) -> Report:
-        report = Report("S2SRefcst From Start")
-        if message["endStep"] != 0:
-            report.add(self._check_range(message, p))
-        return super()._from_start(message, p).add(report)
+    # def _from_start(self, message, p) -> Report:
+    #     report = Report("S2SRefcst From Start")
+    #     if message["endStep"] != 0:
+    #         report.add(self._check_range(message, p))
+    #     return super()._from_start(message, p).add(report)
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("S2SRefcst Point In Time")
