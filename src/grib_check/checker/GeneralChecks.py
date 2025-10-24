@@ -153,12 +153,33 @@ class GeneralChecks(CheckEngine):
         report = Report("Range check")
 
         if self.check_limits:
-            endStep = message.get("endStep", int)
+            count = 0
+            try:
+                count = message.get_size("values")
+            except Exception as e:
+                report.add(Fail(f"Cannot get number of values: {e}"))
+                return report
 
-            # See ECC-437
+            report.add(Eq(message["numberOfDataPoints"], count))
+
+            try:
+                values = message.get_double_array("values")
+            except Exception as e:
+                report.add(Fail(f"Cannot get values: {e}"))
+                return report
+
+            n = count
+            count = len(values)
+            if n != count:
+                report.add(Fail(f"Value count changed {count} -> {n}"))
+                return report
+
+            endStep = message.get("endStep", int)
             missing = message.get("missingValue", float)
+
+            is_accumulated = message.get("typeOfStatisticalProcessing", int) == 1
             min_value, max_value = message.minmax()
-            if endStep != 0:
+            if endStep != 0 and is_accumulated:
                 min_value /= endStep
                 max_value /= endStep
 
@@ -483,31 +504,6 @@ class GeneralChecks(CheckEngine):
             report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
         report.add(self._check_range(message, p))
-
-        if self.check_limits:
-            values_report = Report("Check values")
-            count = 0
-            try:
-                count = message.get_size("values")
-            except Exception as e:
-                values_report.add(Fail(f"Cannot get number of values: {e}"))
-                return values_report
-
-            values_report.add(Eq(message["numberOfDataPoints"], count))
-
-            try:
-                values = message.get_double_array("values")
-            except Exception as e:
-                values_report.add(Fail(f"Cannot get values: {e}"))
-                return values_report
-
-            n = count
-            count = len(values)
-            if n != count:
-                values_report.add(Fail(f"Value count changed {count} -> {n}"))
-                return values_report
-
-            report.add(values_report)
 
         # reports += self._check_packing(message)
 
