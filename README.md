@@ -68,7 +68,7 @@ grib-check -C tigge /path/to/file.grib2
 The output provides the result of each check performed on the GRIB messages in the file. 
 Each check may be annotated with an additional context or information of the check performed which may be useful for diagnostics.
 Checks typically have the status FAIL or PASS.
-Sometimes, however, a status cannot be assigned - for example if a test is skipped or message is purely informational - in which case the status NONE is used.
+Sometimes, however, a status cannot be assigned - for example if a test is skipped or message is purely informational - in which case the status "----" is used.
 
 The report follows a hierarchical structure, where checks can contain sub-checks and assertions, forming branches. If an assertion fails, the failure propagates upward, and the entire branch is marked as failed.
 
