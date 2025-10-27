@@ -574,7 +574,7 @@ class GeneralChecks(CheckEngine):
         if end_step == 0:
             report.add(
                 AssertTrue(
-                    min_value == 0 and max_value() == 0,
+                    min_value == 0 and max_value == 0,
                     "min_value == 0 and max_value == 0",
                 )
             )
@@ -585,6 +585,15 @@ class GeneralChecks(CheckEngine):
     def _from_start(self, message, p):
         report = Report("From Start")
         report.add(Eq(message["startStep"], 0))
+        end_step = message["endStep"]
+        min_value, max_value = message.minmax()
+        if end_step == 0:
+            report.add(
+                AssertTrue(
+                    min_value == 0 and max_value == 0,
+                    "min_value == 0 and max_value == 0",
+                )
+            )
         report.add(self._statistical_process(message, p))
 
         return report

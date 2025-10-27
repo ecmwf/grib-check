@@ -8,7 +8,7 @@
 # nor does it submit to any jurisdiction.
 #
 
-from grib_check.Assert import AssertTrue, Eq, Fail, IsIn, IsMultipleOf, Le
+from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -47,20 +47,6 @@ class Uerra(GeneralChecks):
             report.add(IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 3))
 
         return super()._basic_checks(message, p).add(report)
-
-    def _from_start(self, message, p) -> Report:
-        report = Report("Uerra From Start")
-        min_value, max_value = message.minmax()
-        if message["endStep"] == 0:
-            report = Report(f"{__class__.__name__}")
-            report.add(
-                AssertTrue(
-                    bool(min_value == 0) and bool(max_value == 0),
-                    "min_value == 0 and max_value == 0",
-                )
-            )
-
-        return super()._from_start(message, p).add(report)
 
     def _statistical_process(self, message, p) -> Report:
         report = Report("Uerra Statistical Process")

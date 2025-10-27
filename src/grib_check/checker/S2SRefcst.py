@@ -15,8 +15,8 @@ from .GeneralChecks import GeneralChecks
 
 
 class S2SRefcst(GeneralChecks):
-    def __init__(self, lookup_table, check_limits=False):
-        super().__init__(lookup_table, check_limits=check_limits)
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
+        super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("S2SRefcst Basic Checks")
@@ -121,12 +121,6 @@ class S2SRefcst(GeneralChecks):
         report.add(IsMultipleOf(message["step"], 6))
 
         return super()._statistical_process(message, p).add(report)
-
-    # def _from_start(self, message, p) -> Report:
-    #     report = Report("S2SRefcst From Start")
-    #     if message["endStep"] != 0:
-    #         report.add(self._check_range(message, p))
-    #     return super()._from_start(message, p).add(report)
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("S2SRefcst Point In Time")
