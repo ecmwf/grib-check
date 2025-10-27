@@ -15,8 +15,8 @@ from .GeneralChecks import GeneralChecks
 
 
 class S2SRefcst(GeneralChecks):
-    def __init__(self, lookup_table, check_limits=False):
-        super().__init__(lookup_table, check_limits=check_limits)
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
+        super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("S2SRefcst Basic Checks")

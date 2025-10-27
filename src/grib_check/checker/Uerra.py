@@ -48,20 +48,6 @@ class Uerra(GeneralChecks):
 
         return super()._basic_checks(message, p).add(report)
 
-    def _from_start(self, message, p) -> Report:
-        report = Report("Uerra From Start")
-        min_value, max_value = message.minmax()
-        if message["endStep"] == 0:
-            report = Report(f"{__class__.__name__}")
-            report.add(
-                AssertTrue(
-                    bool(min_value == 0) and bool(max_value == 0),
-                    "min_value == 0 and max_value == 0",
-                )
-            )
-
-        return super()._from_start(message, p).add(report)
-
     def _statistical_process(self, message, p) -> Report:
         report = Report("Uerra Statistical Process")
 
