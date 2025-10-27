@@ -19,11 +19,8 @@ from grib_check.Assert import (
     Le,
     Lt,
     Ne,
-    Pass,
 )
-from grib_check.KeyValue import KeyValue
 from grib_check.Report import Report
-
 from .GeneralChecks import GeneralChecks
 
 

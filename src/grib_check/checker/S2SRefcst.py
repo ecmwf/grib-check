@@ -10,7 +10,6 @@
 
 from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt, Ne
 from grib_check.Report import Report
-
 from .GeneralChecks import GeneralChecks
 
 
@@ -121,7 +120,6 @@ class S2SRefcst(GeneralChecks):
         report.add(IsMultipleOf(message["step"], 6))
 
         return super()._statistical_process(message, p).add(report)
-
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("S2SRefcst Point In Time")

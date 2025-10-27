@@ -8,7 +8,7 @@
 # nor does it submit to any jurisdiction.
 #
 
-from grib_check.Assert import AssertTrue, Eq, Fail, IsIn, IsMultipleOf, Le
+from grib_check.Assert import Eq, Fail, IsIn, IsMultipleOf, Le
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
