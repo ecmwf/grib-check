@@ -149,14 +149,39 @@ class GeneralChecks(CheckEngine):
         return report
 
     # not registered in the lookup table
-    def _check_range(self, message, p, min_value=None, max_value=None):
+    def _check_range(self, message, p):
         report = Report("Range check")
 
         if self.check_limits:
-            # See ECC-437
+            count = 0
+            try:
+                count = message.get_size("values")
+            except Exception as e:
+                report.add(Fail(f"Cannot get number of values: {e}"))
+                return report
+
+            report.add(Eq(message["numberOfDataPoints"], count))
+
+            try:
+                values = message.get_double_array("values")
+            except Exception as e:
+                report.add(Fail(f"Cannot get values: {e}"))
+                return report
+
+            n = count
+            count = len(values)
+            if n != count:
+                report.add(Fail(f"Value count changed {count} -> {n}"))
+                return report
+
+            endStep = message.get("endStep", int)
             missing = message.get("missingValue", float)
-            if min_value is None or max_value is None:
-                min_value, max_value = message.minmax()
+
+            is_accumulated = message.get("typeOfStatisticalProcessing", int) == 1
+            min_value, max_value = message.minmax()
+            if endStep != 0 and is_accumulated:
+                min_value /= endStep
+                max_value /= endStep
 
             for entry in p["expected"]:
                 if entry["key"] == "values":
@@ -196,7 +221,7 @@ class GeneralChecks(CheckEngine):
                                 )
                             )
         else:
-            report.add("Check disabled. Use the option -a or --check_limits to enable it.")
+            report.add("Check disabled. Use the option -L or --check_limits to enable it.")
         return report
 
     # not registered in the lookup table
@@ -478,39 +503,7 @@ class GeneralChecks(CheckEngine):
         if self.check_validity:
             report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
-        # check min/max ranges
-        if self._from_start:
-            endStep = message.get("endStep", int)
-            if endStep != 0:
-                min_value, max_value = message.minmax()
-                report.add(self._check_range(message, p, min_value=min_value/endStep, max_value=max_value/endStep))
-        else:
-            report.add(self._check_range(message, p))
-
-        if self.check_limits:
-            values_report = Report("Check values")
-            count = 0
-            try:
-                count = message.get_size("values")
-            except Exception as e:
-                values_report.add(Fail(f"Cannot get number of values: {e}"))
-                return values_report
-
-            values_report.add(Eq(message["numberOfDataPoints"], count))
-
-            try:
-                values = message.get_double_array("values")
-            except Exception as e:
-                values_report.add(Fail(f"Cannot get values: {e}"))
-                return values_report
-
-            n = count
-            count = len(values)
-            if n != count:
-                values_report.add(Fail(f"Value count changed {count} -> {n}"))
-                return values_report
-
-            report.add(values_report)
+        report.add(self._check_range(message, p))
 
         # reports += self._check_packing(message)
 
@@ -581,7 +574,7 @@ class GeneralChecks(CheckEngine):
         if end_step == 0:
             report.add(
                 AssertTrue(
-                    min_value == 0 and max_value() == 0,
+                    min_value == 0 and max_value == 0,
                     "min_value == 0 and max_value == 0",
                 )
             )
@@ -592,6 +585,15 @@ class GeneralChecks(CheckEngine):
     def _from_start(self, message, p):
         report = Report("From Start")
         report.add(Eq(message["startStep"], 0))
+        end_step = message["endStep"]
+        min_value, max_value = message.minmax()
+        if end_step == 0:
+            report.add(
+                AssertTrue(
+                    min_value == 0 and max_value == 0,
+                    "min_value == 0 and max_value == 0",
+                )
+            )
         report.add(self._statistical_process(message, p))
 
         return report

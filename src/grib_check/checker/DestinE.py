@@ -13,10 +13,9 @@ from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
 
-
 class DestinE(GeneralChecks):
-    def __init__(self, lookup_table, valueflg=False):
-        super().__init__(lookup_table, valueflg=valueflg)
+    def __init__(self, lookup_table, check_limits=False, check_validity=True):
+        super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.register_checks({"destine_limits": self._destine_limits})
 
     # Reuse / override checks
