@@ -49,6 +49,7 @@ class Wpmip(GeneralChecks):
 
         report.add(Le(message["endStep"], 10 * 36))
         report.add(IsMultipleOf(message["step"], 6))
+        report.add(Eq(message["bitsPerValue"], 16))
         report.add(self._check_date(message, p))
 
         return super()._basic_checks(message, p).add(report)
