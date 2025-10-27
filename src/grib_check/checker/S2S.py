@@ -72,18 +72,6 @@ class S2S(GeneralChecks):
 
         return super()._statistical_process(message, p).add(report)
 
-    def _from_start(self, message, p) -> Report:
-        report = Report("S2S From Start")
-        endStep = message["endStep"]
-        if endStep == 0:
-            min_value, max_value = message.minmax()
-            if min_value == 0 and max_value == 0:
-                report.add(Pass(f"min and max are both {KeyValue(None, 0)} for {endStep}"))
-            else:
-                report.add(Fail(f"min and max should both be {KeyValue(None, 0)} for {endStep} but are {KeyValue(None, min_value)} and {KeyValue(None, max_value)}"))
-
-        return super()._from_start(message, p).add(report)
-
     def _point_in_time(self, message, p) -> Report:
         report = Report("S2S Point In Time")
         topd = message.get("typeOfProcessedData", int)
