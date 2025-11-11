@@ -529,7 +529,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'surface_air_maximum_temperature_sfc.ammc',
     expected+: [
-      { key: 'centre', value: 1 },
       { key: 'values', min: [175, 240], max: [300, 10000] },
     ],
     pairs+: [
@@ -857,7 +856,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'mean_sea_level_pressure_sfc.lfpw',
     expected+: [
-      { key: 'centre', value: 1 },
       { key: 'values', min: [85000, 104000], max: [98000, 121000] },
     ],
     pairs+: [
@@ -930,7 +928,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'temperature_pl.ammc',
     expected+: [
-      { key: 'centre', value: 1 },
       { key: 'values', min: [-999, 260], max: [200, 350] },
     ],
     pairs+: [
@@ -1405,7 +1402,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_temperature_top_20_cm_sfc.glob.rums',
     expected+: [
-      { key: 'centre', value: 1 },
       { key: 'values', min: [0, 250], max: [300, 350] },
     ],
     pairs+: [
@@ -1457,7 +1453,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'soil_temperature_top_100_cm_sfc.glob.s2.rums',
     expected+: [
-      { key: 'centre', value: 1 },
       { key: 'values', min: [0, 250], max: [300, 350] },
     ],
     pairs+: [
@@ -1505,7 +1500,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'snow_depth_water_equivalent_sfc.glob.s2.cwao',
     expected+: [
-      { key: 'centre', value: 1 },
       { key: 'values', min: [-4e-19, 0], max: [100, 40000] },
     ],
     pairs+: [
@@ -1547,32 +1541,30 @@ local templates = import 'Parameter.libsonnet';
       'resolution_s2s',
     ],
   },
-  templates.Wmo {
-    name: 'total_cloud_cover_sfc.glob.s2.lfpw',
-    expected+: [
-      { key: 'centre', value: 1 },
-      { key: 'step', value: 1 },
-      { key: 'values', min: [-0.1, 5], max: [70.0, 101.0] },
-    ],
-    pairs+: [
-      { key: 'model', value: 'glob' },
-      { key: 'class', value: 's2' },
-      { key: 'centre', value: 'lfpw' },
-      { key: 'step', value: '0-24' },
-      { key: 'paramId', value: 228164 },
-      { key: 'typeOfStatisticalProcessing', value: 0 },
-      { key: 'discipline', value: 0 },
-      { key: 'parameterCategory', value: 6 },
-      { key: 'parameterNumber', value: 1 },
-      { key: 'typeOfFirstFixedSurface', value: 1 },
-      { key: 'typeOfSecondFixedSurface', value: 8 },
-    ],
-    checks+: [
-      'daily_average',
-      'predefined_thickness',
-      'resolution_s2s',
-    ],
-  },
+# templates.Wmo {
+#   name: 'total_cloud_cover_sfc.glob.s2.lfpw',
+#   expected+: [
+#     { key: 'values', min: [-0.1, 5], max: [70.0, 101.0] },
+#   ],
+#   pairs+: [
+#     { key: 'model', value: 'glob' },
+#     { key: 'class', value: 's2' },
+#     { key: 'centre', value: 'lfpw' },
+#     { key: 'step', value: '0-24' },
+#     { key: 'paramId', value: 228164 },
+#     { key: 'typeOfStatisticalProcessing', value: 0 },
+#     { key: 'discipline', value: 0 },
+#     { key: 'parameterCategory', value: 6 },
+#     { key: 'parameterNumber', value: 1 },
+#     { key: 'typeOfFirstFixedSurface', value: 1 },
+#     { key: 'typeOfSecondFixedSurface', value: 8 },
+#    ],
+#    checks+: [
+#      'daily_average',
+#      'predefined_thickness',
+#      'resolution_s2s',
+#    ],
+#  },
   templates.Wmo {
     name: 'convective_precipitation_sfc.glob',
     expected+: [
@@ -1657,26 +1649,27 @@ local templates = import 'Parameter.libsonnet';
       'resolution_s2s',
     ],
   },
-//templates.Wmo {
- // name: 'snow_albedo_sfc.glob',
-//  expected+: [
-//    { key: 'values', min: [-1500000.0, 1500000.0], max: [-1500000.0, 1500000.0] },
-//  ],
-//  pairs+: [
-//    { key: 'model', value: 'glob' },
-//    { key: 'paramId', value: 228032 },
-//    { key: 'typeOfStatisticalProcessing', value: 0 },
-//    { key: 'discipline', value: 0 },
-//    { key: 'parameterCategory', value: 19 },
-//    { key: 'parameterNumber', value: 19 },
-//    { key: 'typeOfFirstFixedSurface', value: 1 },
- // ],
- // checks+: [
-//    'daily_average',
-//    'predefined_level',
-//    'has_bitmap',
-//  ],
-//},
+  templates.Wmo {
+    name: 'snow_albedo_sfc.s2',
+    expected+: [
+      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+    ],
+    pairs+: [
+      { key: 'class', value: 's2' },
+      { key: 'model', value: 'glob' },
+      { key: 'paramId', value: 228032 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 19 },
+      { key: 'parameterNumber', value: 19 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+      { key: 'typeOfStatisticalProcessing', value: 0 },
+    ],
+    checks+: [
+      'daily_average',
+      'predefined_level',
+      'has_bitmap',
+    ],
+  },
   templates.Wmo {
     name: 'high_cloud_cover_sfc',
     expected+: [
@@ -2345,7 +2338,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'albedo_sfc.uerra-egrr',
     expected+: [
-      { key: 'centre', value: 1 },
       { key: 'values', min: [0, 20], max: [0, 100] },
     ],
     pairs+: [
@@ -2796,7 +2788,6 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'total_cloud_cover_sfc.ur.eswi',
     expected+: [
-      { key: 'centre', value: 1 },
       { key: 'values', min: [0, 2e-10], max: [90.0, 100.0] },
     ],
     pairs+: [
