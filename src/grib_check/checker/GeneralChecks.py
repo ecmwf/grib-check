@@ -38,7 +38,6 @@ class GeneralChecks(CheckEngine):
 
         self.register_checks(
             {
-                "basic_checks_2": self._basic_checks_2,
                 "basic_checks": self._basic_checks,
                 "daily_average": self._daily_average,
                 "from_start": self._from_start,
@@ -490,12 +489,6 @@ class GeneralChecks(CheckEngine):
 
         return report
 
-    def _basic_checks_2(self, message, p):
-        report = Report("Basic Checks 2")
-        # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
-        report.add(IsIn(message["typeOfProcessedData"], [2, 3, 4]))
-        return report
-
     def _basic_checks(self, message, p):
         report = Report("Basic checks")
         report.add(Eq(message["editionNumber"], 2))
@@ -504,6 +497,9 @@ class GeneralChecks(CheckEngine):
             report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
         report.add(self._check_range(message, p))
+        # 0 analysis, 1 = forecast, 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
+        topd = message.get("typeOfProcessedData", int)
+        report.add(IsIn(topd, [0, 1, 2, 3, 4]))
 
         # reports += self._check_packing(message)
 
@@ -602,9 +598,20 @@ class GeneralChecks(CheckEngine):
         report = Report("Point in time")
         topd = message.get("typeOfProcessedData", int)
         if topd in [0, 1]:  # Analysis, Forecast
-            pass
+            if message["productDefinitionTemplateNumber"] == 1:
+                report.add(
+                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}")
+                )
+                report.add(
+                    Le(
+                        message["perturbationNumber"],
+                        message["numberOfForecastsInEnsemble"],
+                        f"topd={topd}",
+                    )
+                )
         elif topd == 2:  # Analysis and forecast products
             report.add(
+                #??? xxx
                 Eq(message["productDefinitionTemplateNumber"], 0, f"topd={topd}")
             )
         elif topd == 3:  # Control forecast products
@@ -613,6 +620,13 @@ class GeneralChecks(CheckEngine):
         elif topd == 4:  # Perturbed forecast products
             report.add(Ne(message["perturbationNumber"], 0, f"topd={topd}"))
             report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
+            report.add(
+                Le(
+                    message["perturbationNumber"],
+                    message["numberOfForecastsInEnsemble"] - 1,
+                    f"topd={topd}",
+                )
+            )
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 

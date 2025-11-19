@@ -20,11 +20,7 @@ class Tigge(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
-        self.register_checks(
-            {
-                "pressure_level": self._pressure_level,
-            }
-        )
+        self.register_checks({"pressure_level": self._pressure_level,})
 
     def _basic_checks(self, message, p):
         report = Report("Tigge Basic Checks")
@@ -34,7 +30,6 @@ class Tigge(GeneralChecks):
         report.add(IsIn(message["productionStatusOfProcessedData"], [4, 5]))
         report.add(Le(message["endStep"], 30 * 24))
         report.add(IsMultipleOf(message["step"], 6))
-        report.add(self._check_date(message, p))
 
         return super()._basic_checks(message, p).add(report)
 
