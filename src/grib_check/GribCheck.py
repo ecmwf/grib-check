@@ -23,6 +23,7 @@ from .checker.S2S import S2S
 from .checker.S2SRefcst import S2SRefcst
 from .checker.Tigge import Tigge
 from .checker.Uerra import Uerra
+from .checker.Era6 import era6
 from .checker.Wpmip import Wpmip
 from .FileScanner import FileScanner
 from .Grib import Grib
@@ -70,6 +71,7 @@ class GribCheck:
         s2s_refcst: subseasonal to subseasonal reforecast
         uerra: uncertainty estimation reanalysis
         crra: climate reanalysis
+        era6: ECMWF era6 reanalysis
         """
         script_path = os.path.dirname(os.path.realpath(__file__))
         tigge_params = (
@@ -87,6 +89,11 @@ class GribCheck:
             if self.args.parameters is not None
             else f"{script_path}/checker/CrraParameters.jsonnet"
         )
+       	era6_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/ERA6Parameters.jsonnet"
+       	)
 
         if self.args.convention == "tigge":
             checker = Tigge(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
@@ -104,6 +111,8 @@ class GribCheck:
                 SimpleLookupTable(crra_params, ignore_keys=["model"]),
                 check_limits=self.args.check_limits, check_validity=self.args.validity_check,
             )
+        elif self.args.convention == "era6":
+            checker = era6(SimpleLookupTable(era6_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "lam":
             checker = Lam(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         else:
@@ -154,6 +163,7 @@ It performs a set of checks on GRIB messages to ensure they comply with the proj
             "uerra",
             "crra",
             "lam",
+            "era6",
             "wpmip",
         ],
         required=True,
