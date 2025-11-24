@@ -487,7 +487,7 @@ class GeneralChecks(CheckEngine):
         # 0 analysis, 1 = forecast, 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
         topd = message.get("typeOfProcessedData", int)
 
-        if topd in [0, 1]:  # Analysis, Forecast
+        if topd in [0, 1, 2]:  # Analysis, Forecast
             if message["productDefinitionTemplateNumber"] == 1:
                 report.add(
                     Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}")
@@ -499,9 +499,6 @@ class GeneralChecks(CheckEngine):
                         f"topd={topd}",
                     )
                 )
-        elif topd == 2:  # Analysis and forecast products
-           pass
-           ### report.add( Eq(message["productDefinitionTemplateNumber"], 0, f"topd={topd}"))
         elif topd == 3:  # Control forecast products
             report.add(Eq(message["perturbationNumber"], 0, f"topd={topd}"))
             report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))

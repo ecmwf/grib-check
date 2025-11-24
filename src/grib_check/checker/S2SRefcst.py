@@ -10,7 +10,7 @@
 
 import logging
 
-from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt, Ne
+from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -20,7 +20,7 @@ class S2SRefcst(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
-        self.register_checks({"pressure_level": self._pressure_level,})
+        self.register_checks({"pressure_level": self._pressure_level, })
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("S2SRefcst Basic Checks")
