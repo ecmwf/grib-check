@@ -10,7 +10,7 @@
 
 import logging
 
-from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt, Ne
+from grib_check.Assert import Eq, EqDbl, Fail, Ge, Gt, IsIn, IsMultipleOf, Le, Lt
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -20,26 +20,13 @@ class S2SRefcst(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
-        self.register_checks(
-            {
-                "pressure_level": self._pressure_level,
-            }
-        )
+        self.register_checks({"pressure_level": self._pressure_level, })
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("S2SRefcst Basic Checks")
-        # Only 00, 06 12 and 18 Cycle OK
-        report.add(IsIn(message["hour"], [0, 6, 12, 18]))
-        report.add(
-            IsIn(message["productionStatusOfProcessedData"], [4, 5])
-        )  # TIGGE prod or test
-        report.add(Le(message["endStep"], 30 * 24))
-        report.add(IsMultipleOf(message["step"], 6))
-
-        report.add(self._check_date(message, p))
-
+        report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
+        report.add(IsMultipleOf(message.get("step", int), 6))
         report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
-
         return super()._basic_checks(message, p).add(report)
 
     def _latlon_grid(self, message) -> Report:
@@ -110,9 +97,7 @@ class S2SRefcst(GeneralChecks):
 
         topd = message.get("typeOfProcessedData", int)
 
-        if topd in [0, 1, 2]:  # Analysis, Forecast, Analysis and forecast products
-            pass
-        elif topd in [3, 4]:  # Control forecast products, Perturbed forecast products
+        if topd in [3, 4]:  # Control forecast products, Perturbed forecast products
             report.add(Eq(message["productDefinitionTemplateNumber"], 61))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
@@ -125,43 +110,20 @@ class S2SRefcst(GeneralChecks):
             report.add(Eq(message["indicatorOfUnitOfTimeRange"], 1))
             report.add(IsMultipleOf(message["forecastTime"], 6))
 
-        report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
-        report.add(IsMultipleOf(message["step"], 6))
+        tosp = message.get("typeOfStatisticalProcessing", int)
+        if tosp == 0:  # average
+            report.add(IsIn(message["timeIncrementBetweenSuccessiveFields"], [1, 4]))
+        else:
+            report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
+        report.add(IsMultipleOf(message["endStep"], 6))
 
         return super()._statistical_process(message, p).add(report)
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("S2SRefcst Point In Time")
         topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]:  # Analysis, Forecast
-            if message["productDefinitionTemplateNumber"] == 1:
-                report.add(
-                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}")
-                )
-                report.add(
-                    Le(
-                        message["perturbationNumber"],
-                        message["numberOfForecastsInEnsemble"],
-                        f"topd={topd}",
-                    )
-                )
-        elif topd == 2:  # Analysis and forecast products
-            pass
-        elif topd == 3:  # Control forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 60, f"topd={topd}")
-            )
-        elif topd == 4:  # Perturbed forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 60, f"topd={topd}")
-            )
-            report.add(
-                Lt(
-                    message["perturbationNumber"],
-                    message["numberOfForecastsInEnsemble"],
-                    f"topd={topd}",
-                )
-            )
+        if topd in [3, 4]:  # Control forecast products, Perturbed forecast products
+            report.add(Eq(message["productDefinitionTemplateNumber"], 60, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
@@ -173,3 +135,9 @@ class S2SRefcst(GeneralChecks):
             report.add(IsMultipleOf(message["forecastTime"], 6))
 
         return super()._point_in_time(message, p).add(report)
+
+    def _pressure_level(self, message, p) -> Report:
+        report = Report("S2SRefcst Pressure Level")
+        levels = [1000, 925, 850, 700, 500, 300, 200, 100, 50, 10]
+        report.add(IsIn(message["level"], levels, "check pressure level"))
+        return report

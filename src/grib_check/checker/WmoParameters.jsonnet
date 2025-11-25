@@ -3795,9 +3795,9 @@ local templates = import 'Parameter.libsonnet';
     ],
     pairs+: [
       { key: 'paramId', value: 3099 },
-      { key: 'discipline', value: 0 },
-      { key: 'parameterCategory', value: 1 },
-      { key: 'parameterNumber', value: 16 },
+      { key: 'discipline', value: 2 },
+      { key: 'parameterCategory', value: 0 },
+      { key: 'parameterNumber', value: 41 },
       { key: 'typeOfStatisticalProcessing', value: 1 },
       { key: 'typeOfFirstFixedSurface', value: 1 },
     ],

@@ -56,6 +56,7 @@ class Crra(Uerra):
         stream = message.get("stream", str)
         if topd in [0, 1]:  # Analysis, Forecast
             if stream == "dame" or stream == "moda":
+                # because mostly instant paramIds are used even for monthly/daily means..
                 report.add(Eq(message["productDefinitionTemplateNumber"], 8))
             else:
                 report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
@@ -103,8 +104,13 @@ class Crra(Uerra):
         report = Report("CRRA Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
+        stream = message.get("stream", str)
+
         if topd.value() in [0, 1]:  # Analysis, Forecast
-            report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+            if IsIn(stream, ["oper", "moda", "dame"]):
+                report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+            elif Eq(stream, "enda"):
+                report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
@@ -123,6 +129,9 @@ class Crra(Uerra):
         stepType = message.get("stepType", str)
         stream = message.get("stream", str)
         topd = message.get("typeOfProcessedData", int)
+
+        validityDateBefore = message["validityDate"]
+        validityTimeBefore = message["validityTime"]
 
         if Ne(stepType, "instant"):  # not instantaneous
             # Check only applies to accumulated, max etc.
@@ -165,9 +174,6 @@ class Crra(Uerra):
                 lengthOfTimeRanges = [KeyValue("lengthOfTimeRange", v) for v in message.get_long_array("lengthOfTimeRange")]
                 indicatorOfUnitForTimeIncrements = [KeyValue("indicatorOfUnitForTimeIncrement", v) for v in message.get_long_array("indicatorOfUnitForTimeIncrement")]
                 timeIncrements = [KeyValue("timeIncrement", v) for v in message.get_long_array("timeIncrement")]
-
-                validityDateBefore = message["validityDate"]
-                validityTimeBefore = message["validityTime"]
 
             # monthly/daily averages are archived under instant paramIds as param-db was not ready for all time-mean proper ones..
             # https://confluence.ecmwf.int/display/DGOV/Support+page+for+DGOV-399+CARRA+daily+and+monthly+GRIB+headers
