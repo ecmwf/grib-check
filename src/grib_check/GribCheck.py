@@ -54,8 +54,7 @@ def worker(filename, message_buffer, pos, checker, args):
         flush=True,
     )
 
-    # return report
-    return None
+    return report.status()
 
 
 class GribCheck:
@@ -109,6 +108,7 @@ class GribCheck:
         else:
             raise ValueError("Unknown data type")
 
+        statuses = []
         if self.args.num_jobs > 1:
             results = []
             with multiprocessing.Pool(processes=self.args.num_jobs) as pool:
@@ -129,11 +129,14 @@ class GribCheck:
                         )
                 for result in results:
                     result.wait()
+                statuses = [result.get() for result in results]
         else:
             for filename in FileScanner(self.args.path):
                 grib = Grib(filename)
                 for pos, message in enumerate(grib):
-                    worker(filename, message.get_buffer(), pos + 1, checker, self.args)
+                    statuses.append(worker(filename, message.get_buffer(), pos + 1, checker, self.args))
+
+        return any(statuses)
 
 
 def main():
@@ -166,7 +169,7 @@ It performs a set of checks on GRIB messages to ensure they comply with the proj
     parser.add_argument("-j", "--num-jobs", help="number of jobs", type=int, default=1)
     parser.add_argument("-f", "--failed-only", help="show only failed checks", action="store_true")
     parser.add_argument("-o", "--output-type", help="output format", choices=["short", "tree"], default="tree")
-    parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.6")
+    parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.7")
     parser.add_argument("-t", "--show-type", help="show value type", action="store_true")
     parser.add_argument(
         "--validity-check",
@@ -195,4 +198,4 @@ It performs a set of checks on GRIB messages to ensure they comply with the proj
 
 if __name__ == "__main__":
     ret = main()
-    # sys.exit(0 if ret is None else ret)
+    sys.exit(0 if ret is True else 1)
