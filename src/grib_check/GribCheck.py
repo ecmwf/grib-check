@@ -139,7 +139,6 @@ class GribCheck:
         return any(statuses)
 
 
-
 def main():
     parser = argparse.ArgumentParser(description="""GribCheck is a tool that validates project-specific conventions of GRIB files.
 It performs a set of checks on GRIB messages to ensure they comply with the project's internal standards and expectations.
