@@ -38,7 +38,6 @@ class GeneralChecks(CheckEngine):
 
         self.register_checks(
             {
-                "basic_checks_2": self._basic_checks_2,
                 "basic_checks": self._basic_checks,
                 "daily_average": self._daily_average,
                 "from_start": self._from_start,
@@ -65,24 +64,6 @@ class GeneralChecks(CheckEngine):
         self.check_limits = check_limits
         self.check_validity = check_validity
 
-    # def register_check(self, name, func):
-    #     if name in self._check_map:
-    #         raise ValueError(f"Check {name} already registered.")
-    #     else:
-    #         self._check_map[name] = func
-    #
-    # def override_check(self, name, func):
-    #     if name not in self._check_map:
-    #         raise ValueError(f"Check {name} not registered.")
-    #     else:
-    #         self._check_map[name] = func
-    #
-    # def get_check(self, name):
-    #     if name not in self._check_map:
-    #         raise ValueError(f"Check {name} not registered.")
-    #     else:
-    #         return self._check_map[name]
-
     def _check_date(self, message, p):
         report = Report("Check Date")
         # todo check for how many years back the reforecast is done? Is it coded in the grib???
@@ -103,9 +84,9 @@ class GeneralChecks(CheckEngine):
         topd = message.get("typeOfProcessedData", int)
 
         if topd.value() in [0, 1]:  # Analysis, Forecast
-            report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+            report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11], f"topd={topd}"))
         elif topd == 2:  # Analysis and forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+            report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11], f"topd={topd}"))
         elif topd in [3, 4]:  # Control forecast products
             pass
         else:
@@ -179,9 +160,14 @@ class GeneralChecks(CheckEngine):
 
             is_accumulated = message.get("typeOfStatisticalProcessing", int) == 1
             min_value, max_value = message.minmax()
-            if endStep != 0 and is_accumulated:
-                min_value /= endStep
-                max_value /= endStep
+
+            if is_accumulated:
+                if endStep != 0:
+                    min_value /= endStep
+                    max_value /= endStep
+                else:
+                    report.add(AssertTrue(min_value == 0 and max_value == 0, "value == 0 at step 0",))
+                    return report
 
             for entry in p["expected"]:
                 if entry["key"] == "values":
@@ -490,12 +476,6 @@ class GeneralChecks(CheckEngine):
 
         return report
 
-    def _basic_checks_2(self, message, p):
-        report = Report("Basic Checks 2")
-        # 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
-        report.add(IsIn(message["typeOfProcessedData"], [2, 3, 4]))
-        return report
-
     def _basic_checks(self, message, p):
         report = Report("Basic checks")
         report.add(Eq(message["editionNumber"], 2))
@@ -504,6 +484,36 @@ class GeneralChecks(CheckEngine):
             report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
         report.add(self._check_range(message, p))
+        # 0 analysis, 1 = forecast, 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
+        topd = message.get("typeOfProcessedData", int)
+
+        if topd in [0, 1, 2]:  # Analysis, Forecast
+            if message["productDefinitionTemplateNumber"] == 1:
+                report.add(
+                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}")
+                )
+                report.add(
+                    Le(
+                        message["perturbationNumber"],
+                        message["numberOfForecastsInEnsemble"],
+                        f"topd={topd}",
+                    )
+                )
+        elif topd == 3:  # Control forecast products
+            report.add(Eq(message["perturbationNumber"], 0, f"topd={topd}"))
+            report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
+        elif topd == 4:  # Perturbed forecast products
+            report.add(Ne(message["perturbationNumber"], 0, f"topd={topd}"))
+            report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
+            report.add(
+                Le(
+                    message["perturbationNumber"],
+                    message["numberOfForecastsInEnsemble"] - 1,
+                    f"topd={topd}",
+                )
+            )
+        else:
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         # reports += self._check_packing(message)
 
@@ -567,54 +577,20 @@ class GeneralChecks(CheckEngine):
 
     def _daily_average(self, message, p):
         report = Report("Daily Average")
-        start_step = message["startStep"]
-        end_step = message["endStep"]
-        report.add(Eq(start_step, end_step - 24))
-        min_value, max_value = message.minmax()
-        if end_step == 0:
-            report.add(
-                AssertTrue(
-                    min_value == 0 and max_value == 0,
-                    "min_value == 0 and max_value == 0",
-                )
-            )
+        startStep = message["startStep"]
+        endStep = message["endStep"]
+        report.add(Eq(startStep, endStep - 24))
         report.add(self._statistical_process(message, p))
-
         return report
 
     def _from_start(self, message, p):
         report = Report("From Start")
         report.add(Eq(message["startStep"], 0))
-        end_step = message["endStep"]
-        min_value, max_value = message.minmax()
-        if end_step == 0:
-            report.add(
-                AssertTrue(
-                    min_value == 0 and max_value == 0,
-                    "min_value == 0 and max_value == 0",
-                )
-            )
         report.add(self._statistical_process(message, p))
-
         return report
 
     def _point_in_time(self, message, p):
         report = Report("Point in time")
-        topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]:  # Analysis, Forecast
-            pass
-        elif topd == 2:  # Analysis and forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 0, f"topd={topd}")
-            )
-        elif topd == 3:  # Control forecast products
-            report.add(Eq(message["perturbationNumber"], 0, f"topd={topd}"))
-            report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
-        elif topd == 4:  # Perturbed forecast products
-            report.add(Ne(message["perturbationNumber"], 0, f"topd={topd}"))
-            report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         return report
 

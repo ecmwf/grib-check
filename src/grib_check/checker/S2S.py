@@ -20,7 +20,6 @@ from grib_check.Assert import (
     IsMultipleOf,
     Le,
     Lt,
-    Ne,
 )
 from grib_check.Report import Report
 
@@ -31,33 +30,22 @@ class S2S(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
-        self.register_checks(
-            {
-                "pressure_level": self._pressure_level,
-            }
-        )
+        self.register_checks({"pressure_level": self._pressure_level, })
 
     def _basic_checks(self, message, p) -> Report:
         report = Report("S2S Basic Checks")
         report.add(IsIn(message["productionStatusOfProcessedData"], [6, 7]))
         report.add(IsMultipleOf(message.get("step", int), 6))
-
         report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
-
+        report.add(self._check_date(message, p))
         return super()._basic_checks(message, p).add(report)
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
         report = Report("S2S Statistical Process")
-
         topd = message.get("typeOfProcessedData", int)
-
-        if topd in [0, 1, 2]:  # Analysis, Forecast, Analysis and forecast products
-            pass
-        elif topd in [3, 4]:  # Control forecast products, Perturbed forecast products
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}")
-            )
+        if topd in [3, 4]:  # Control forecast products, Perturbed forecast products
+            report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
@@ -70,7 +58,7 @@ class S2S(GeneralChecks):
             report.add(IsMultipleOf(message["forecastTime"], 6))
 
         tosp = message.get("typeOfStatisticalProcessing", int)
-        if tosp == 0:  # Statistical processing not applied
+        if tosp == 0:  # average
             report.add(IsIn(message["timeIncrementBetweenSuccessiveFields"], [1, 4]))
         else:
             report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
@@ -81,43 +69,10 @@ class S2S(GeneralChecks):
     def _point_in_time(self, message, p) -> Report:
         report = Report("S2S Point In Time")
         topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]:  # Analysis, Forecast
-            if message["productDefinitionTemplateNumber"] == 1:
-                report.add(
-                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}")
-                )
-                report.add(
-                    Le(
-                        message["perturbationNumber"],
-                        message["numberOfForecastsInEnsemble"],
-                        f"topd={topd}",
-                    )
-                )
-        elif topd == 2:  # Analysis and forecast products
-            pass
-        elif topd == 3:  # Control forecast products
-            # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}")
-            )
-        elif topd == 4:  # Perturbed forecast products
-            # check.add(IsIn(message["productDefinitionTemplateNumber"], [60, 11, 1]))
-            report.add(
-                Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}")
-            )
-            report.add(
-                Le(
-                    message["perturbationNumber"],
-                    message["numberOfForecastsInEnsemble"] - 1,
-                    f"topd={topd}",
-                )
-            )
+        if topd in [3, 4]:  # Control forecast products, Perturbed forecast products
+            report.add(Eq(message["productDefinitionTemplateNumber"], 1, f"topd={topd}"))
         else:
-            report.add(
-                Fail(
-                    f'Unsupported typeOfProcessedData {message["typeOfProcessedData"]}'
-                )
-            )
+            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         if message["indicatorOfUnitOfTimeRange"] == 11:
             # Six hourly is OK

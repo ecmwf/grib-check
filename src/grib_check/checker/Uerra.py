@@ -60,12 +60,13 @@ class Uerra(GeneralChecks):
         report = Report("Uerra Statistical Process")
 
         topd = message.get("typeOfProcessedData", int)
-        if topd in [0, 1]:  # Analysis, Forecast
-            report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11]))
-        elif topd == 2:  # Analysis and forecast products
-            pass
-        elif topd in [3, 4]:  # Control forecast products, Perturbed forecast products
-            report.add(Eq(message["productDefinitionTemplateNumber"], 61))
+        stream = message.get("stream", str)
+
+        if topd.value() in [0, 1]:  # Analysis, Forecast
+            if Eq(stream, "oper"):
+                report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+            elif Eq(stream, "enda"):
+                report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
@@ -75,10 +76,7 @@ class Uerra(GeneralChecks):
             report.add(Le(message["forecastTime"], 30))
 
         report.add(Eq(message["timeIncrementBetweenSuccessiveFields"], 0))
-
-        stream = message.get("stream", str)
-        if stream != "moda":
-            report.add(IsIn(message["endStep"], [1, 2, 4, 5]) | IsMultipleOf(message["endStep"], 3))
+        report.add(IsIn(message["endStep"], [1, 2, 4, 5]) | IsMultipleOf(message["endStep"], 3))
 
         return super()._statistical_process(message, p).add(report)
 
