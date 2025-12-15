@@ -193,9 +193,9 @@ It performs a set of checks on GRIB messages to ensure they comply with the proj
         formatter.set_format("{}:{}", show_type=True)
 
     grib_check = GribCheck(args)
-    return grib_check.run()
+    ret = grib_check.run()
+    return 0 if ret is True else 1
 
 
 if __name__ == "__main__":
-    ret = main()
-    sys.exit(0 if ret is True else 1)
+    sys.exit(main())
