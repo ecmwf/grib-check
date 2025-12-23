@@ -26,6 +26,7 @@ class era6(GeneralChecks):
                 "level_keys_era6": self._level_keys_era6,
                 "pressure_level_era6": self._pressure_level_era6,
                 "height_level_era6": self._height_level_era6,
+                "model_level_era6": self._model_level_era6,
             }
         )
 
@@ -116,4 +117,14 @@ class era6(GeneralChecks):
             report.add(IsIn(message["level"], levels))
         else:
             report.add(Report("No height level data"))
+        return report
+
+    def _model_level_era6(self, message, p) -> Report:
+        report = Report("ERA6 model Level")
+        ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
+        if ty1stfxsfc == 105:
+            levels = list(range(1, 138))
+            report.add(IsIn(message["level"], levels))
+        else:
+            report.add(Report("No model level data"))
         return report

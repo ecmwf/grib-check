@@ -16,6 +16,7 @@ local templates = import 'Parameter.libsonnet';
           "level_keys_era6",
           "pressure_level_era6",
           "height_level_era6",
+          "model_level_era6",
     ]
   }
 ]
