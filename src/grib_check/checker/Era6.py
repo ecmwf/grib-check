@@ -125,6 +125,8 @@ class era6(GeneralChecks):
         if ty1stfxsfc == 103 or ty1stfxsfc == 102 :
             levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
             report.add(IsIn(message["level"], levels))
+            paramIds=[10,54,130,157,246,247,3031]
+            report.add(IsIn(message["paramId"],paramIds))
         else:
             report.add(Report("No height level data"))
         return report
