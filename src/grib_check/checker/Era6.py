@@ -11,7 +11,7 @@
 import logging
 
 from grib_check.CheckEngine import CheckEngine
-from grib_check.Assert import Eq, IsIn, IsMultipleOf
+from grib_check.Assert import Eq, IsIn, IsMultipleOf, Missing
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -23,16 +23,19 @@ class era6(GeneralChecks):
         self.register_checks(
             {
                 "pressure_level": self._pressure_level,
+                "basic_checks_era6": self._basic_checks_era6,
             }
         )
 
-    def basic_checks_era6(self, message, p) -> Report:
+    def _basic_checks_era6(self, message, p) -> Report:
         report = Report("ERA6 Basic Checks")
         # re-analysis regarding code table 1.3
         report.add(IsIn(message["productionStatusOfProcessedData"], [3]))
         # IFS cycle cy49r2
         report.add(IsIn(message["backgroundProcess"], [255]))
         report.add(IsIn(message["generatingProcessIdentifier"], [159]))
+        report.add(Missing(message, "hoursAfterDataCutoff"))
+        report.add(Missing(message, "minutesAfterDataCutoff"))
         report.add(
             IsIn(message["typeOfProcessedData"], [0, 1])
         )  # 0 = analysis , 1 = forecast

@@ -12,13 +12,10 @@ wmo_params +
           {"key": "productionStatusOfProcessedData", "value": 3},
           {"key": "generatingProcessIdentifier", "value": 159},
           {"key": "backgroundProcess", "value": 255},
-          {"key": "hoursAfterDataCutoff", "value": 65535},
-          {"key": "minutesAfterDataCutoff", "value": 255},
-
       ],
       "checks": [
 #          "point_in_time",
-          "basic_checks",
+          "basic_checks_era6",
     ]
   }
 ]
