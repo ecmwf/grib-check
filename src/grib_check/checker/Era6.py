@@ -69,38 +69,42 @@ class era6(GeneralChecks):
 
     def _pressure_level(self, message, p) -> Report:
         report = Report("ERA6 Pressure Level")
-        levels = [
-            1000,
-            975,
-            950,
-            925,
-            900,
-            875,
-            850,
-            825,
-            800,
-            750,
-            700,
-            600,
-            500,
-            400,
-            300,
-            250,
-            200,
-            150,
-            100,
-            70,
-            50,
-            30,
-            20,
-            10,
-            7,
-            5,
-            3,
-            2,
-            1,
-        ]
-        report.add(IsIn(message["level"], levels, "invalid pressure level"))
+        ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
+        if ty1stfxsfc == 100:
+            levels = [
+                1000,
+                975,
+                950,
+                925,
+                900,
+                875,
+                850,
+                825,
+                800,
+                750,
+                700,
+                600,
+                500,
+                400,
+                300,
+                250,
+                200,
+                150,
+                100,
+                70,
+                50,
+                30,
+                20,
+                10,
+                7,
+                5,
+                3,
+                2,
+                1,
+            ]
+            report.add(IsIn(message["level"], levels))
+        else:
+            report.add(Report("No pressure level data"))
         return report
 
     def _height_level(self, message, p) -> Report:

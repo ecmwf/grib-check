@@ -14,6 +14,7 @@ wmo_params +
       "checks": [
           "basic_checks_era6",
           "level_keys",
+          "pressure_level",
     ]
   }
 ]
