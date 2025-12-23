@@ -32,8 +32,11 @@ class era6(GeneralChecks):
 
     def _basic_checks_era6(self, message, p) -> Report:
         report = Report("ERA6 Basic Checks")
+        marsType = message.get("marsType", str)
         # re-analysis regarding code table 1.3
         report.add(IsIn(message["productionStatusOfProcessedData"], [3]))
+        report.add(IsIn(message.get("centre",int), [98]))
+        report.add(IsIn(message.get("subCentre",int), [0]))
         # IFS cycle cy49r2
         report.add(IsIn(message["backgroundProcess"], [255]))
         report.add(IsIn(message["generatingProcessIdentifier"], [159]))
@@ -41,6 +44,11 @@ class era6(GeneralChecks):
         report.add(Missing(message, "hoursAfterDataCutoff"))
         report.add(Missing(message, "minutesAfterDataCutoff"))
         report.add(IsIn(message["indicatorOfUnitForForecastTime"], [1]))
+        if marsType == "an": # 0 - Analysis
+            report.add(IsIn(message["significanceOfReferenceTime"], [0]))
+        else: # 1 - Start of forecast
+            report.add(IsIn(message["significanceOfReferenceTime"], [1]))
+
         report.add(
             IsIn(message.get("typeOfProcessedData", int), [0, 1, 2])
         )  # 0 = analysis , 1 = forecast, 2 = Analysis and forecast products
