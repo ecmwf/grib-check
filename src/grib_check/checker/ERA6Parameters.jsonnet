@@ -1,7 +1,7 @@
 local templates = import 'Parameter.libsonnet';
-local wmo_params = import 'WmoParameters.jsonnet';
+#local wmo_params = import 'WmoParameters.jsonnet';
 
-wmo_params +
+#wmo_params +
 [
   {
       "name": "ERA6 specific basic checks",
@@ -13,8 +13,9 @@ wmo_params +
       ],
       "checks": [
           "basic_checks_era6",
-          "level_keys",
-          "pressure_level",
+          "level_keys_era6",
+          "pressure_level_era6",
+          "height_level_era6",
     ]
   }
 ]

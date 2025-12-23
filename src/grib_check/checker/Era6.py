@@ -22,9 +22,10 @@ class era6(GeneralChecks):
         self.logger = logging.getLogger(__class__.__name__)
         self.register_checks(
             {
-                "pressure_level": self._pressure_level,
                 "basic_checks_era6": self._basic_checks_era6,
-                "level_keys": self._level_keys,
+                "level_keys_era6": self._level_keys_era6,
+                "pressure_level_era6": self._pressure_level_era6,
+                "height_level_era6": self._height_level_era6,
             }
         )
 
@@ -48,8 +49,8 @@ class era6(GeneralChecks):
             )
         return report
 
-    def _level_keys(self, message, p):
-        report = Report("Level keys")
+    def _level_keys_era6(self, message, p):
+        report = Report("ERA6 level keys")
         ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
         ty2ndfxsfc = message.get("typeOfSecondFixedSurface", int)
         # for these entries we expect the level keys (sv,sf) to be missing
@@ -67,7 +68,7 @@ class era6(GeneralChecks):
             report.add(Exists(message, "scaledValueOfSecondFixedSurface"))
         return report
 
-    def _pressure_level(self, message, p) -> Report:
+    def _pressure_level_era6(self, message, p) -> Report:
         report = Report("ERA6 Pressure Level")
         ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
         if ty1stfxsfc == 100:
@@ -107,8 +108,12 @@ class era6(GeneralChecks):
             report.add(Report("No pressure level data"))
         return report
 
-    def _height_level(self, message, p) -> Report:
+    def _height_level_era6(self, message, p) -> Report:
         report = Report("ERA6 Height Level")
-        levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
-        report.add(IsIn(message["level"], levels, "invalid height level"))
+        ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
+        if ty1stfxsfc == 103 or ty1stfxsfc == 102 :
+            levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
+            report.add(IsIn(message["level"], levels))
+        else:
+            report.add(Report("No height level data"))
         return report
