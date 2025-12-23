@@ -16,6 +16,7 @@ wmo_params +
       "checks": [
 #          "point_in_time",
           "basic_checks_era6",
+          "level_keys",
     ]
   }
 ]

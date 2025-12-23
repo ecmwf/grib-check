@@ -11,7 +11,7 @@
 import logging
 
 from grib_check.CheckEngine import CheckEngine
-from grib_check.Assert import Eq, IsIn, IsMultipleOf, Missing
+from grib_check.Assert import Eq, IsIn, IsMultipleOf, Missing, Exists
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -24,6 +24,7 @@ class era6(GeneralChecks):
             {
                 "pressure_level": self._pressure_level,
                 "basic_checks_era6": self._basic_checks_era6,
+                "level_keys": self._level_keys,
             }
         )
 
@@ -45,6 +46,25 @@ class era6(GeneralChecks):
             report.add(
                 IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 1)
             )
+        return report
+
+    def _level_keys(self, message, p):
+        report = Report("Level keys")
+        ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
+        ty2ndfxsfc = message.get("typeOfSecondFixedSurface", int)
+        # for these entries we expect the level keys (sv,sf) to be missing
+        if ty1stfxsfc in [1,2,3,5,7,8,10,11,12,14,15,166,174,175,176,177,188,188,189,255]:
+            report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
+            report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
+        if ty2ndfxsfc in [1,2,3,5,7,8,10,11,12,14,15,166,174,175,176,177,188,188,189,255]:
+            report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
+            report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
+       	if ty1stfxsfc in [20,100,102,103,105,106,160,168]:
+            report.add(Exists(message, "scaleFactorOfFirstFixedSurface"))
+            report.add(Exists(message, "scaledValueOfFirstFixedSurface"))
+        if ty2ndfxsfc in [20,100,102,103,105,106,160,168]:
+            report.add(Exists(message, "scaleFactorOfSecondFixedSurface"))
+            report.add(Exists(message, "scaledValueOfSecondFixedSurface"))
         return report
 
     def _pressure_level(self, message, p) -> Report:
