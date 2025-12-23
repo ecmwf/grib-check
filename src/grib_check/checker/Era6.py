@@ -40,6 +40,7 @@ class era6(GeneralChecks):
         report.add(IsIn(message["dataRepresentationTemplateNumber"], [42]))
         report.add(Missing(message, "hoursAfterDataCutoff"))
         report.add(Missing(message, "minutesAfterDataCutoff"))
+        report.add(IsIn(message["indicatorOfUnitForForecastTime"], [1]))
         report.add(
             IsIn(message.get("typeOfProcessedData", int), [0, 1, 2])
         )  # 0 = analysis , 1 = forecast, 2 = Analysis and forecast products
