@@ -37,6 +37,7 @@ class era6(GeneralChecks):
         # IFS cycle cy49r2
         report.add(IsIn(message["backgroundProcess"], [255]))
         report.add(IsIn(message["generatingProcessIdentifier"], [159]))
+        report.add(IsIn(message["dataRepresentationTemplateNumber"], [42]))
         report.add(Missing(message, "hoursAfterDataCutoff"))
         report.add(Missing(message, "minutesAfterDataCutoff"))
         report.add(
