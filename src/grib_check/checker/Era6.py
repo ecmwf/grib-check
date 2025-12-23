@@ -38,13 +38,13 @@ class era6(GeneralChecks):
         report.add(Missing(message, "hoursAfterDataCutoff"))
         report.add(Missing(message, "minutesAfterDataCutoff"))
         report.add(
-            IsIn(message["typeOfProcessedData"], [0, 1])
-        )  # 0 = analysis , 1 = forecast
+            IsIn(message.get("typeOfProcessedData", int), [0, 1, 2])
+        )  # 0 = analysis , 1 = forecast, 2 = Analysis and forecast products
         if message["typeOfProcessedData"] == 0:
             report.add(Eq(message["step"], 0))
         else:
             report.add(
-                IsIn(message["step"], [1, 2, 4, 5]) | IsMultipleOf(message["step"], 1)
+                IsIn(message["step"], list(range(0, 19))) | IsMultipleOf(message["step"], 1)
             )
         return report
 
