@@ -27,6 +27,7 @@ class era6(GeneralChecks):
                 "pressure_level_era6": self._pressure_level_era6,
                 "height_level_era6": self._height_level_era6,
                 "model_level_era6": self._model_level_era6,
+                "check_expected_paramid_era6": self._check_expected_paramid_era6,
             }
         )
 
@@ -125,8 +126,8 @@ class era6(GeneralChecks):
         if ty1stfxsfc == 103 or ty1stfxsfc == 102 :
             levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
             report.add(IsIn(message["level"], levels))
-            paramIds=[10,54,130,157,246,247,3031]
-            report.add(IsIn(message["paramId"],paramIds))
+            #paramIds=[10,54,130,157,246,247,3031]
+            #report.add(IsIn(message["paramId"],paramIds))
         else:
             report.add(Report("No height level data"))
         return report
@@ -139,4 +140,36 @@ class era6(GeneralChecks):
             report.add(IsIn(message["level"], levels))
         else:
             report.add(Report("No model level data"))
+        return report
+
+    def _check_expected_paramid_era6(self, message, p):
+        report = Report("ERA6 expected paramIds")
+        mars_stream = message.get("stream", str)
+        mars_type = message.get("type", str)
+        mars_levtype = message.get("levtype", str)
+        mars_timespan = message.get("timespan", str)
+        if mars_levtype == 'hl':
+            paramids = [10,54,130,157,246,247,3031]
+            report.add(IsIn(message["paramId"], paramids))
+        if mars_levtype == 'o2d':
+            paramids = [262000,262001,262002,262003,262004,262005,262006,262008,262009,262011,262014,262015,262017,262100,262101,262102,262103,262104,262105,262106,262108,262109,262110,262113,262118,262119,262120,262121,262122,262123,262124,262139,262140,262141,262143,262900,262906,262907]
+            report.add(IsIn(message["paramId"], paramids))
+        if mars_levtype == 'o3d':
+            paramids = [262500,262501,262505,262506,262507]
+            report.add(IsIn(message["paramId"], paramids))
+        if mars_levtype == 'sol':
+            paramids = [33,238,228038,228141,260199,260360]
+            report.add(IsIn(message["paramId"], paramids))
+       	if mars_levtype == 'pv':
+            paramids = [3,54,129,131,132,133,203]
+            report.add(IsIn(message["paramId"], paramids))
+       	if mars_levtype == 'pt':
+            paramids = [53,54,60,131,132,133,138,155,203]
+            report.add(IsIn(message["paramId"], paramids))
+        if mars_type == '4i':
+            paramids = [130,131,132,133,138,152,155,203]
+            report.add(IsIn(message["paramId"], paramids))
+        if mars_type == 'me':
+            paramids = [130,131,132,138,152,155]
+            report.add(IsIn(message["paramId"], paramids))
         return report
