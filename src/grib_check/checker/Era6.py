@@ -28,6 +28,7 @@ class era6(GeneralChecks):
                 "height_level_era6": self._height_level_era6,
                 "model_level_era6": self._model_level_era6,
                 "pt_level_era6":self._pt_level_era6,
+                "pv_level_era6":self._pv_level_era6,
                 "check_expected_paramid_era6": self._check_expected_paramid_era6,
             }
         )
@@ -151,6 +152,16 @@ class era6(GeneralChecks):
             report.add(IsIn(message["level"], levels))
         else:
             report.add(Report("No potential temperature level data"))
+        return report
+
+    def _pv_level_era6(self, message, p) -> Report:
+        report = Report("ERA6 potential vorticity Level")
+        ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
+        if ty1stfxsfc == 109:
+            levels = [1500,2000]
+            report.add(IsIn(message["level"], levels))
+        else:
+            report.add(Report("No potential vorticity level data"))
         return report
 
     def _check_expected_paramid_era6(self, message, p):
