@@ -170,6 +170,7 @@ class era6(GeneralChecks):
         mars_type = message.get("type", str)
         mars_levtype = message.get("levtype", str)
         mars_timespan = message.get("timespan", str)
+        mars_paramtype = message.get("paramtype", str)
         if mars_levtype == 'hl':
             paramids = [10,54,130,157,246,247,3031]
             report.add(IsIn(message["paramId"], paramids))
@@ -231,5 +232,80 @@ class era6(GeneralChecks):
             report.add(IsIn(message["paramId"], paramids))
         if mars_type == 'me':
             paramids = [130,131,132,138,152,155]
+            report.add(IsIn(message["paramId"], paramids))
+        if mars_paramtype == 'wave_spectra':
+            paramids = [140251]
+            report.add(IsIn(message["paramId"], paramids))
+        if mars_paramtype == 'wave':
+            paramids = [
+                     140098,
+                     140099,
+                     140100,
+                     140101,
+                     140102,
+                     140103,
+                     140104,
+                     140105,
+                     140112,
+                     140113,
+                     140114,
+                     140115,
+                     140116,
+                     140117,
+                     140118,
+                     140119,
+                     140120,
+                     140121,
+                     140122,
+                     140123,
+                     140124,
+                     140125,
+                     140126,
+                     140127,
+                     140128,
+                     140129,
+                     140131,
+                     140132,
+                     140133,
+                     140134,
+                     140207,
+                     140208,
+                     140209,
+                     140211,
+                     140212,
+                     140214,
+                     140215,
+                     140216,
+                     140217,
+                     140218,
+                     140219,
+                     140220,
+                     140221,
+                     140222,
+                     140223,
+                     140224,
+                     140225,
+                     140226,
+                     140227,
+                     140228,
+                     140229,
+                     140230,
+                     140231,
+                     140232,
+                     140233,
+                     140234,
+                     140235,
+                     140236,
+                     140237,
+                     140238,
+                     140239,
+                     140244,
+                     140245,
+                     140246,
+                     140247,
+                     140249,
+                     140252,
+                     140253,
+                     140254]
             report.add(IsIn(message["paramId"], paramids))
         return report
