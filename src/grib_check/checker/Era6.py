@@ -27,6 +27,7 @@ class era6(GeneralChecks):
                 "pressure_level_era6": self._pressure_level_era6,
                 "height_level_era6": self._height_level_era6,
                 "model_level_era6": self._model_level_era6,
+                "pt_level_era6":self._pt_level_era6,
                 "check_expected_paramid_era6": self._check_expected_paramid_era6,
             }
         )
@@ -140,6 +141,16 @@ class era6(GeneralChecks):
             report.add(IsIn(message["level"], levels))
         else:
             report.add(Report("No model level data"))
+        return report
+
+    def _pt_level_era6(self, message, p) -> Report:
+        report = Report("ERA6 potential temperature Level")
+        ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
+        if ty1stfxsfc == 107:
+            levels = [265,275,285,300,315,320,330,350,370,395,430,475,530,600,700,850]
+            report.add(IsIn(message["level"], levels))
+        else:
+            report.add(Report("No potential temperature level data"))
         return report
 
     def _check_expected_paramid_era6(self, message, p):
