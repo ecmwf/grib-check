@@ -37,6 +37,7 @@ class era6(GeneralChecks):
     def _basic_checks_era6(self, message, p) -> Report:
         report = Report("ERA6 Basic Checks")
         marsType = message.get("marsType", str)
+        #typeOfTimeIncrement = message.get("typeOfTimeIncrement",int)
         # re-analysis regarding code table 1.3
         report.add(IsIn(message["productionStatusOfProcessedData"], [3]))
         report.add(IsIn(message.get("centre",int), [98]))
@@ -57,11 +58,17 @@ class era6(GeneralChecks):
             IsIn(message.get("typeOfProcessedData", int), [0, 1, 2])
         )  # 0 = analysis , 1 = forecast, 2 = Analysis and forecast products
         if message["typeOfProcessedData"] == 0:
+            #if (typeOfTimeIncrement == 2):
             report.add(Eq(message["step"], 0))
+            #else:
+            #    report.add(Report("typeOfTimeIncrement = 2, can't check the step!"))
         else:
+            #if (typeOfTimeIncrement == 2):
             report.add(
                 IsIn(message["step"], list(range(0, 19))) | IsMultipleOf(message["step"], 1)
             )
+            #else:
+            #    report.add(Report("typeOfTimeIncrement == 2, can't check the step!"))
         return report
 
     def _level_keys_era6(self, message, p):
@@ -311,13 +318,14 @@ class era6(GeneralChecks):
             report.add(IsIn(message["paramId"], paramids))
         if mars_stream == 'sttd' or mars_stream == 'stte':
             mars_stattype = message.get("stattype", str)
-            if mars_stattype in [daac, daav, damn, damx, dasd]:
+            if mars_stattype in ['daac', 'daav', 'damn', 'damx', 'dasd']:
                 report.add(IsIn(message["timespan"], ['1h','none']))
             else:
                	report.add(IsIn(message["timespan"], ['24h']))
             paramids = [
                228004,
                228005,
+               228143,
                235033,
                235041,
                235042,
