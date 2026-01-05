@@ -9,6 +9,7 @@ local allBasicChecks = [
           "model_level_era6",
           "pt_level_era6",
           "pv_level_era6",
+          "overall_time_era6",
           "check_expected_paramid_era6",
 ];
 

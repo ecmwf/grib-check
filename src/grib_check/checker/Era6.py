@@ -11,7 +11,7 @@
 import logging
 
 from grib_check.CheckEngine import CheckEngine
-from grib_check.Assert import Eq, IsIn, IsMultipleOf, Missing, Exists
+from grib_check.Assert import Eq, IsIn, IsMultipleOf, Missing, Exists, OverallDateMatches
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -29,6 +29,7 @@ class era6(GeneralChecks):
                 "model_level_era6": self._model_level_era6,
                 "pt_level_era6":self._pt_level_era6,
                 "pv_level_era6":self._pv_level_era6,
+                "overall_time_era6":self._overall_time_era6,
                 "check_expected_paramid_era6": self._check_expected_paramid_era6,
             }
         )
@@ -598,3 +599,36 @@ class era6(GeneralChecks):
             report.add(IsIn(message["paramId"], paramids))
         return report
 
+    def _overall_time_era6(self, message, p):
+        report = Report("ERA6 overall time")
+        pdtn = message.get("productDefinitionTemplateNumber", int)
+        if pdtn in [8,11]:
+            timeunit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
+            if timeunit == 1:
+                dataDate = message.get("dataDate", int)
+                dataTime = message.get("dataTime", int)
+                forecastTime = message.get("forecastTime", int)
+                # we need the most outer loop
+                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
+                yearOfEndOfOverallTimeInterval = message.get("yearOfEndOfOverallTimeInterval", int)
+                monthOfEndOfOverallTimeInterval = message.get("monthOfEndOfOverallTimeInterval", int)
+                dayOfEndOfOverallTimeInterval = message.get("dayOfEndOfOverallTimeInterval", int)
+                hourOfEndOfOverallTimeInterval = message.get("hourOfEndOfOverallTimeInterval", int)
+                minuteOfEndOfOverallTimeInterval = message.get("minuteOfEndOfOverallTimeInterval", int)
+                secondOfEndOfOverallTimeInterval= message.get("secondOfEndOfOverallTimeInterval", int)
+                report.add(OverallDateMatches(
+                              dataDate=dataDate,
+                              dataTime=dataTime,
+                              forecastTime=forecastTime,
+                              lengthOfTimeRange=lengthOfTimeRange,
+                              yearOfEndOfOverallTimeInterval=yearOfEndOfOverallTimeInterval,
+                              monthOfEndOfOverallTimeInterval=monthOfEndOfOverallTimeInterval,
+                              dayOfEndOfOverallTimeInterval=dayOfEndOfOverallTimeInterval,
+                              hourOfEndOfOverallTimeInterval=hourOfEndOfOverallTimeInterval,
+                              minuteOfEndOfOverallTimeInterval=minuteOfEndOfOverallTimeInterval,
+                              secondOfEndOfOverallTimeInterval=secondOfEndOfOverallTimeInterval))
+            else:
+                report.add(Report("Time-unit of statistical unit not hours, can't check"))
+        else:
+            report.add(Report("No time-statistical data !"))
+        return report
