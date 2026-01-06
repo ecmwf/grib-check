@@ -11,6 +11,7 @@ local allBasicChecks = [
           "pv_level_era6",
           "overall_time_era6",
           "check_expected_paramid_era6",
+          "check_range",
 ];
 
 #wmo_params +

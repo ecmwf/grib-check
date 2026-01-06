@@ -31,6 +31,7 @@ class era6(GeneralChecks):
                 "pv_level_era6":self._pv_level_era6,
                 "overall_time_era6":self._overall_time_era6,
                 "check_expected_paramid_era6": self._check_expected_paramid_era6,
+                "check_range": self._check_range,
             }
         )
 
