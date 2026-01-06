@@ -34,6 +34,7 @@ class era6(GeneralChecks):
             }
         )
 
+
     def _basic_checks_era6(self, message, p) -> Report:
         report = Report("ERA6 Basic Checks")
         marsType = message.get("marsType", str)

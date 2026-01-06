@@ -37,8 +37,43 @@ local allBasicChecks = [
           {"key": "paramId", "value": "3073"},
       ],
       "expected": [
-          {"key": "typeOfLevel", "value": "lowCloudLayer"},
+          { key: 'values', min: [0, 100], max: [0, 100] },
+          { key: "typeOfLevel", value: "lowCloudLayer"},
       ],
       "checks": allBasicChecks
   }
 ] 
+
++
+
+[
+  {
+      "name": "Medium cloud cover",
+      "pairs": [
+          {"key": "class", "value": "e6"},
+          {"key": "paramId", "value": "3074"},
+      ],
+      "expected": [
+          {"key": "typeOfLevel", "value": "mediumCloudLayer"},
+          { key: "typeOfLevel", value: "lowCloudLayer"},
+      ],
+      "checks": allBasicChecks
+  }
+]
+
++
+
+[
+  {
+      "name": "High cloud cover",
+      "pairs": [
+          {"key": "class", "value": "e6"},
+          {"key": "paramId", "value": "3075"},
+      ],
+      "expected": [
+          {"key": "typeOfLevel", "value": "highCloudLayer"},
+          { key: "typeOfLevel", value: "lowCloudLayer"},
+      ],
+      "checks": allBasicChecks
+  }
+]
