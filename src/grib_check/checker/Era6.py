@@ -32,9 +32,9 @@ class era6(GeneralChecks):
                 "overall_time_era6":self._overall_time_era6,
                 "check_expected_paramid_era6": self._check_expected_paramid_era6,
                 "check_range": self._check_range,
+                "topd_era6": self._topd_era6,
             }
         )
-
 
     def _basic_checks_era6(self, message, p) -> Report:
         report = Report("ERA6 Basic Checks")
@@ -135,7 +135,8 @@ class era6(GeneralChecks):
     def _height_level_era6(self, message, p) -> Report:
         report = Report("ERA6 Height Level")
         ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
-        if ty1stfxsfc == 103 or ty1stfxsfc == 102 :
+        levtype = message.get("levtype",str)
+        if (ty1stfxsfc == 103 or ty1stfxsfc == 102) and levtype == 'hl' :
             levels = [15, 30, 50, 75, 100, 150, 200, 250, 300, 400, 500]
             report.add(IsIn(message["level"], levels))
             #paramIds=[10,54,130,157,246,247,3031]
@@ -641,4 +642,25 @@ class era6(GeneralChecks):
                 report.add(Report("Time-unit of statistical unit not hours, can't check"))
         else:
             report.add(Report("No time-statistical data !"))
+        return report
+
+    def _topd_era6(self, message, p):
+        report = Report("typeOfProcessedData")
+        topd = message.get("typeOfProcessedData", int)
+        marsStream = message.get("stream", str)
+        marsType = message.get("type", str)
+        if marsStream == "oper" or marsStream == "lwda" or marsStream == "sttd":
+            if marsType == "an":
+                report.add(Eq(topd, 0))
+            elif marsType == "4i" or marsType == "4v":
+                report.add(Eq(topd, 2))
+            else:
+                report.add(Eq(topd, 1))
+        elif marsStream == "enda" or marsStream == "elda" or marsStream == "stte":
+            if marsType == "an":
+                report.add(Eq(topd, 0))
+            elif marsType == "4i" or marsType == "4v":
+                report.add(Eq(topd, 2))
+            else:
+                report.add(Eq(topd, 5))
         return report
