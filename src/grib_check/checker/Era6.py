@@ -57,8 +57,8 @@ class era6(GeneralChecks):
             report.add(IsIn(message["significanceOfReferenceTime"], [1]))
 
         report.add(
-            IsIn(message.get("typeOfProcessedData", int), [0, 1, 2])
-        )  # 0 = analysis , 1 = forecast, 2 = Analysis and forecast products
+            IsIn(message.get("typeOfProcessedData", int), [0, 1, 2, 4, 5])
+        )  # 0 = analysis , 1 = forecast, 2 = Analysis and forecast products, 4 = Perturbed forecast products, 5 = Control and perturbed forecast products
         if message["typeOfProcessedData"] == 0:
             #if (typeOfTimeIncrement == 2):
             report.add(Eq(message["step"], 0))
@@ -650,17 +650,13 @@ class era6(GeneralChecks):
         marsStream = message.get("stream", str)
         marsType = message.get("type", str)
         if marsStream == "oper" or marsStream == "lwda" or marsStream == "sttd":
-            if marsType == "an":
+            if marsType == "an" or marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
                 report.add(Eq(topd, 0))
-            elif marsType == "4i" or marsType == "4v":
-                report.add(Eq(topd, 2))
             else:
                 report.add(Eq(topd, 1))
         elif marsStream == "enda" or marsStream == "elda" or marsStream == "stte":
-            if marsType == "an":
+            if marsType == "an" or marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
                 report.add(Eq(topd, 0))
-            elif marsType == "4i" or marsType == "4v":
-                report.add(Eq(topd, 2))
             else:
                 report.add(Eq(topd, 5))
         return report
