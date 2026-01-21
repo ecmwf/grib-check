@@ -33,6 +33,7 @@ class era6(GeneralChecks):
                 "check_expected_paramid_era6": self._check_expected_paramid_era6,
                 "check_range": self._check_range,
                 "topd_era6": self._topd_era6,
+                "togp_era6": self._togp_era6,
             }
         )
 
@@ -660,3 +661,22 @@ class era6(GeneralChecks):
             else:
                 report.add(Eq(topd, 5))
         return report
+
+
+    def _togp_era6(self, message, p):
+        report = Report("typeOfGeneratingProcess")
+        togp = message.get("typeOfGeneratingProcess", int)
+        marsStream = message.get("stream", str)
+        marsType = message.get("type", str)
+        if marsStream == "enda" or marsStream == "elda" or marsStream == "stte":
+            if marsType == "an" or marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
+                report.add(Eq(togp, 0))
+            else:
+                report.add(Eq(togp, 4))
+        elif marsStream == "oper" or marsStream == "lwda" or marsStream == "sttd":
+            if marsType == "an" or marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
+                report.add(Eq(togp, 0))
+            else:
+                report.add(Eq(togp, 2))
+        return report
+
