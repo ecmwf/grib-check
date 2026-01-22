@@ -54,6 +54,9 @@ class era6(GeneralChecks):
         report.add(IsIn(message["indicatorOfUnitForForecastTime"], [1]))
         if marsType == "an": # 0 - Analysis
             report.add(IsIn(message["significanceOfReferenceTime"], [0]))
+        elif marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
+            # 6 - Start of data assimilation
+            report.add(IsIn(message["significanceOfReferenceTime"], [6]))
         else: # 1 - Start of forecast
             report.add(IsIn(message["significanceOfReferenceTime"], [1]))
 
