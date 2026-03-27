@@ -456,23 +456,28 @@ class GeneralChecks(CheckEngine):
 
         if stepType != "instant":  # not instantaneous
             # Check only applies to accumulated, max etc.
-            # stepRange = message.get("stepRange", str)
+            stepRange = message.get("stepRange", int)
 
             saved_validityDate = message["validityDate"]
             saved_validityTime = message["validityTime"]
+            saved_lengthOfTimeRange = message["lengthOfTimeRange"]
+            saved_startStep = message["startStep"]
+            saved_endStep = message["endStep"]
 
-            # message.set("stepRange", stepRange)
+            # by setting stepRange, eccodes recomputes related metada and save them
+            message.set("stepRange", int(stepRange))
+
+            message.set("lengthOfTimeRange", int(saved_lengthOfTimeRange))
+            message.set("startStep", int(saved_startStep))
+            message.set("endStep", int(saved_endStep))
 
             validityDate = message["validityDate"]
             validityTime = message["validityTime"]
+
             if validityDate != saved_validityDate or validityTime != saved_validityTime:
-                # print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (cfg['filename'], cfg['field'], cfg['param'], validityDate, validityTime))
                 report.add(
-                    Fail(
-                        f"Invalid validity Date/Time (Should be {validityDate} and {validityTime})"
-                    )
+                    Fail( f"Invalid validity Date({saved_validityDate})/Time({saved_validityTime}) (Should be {validityDate} and {validityTime})")
                 )
-                # cfg['warning'] += 1
 
         return report
 
