@@ -471,8 +471,8 @@ class GeneralChecks(CheckEngine):
             message.set("startStep", saved_startStep.value())
             message.set("endStep", saved_endStep.value())
 
-            report.add(Eq(saved_validityDate, message["validityDate"].value(), f"On failure: Inconsistency between {saved_validityDate} and {saved_startStep}-{saved_endStep}"))
-            report.add(Eq(saved_validityTime, message["validityTime"].value(), f"On failure: Inconsistency between {saved_validityTime} and {saved_startStep}-{saved_endStep}"))
+            report.add(Eq(saved_validityDate, message["validityDate"].value(), f"On failure: Inconsistency between {message['dataDate']}, {message['dataTime']} and {saved_startStep}-{saved_endStep}"))
+            report.add(Eq(saved_validityTime, message["validityTime"].value(), f"On failure: Inconsistency between {message['dataDate']}, {message['dataTime']} and {saved_startStep}-{saved_endStep}"))
 
         return report
 
