@@ -33,7 +33,7 @@ class Wpmip(GeneralChecks):
         report.add(IsIn(message["productionStatusOfProcessedData"], [16, 17]))
 
         # WPMIP centre/subCentre DGOV-577
-        report.add(Eq(message["centre"], "323"))
+        report.add(Eq(message["centre"], "wpmip"))
         report.add(Ne(message["subCentre"], 0))
 
         # to use MARS new key "model"
