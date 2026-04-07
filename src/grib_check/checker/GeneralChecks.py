@@ -455,11 +455,12 @@ class GeneralChecks(CheckEngine):
         stepType = message.get("stepType", str)
 
         if stepType != "instant":  # not instantaneous
-            # Check only applies to accumulated, max etc.
-            stepRange = message.get("stepRange", int)
 
             saved_validityDate = message["validityDate"]
             saved_validityTime = message["validityTime"]
+
+            # Check only applies to accumulated, max etc.
+            stepRange = message.get("stepRange", int)
             saved_lengthOfTimeRange = message["lengthOfTimeRange"]
             saved_startStep = message["startStep"]
             saved_endStep = message["endStep"]
@@ -470,8 +471,8 @@ class GeneralChecks(CheckEngine):
             message.set("startStep", saved_startStep.value())
             message.set("endStep", saved_endStep.value())
 
-            report.add(Eq(message["validityDate"], saved_validityDate.value(), f"Failure means ecCodes miscomputed the validity date when setting stepRange={stepRange.value()}"))
-            report.add(Eq(message["validityTime"], saved_validityTime.value(), f"Failure means ecCodes miscomputed the validity time when setting stepRange={stepRange.value()}"))
+            report.add(Eq(message["validityDate"], saved_validityDate.value()))
+            report.add(Eq(message["validityTime"], saved_validityTime.value()))
 
         return report
 
