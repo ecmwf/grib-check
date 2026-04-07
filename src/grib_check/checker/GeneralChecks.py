@@ -465,19 +465,13 @@ class GeneralChecks(CheckEngine):
             saved_endStep = message["endStep"]
 
             # by setting stepRange, eccodes recomputes related metada and save them
-            message.set("stepRange", int(stepRange))
+            message.set("stepRange", stepRange.value())
+            message.set("lengthOfTimeRange", saved_lengthOfTimeRange.value())
+            message.set("startStep", saved_startStep.value())
+            message.set("endStep", saved_endStep.value())
 
-            message.set("lengthOfTimeRange", int(saved_lengthOfTimeRange))
-            message.set("startStep", int(saved_startStep))
-            message.set("endStep", int(saved_endStep))
-
-            validityDate = message["validityDate"]
-            validityTime = message["validityTime"]
-
-            if validityDate != saved_validityDate or validityTime != saved_validityTime:
-                report.add(
-                    Fail( f"Invalid validity Date({saved_validityDate})/Time({saved_validityTime}) (Should be {validityDate} and {validityTime})")
-                )
+            report.add(Eq(message["validityDate"], saved_validityDate.value(), f"Failure means ecCodes miscomputed the validity date when setting stepRange={stepRange.value()}"))
+            report.add(Eq(message["validityTime"], saved_validityTime.value(), f"Failure means ecCodes miscomputed the validity time when setting stepRange={stepRange.value()}"))
 
         return report
 
