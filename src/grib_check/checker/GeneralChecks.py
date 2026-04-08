@@ -455,24 +455,24 @@ class GeneralChecks(CheckEngine):
         stepType = message.get("stepType", str)
 
         if stepType != "instant":  # not instantaneous
-            # Check only applies to accumulated, max etc.
-            # stepRange = message.get("stepRange", str)
 
             saved_validityDate = message["validityDate"]
             saved_validityTime = message["validityTime"]
 
-            # message.set("stepRange", stepRange)
+            # Check only applies to accumulated, max etc.
+            stepRange = message.get("stepRange", int)
+            saved_lengthOfTimeRange = message["lengthOfTimeRange"]
+            saved_startStep = message["startStep"]
+            saved_endStep = message["endStep"]
 
-            validityDate = message["validityDate"]
-            validityTime = message["validityTime"]
-            if validityDate != saved_validityDate or validityTime != saved_validityTime:
-                # print("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)" % (cfg['filename'], cfg['field'], cfg['param'], validityDate, validityTime))
-                report.add(
-                    Fail(
-                        f"Invalid validity Date/Time (Should be {validityDate} and {validityTime})"
-                    )
-                )
-                # cfg['warning'] += 1
+            # by setting stepRange, eccodes recomputes related metada and save them
+            message.set("stepRange", stepRange.value())
+            message.set("lengthOfTimeRange", saved_lengthOfTimeRange.value())
+            message.set("startStep", saved_startStep.value())
+            message.set("endStep", saved_endStep.value())
+
+            report.add(Eq(saved_validityDate, message["validityDate"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
+            report.add(Eq(saved_validityTime, message["validityTime"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
 
         return report
 
