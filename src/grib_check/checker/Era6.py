@@ -47,8 +47,8 @@ class era6(GeneralChecks):
         report.add(IsIn(message.get("subCentre",int), [0]))
         # IFS cycle cy49r2
         report.add(IsIn(message["backgroundProcess"], [255]))
-        report.add(IsIn(message["generatingProcessIdentifier"], [159]))
-        report.add(IsIn(message["dataRepresentationTemplateNumber"], [42]))
+        report.add(IsIn(message["generatingProcessIdentifier"], [159,107]))
+        report.add(IsIn(message["dataRepresentationTemplateNumber"], [42,51]))
         report.add(Missing(message, "hoursAfterDataCutoff"))
         report.add(Missing(message, "minutesAfterDataCutoff"))
         report.add(IsIn(message["indicatorOfUnitForForecastTime"], [1]))
@@ -330,6 +330,48 @@ class era6(GeneralChecks):
             else:
                	report.add(IsIn(message["timespan"], ['24h']))
             paramids = [
+               260259,
+               238055,
+               237055,
+               235326,
+               233035,
+               233034,
+               233033,
+               233032,
+               233031,
+               233030,
+               233029,
+               233028,
+               233027,
+               233026,
+               233025,
+               233024,
+               233023,
+               233022,
+               233021,
+               233020,
+               233019,
+               233018,
+               233017,
+               233016,
+               233015,
+               233014,
+               233013,
+               233012,
+               233011,
+               233010,
+               233009,
+               233008,
+               233007,
+               233006,
+               233005,
+               233004,
+               233003,
+               233002,
+               233001,
+               237321,
+               237117,
+               237318,
                228004,
                228005,
                228143,

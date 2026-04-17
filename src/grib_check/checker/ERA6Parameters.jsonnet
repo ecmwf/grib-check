@@ -24,7 +24,7 @@ local allBasicChecks = [
           {"key": "class", "value": "e6"},
       ],
       "expected": [
-          {"key": "tablesVersion", "value": 35},
+          {"key": "tablesVersion", "value": 36},
       ],
       "checks": allBasicChecks
   }
