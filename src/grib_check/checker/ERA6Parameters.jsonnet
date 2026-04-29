@@ -14,6 +14,7 @@ local allBasicChecks = [
           "check_range",
           "topd_era6",
           "togp_era6",
+          "pdtn_era6",
 ];
 
 #wmo_params +

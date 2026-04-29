@@ -34,6 +34,7 @@ class era6(GeneralChecks):
                 "check_range": self._check_range,
                 "topd_era6": self._topd_era6,
                 "togp_era6": self._togp_era6,
+                "pdtn_era6": self._pdtn_era6,
             }
         )
 
@@ -110,16 +111,24 @@ class era6(GeneralChecks):
                 850,
                 825,
                 800,
+                775,
                 750,
                 700,
+                650,
                 600,
+                550,
                 500,
                 450,
                 400,
+                350,
                 300,
+                275,
                 250,
+                225,
                 200,
+                175,
                 150,
+                125,
                 100,
                 70,
                 50,
@@ -227,6 +236,9 @@ class era6(GeneralChecks):
                 262140,
                 262141,
                 262143,
+                262146,
+                262147,
+                262148,
                 262900,
                 262906,
                 262907]
@@ -732,3 +744,13 @@ class era6(GeneralChecks):
                	report.add(IsIn(togp, [2,9]))
         return report
 
+    def _pdtn_era6(self, message, p):
+        report = Report("productDefinitionTemplateNumber")
+        pdtn = message.get("productDefinitionTemplateNumber", int)
+        marsStream = message.get("stream", str)
+        #marsType = message.get("type", str)
+        if marsStream == "enda" or marsStream == "elda" or marsStream == "stte":
+            report.add(IsIn(pdtn, [1,11,43,100,104]))
+        elif marsStream == "oper" or marsStream == "lwda" or marsStream == "sttd":
+            report.add(IsIn(pdtn, [0,8,42,99,103]))
+        return report
