@@ -114,6 +114,7 @@ class era6(GeneralChecks):
                 700,
                 600,
                 500,
+                450,
                 400,
                 300,
                 250,
@@ -234,7 +235,7 @@ class era6(GeneralChecks):
             paramids = [262500,262501,262505,262506,262507]
             report.add(IsIn(message["paramId"], paramids))
         if mars_levtype == 'sol':
-            paramids = [33,238,228038,228141,260199,260360]
+            paramids = [33,238,228038,228141,260199,260360,262000,262024]
             report.add(IsIn(message["paramId"], paramids))
        	if mars_levtype == 'pv':
             paramids = [3,54,129,131,132,133,203]
@@ -253,6 +254,7 @@ class era6(GeneralChecks):
             report.add(IsIn(message["paramId"], paramids))
         if mars_paramtype == 'wave' and (mars_stream != 'sttd' and mars_stream != 'stte'):
             paramids = [
+                     148,
                      140098,
                      140099,
                      140100,
@@ -321,7 +323,8 @@ class era6(GeneralChecks):
                      140249,
                      140252,
                      140253,
-                     140254]
+                     140254,
+                     228003]
             report.add(IsIn(message["paramId"], paramids))
         if mars_stream == 'sttd' or mars_stream == 'stte':
             mars_stattype = message.get("stattype", str)
@@ -715,13 +718,17 @@ class era6(GeneralChecks):
         marsType = message.get("type", str)
         if marsStream == "enda" or marsStream == "elda" or marsStream == "stte":
             if marsType == "an" or marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
-                report.add(Eq(togp, 0))
+#                report.add(Eq(togp, 0))
+                report.add(IsIn(togp, [0,9]))
             else:
-                report.add(Eq(togp, 4))
+#                report.add(Eq(togp, 4))
+               	report.add(IsIn(togp, [4,9]))
         elif marsStream == "oper" or marsStream == "lwda" or marsStream == "sttd":
             if marsType == "an" or marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
-                report.add(Eq(togp, 0))
+#                report.add(Eq(togp, 0))
+               	report.add(IsIn(togp, [0,9]))
             else:
-                report.add(Eq(togp, 2))
+#                report.add(Eq(togp, 2))
+               	report.add(IsIn(togp, [2,9]))
         return report
 
