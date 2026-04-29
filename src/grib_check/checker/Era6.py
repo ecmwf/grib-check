@@ -11,7 +11,7 @@
 import logging
 
 from grib_check.CheckEngine import CheckEngine
-from grib_check.Assert import Eq, IsIn, IsMultipleOf, Missing, Exists, OverallDateMatches
+from grib_check.Assert import Eq, IsIn, Gt, IsMultipleOf, Missing, Exists, OverallDateMatches
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -35,6 +35,7 @@ class era6(GeneralChecks):
                 "topd_era6": self._topd_era6,
                 "togp_era6": self._togp_era6,
                 "pdtn_era6": self._pdtn_era6,
+                "assimwin_era6": self._assimwin_era6,
             }
         )
 
@@ -753,4 +754,12 @@ class era6(GeneralChecks):
             report.add(IsIn(pdtn, [1,11,43,100,104]))
         elif marsStream == "oper" or marsStream == "lwda" or marsStream == "sttd":
             report.add(IsIn(pdtn, [0,8,42,99,103]))
+        return report
+
+    def _assimwin_era6(self, message, p):
+        report = Report("assimilationWindow")
+        glsnr = message.get("grib2LocalSectionNumber", int)
+        len4dwin = message.get("lengthOf4DvarWindow", int)
+        if glsnr == 36 or glsnr == 37 or glsnr == 38 or glsnr == 39:
+            report.add(Gt(len4dwin, 0))
         return report
