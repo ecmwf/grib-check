@@ -73,7 +73,8 @@ class era6(GeneralChecks):
         else:
             #if (typeOfTimeIncrement == 2):
             report.add(
-                IsIn(message["step"], list(range(0, 19))) | IsMultipleOf(message["step"], 1)
+#                IsIn(message["step"], list(range(0, 19))) & IsMultipleOf(message["step"], 1)
+                IsIn(message.get("step", int), list(range(0, 19))) & IsMultipleOf(message.get("step", int), 1)
             )
             #else:
             #    report.add(Report("typeOfTimeIncrement == 2, can't check the step!"))
@@ -751,9 +752,9 @@ class era6(GeneralChecks):
         marsStream = message.get("stream", str)
         #marsType = message.get("type", str)
         if marsStream == "enda" or marsStream == "elda" or marsStream == "stte":
-            report.add(IsIn(pdtn, [1,11,43,100,104]))
+            report.add(IsIn(pdtn, [1,11,41,43,100,104]))
         elif marsStream == "oper" or marsStream == "lwda" or marsStream == "sttd":
-            report.add(IsIn(pdtn, [0,8,42,99,103]))
+            report.add(IsIn(pdtn, [0,8,40,42,99,103]))
         return report
 
     def _assimwin_era6(self, message, p):
