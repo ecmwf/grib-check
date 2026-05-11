@@ -36,6 +36,7 @@ class era6(GeneralChecks):
                 "togp_era6": self._togp_era6,
                 "pdtn_era6": self._pdtn_era6,
                 "assimwin_era6": self._assimwin_era6,
+                "typeEns": self._typeEns,
             }
         )
 
@@ -1453,3 +1454,11 @@ class era6(GeneralChecks):
         if glsnr == 36 or glsnr == 37 or glsnr == 38 or glsnr == 39:
             report.add(Gt(len4dwin, 0))
         return report
+
+    def _typeEns(self, message, p):
+        report = Report("typeOfEnsembleForecast")
+        pdtn = message.get("productDefinitionTemplateNumber", int)
+        if pdtn in [1,11,100,104,143,145]:
+            report.add(IsIn(message.get("typeOfEnsembleForecast", int), [5,6]))
+        return report
+
