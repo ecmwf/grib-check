@@ -1167,6 +1167,36 @@ class era6(GeneralChecks):
                239406,
                239407,
                239411,
+               235097,
+               235098,
+               235106,
+               235130,
+               235157,
+               235246,
+               235247,
+               235269,
+               235286,
+               237097,
+               237098,
+               237106,
+               237130,
+               237157,
+               237246,
+               237247,
+               238097,
+               238098,
+               238106,
+               238130,
+               238157,
+               238246,
+               238247,
+               239097,
+               239098,
+               239106,
+               239130,
+               239157,
+               239246,
+               239247,
                260259,
                263000,
                263001,
@@ -1411,7 +1441,7 @@ class era6(GeneralChecks):
         marsStream = message.get("stream", str)
         #marsType = message.get("type", str)
         if marsStream == "enda" or marsStream == "elda" or marsStream == "stte":
-            report.add(IsIn(pdtn, [1,11,41,43,100,104,145,167]))
+            report.add(IsIn(pdtn, [1,2,11,12,41,43,100,104,143,145,167]))
         elif marsStream == "oper" or marsStream == "lwda" or marsStream == "sttd":
             report.add(IsIn(pdtn, [0,8,40,42,99,103,144]))
         return report
