@@ -88,10 +88,10 @@ class era6(GeneralChecks):
         ty1stfxsfc = message.get("typeOfFirstFixedSurface", int)
         ty2ndfxsfc = message.get("typeOfSecondFixedSurface", int)
         # for these entries we expect the level keys (sv,sf) to be missing
-        if ty1stfxsfc in [1,2,3,5,7,8,10,11,12,14,15,166,174,175,176,177,188,188,189,255]:
+        if ty1stfxsfc in [1,2,3,5,7,8,10,11,12,14,15,166,174,175,176,177,188,188,189,254,255]:
             report.add(Missing(message, "scaleFactorOfFirstFixedSurface"))
             report.add(Missing(message, "scaledValueOfFirstFixedSurface"))
-        if ty2ndfxsfc in [1,2,3,5,7,8,10,11,12,14,15,166,174,175,176,177,188,188,189,255]:
+        if ty2ndfxsfc in [1,2,3,5,7,8,10,11,12,14,15,166,174,175,176,177,188,188,189,254,255]:
             report.add(Missing(message, "scaleFactorOfSecondFixedSurface"))
             report.add(Missing(message, "scaledValueOfSecondFixedSurface"))
        	if ty1stfxsfc in [20,100,102,103,105,106,160,168]:
