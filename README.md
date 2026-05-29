@@ -47,12 +47,13 @@ pip install grib-check
 To use GribCheck, you need to specify the GRIB convention you want to check.
 The library currently supports the following conventions:
 
-- tigge : [The THORPEX Interactive Grand Global Ensemble (TIGGE)](https://confluence.ecmwf.int/display/TIGGE)
+- tigge : [The International Grand Global Ensemble (TIGGE)](https://confluence.ecmwf.int/display/TIGGE)
 - lam : [TIGGE Limited-Area Model (TIGGE LAM)](https://confluence.ecmwf.int/display/TIGL)
 - s2s : [Subseasonal to Seasonal (S2S)](http://s2sprediction.net/)
 - s2s_refcst : [S2S Reforecasts](http://s2sprediction.net/)
 - uerra : [Uncertainties in Ensembles of Regional ReAnalysis (UERRA)](https://uerra.eu/)
 - crra : [Copernicus Regional Reanalysis (CERRA)](https://climate.copernicus.eu/copernicus-regional-reanalysis-europe-cerra)
+- lcgcr : [WMO Lead Centre for Global Climate Reanalyses (LC-GCR)](https://confluence.ecmwf.int/display/GCR/WMO+Lead+Centre+for+Global+Climate+Reanalyses+LC-GCR)
 
 Experimental conventions that are under development include:
 

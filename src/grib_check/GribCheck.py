@@ -24,6 +24,7 @@ from .checker.S2SRefcst import S2SRefcst
 from .checker.Tigge import Tigge
 from .checker.Uerra import Uerra
 from .checker.Wpmip import Wpmip
+from .checker.Lcgcr import Lcgcr
 from .FileScanner import FileScanner
 from .Grib import Grib
 from .LookupTable import SimpleLookupTable
@@ -81,6 +82,11 @@ class GribCheck:
             if self.args.parameters is not None
             else f"{script_path}/checker/WpmipParameters.jsonnet"
         )
+        lcgcr_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/LcgcrParameters.jsonnet"
+        )
         crra_params = (
             self.args.parameters
             if self.args.parameters is not None
@@ -91,6 +97,8 @@ class GribCheck:
             checker = Tigge(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "wpmip":
             checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
+        elif self.args.convention == "lcgcr":
+            checker = Lcgcr(SimpleLookupTable(lcgcr_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "s2s":
             checker = S2S(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "s2s_refcst":
@@ -158,6 +166,7 @@ It performs a set of checks on GRIB messages to ensure they comply with the proj
             "crra",
             "lam",
             "wpmip",
+            "lcgcr",
         ],
         required=True,
         type=str,
