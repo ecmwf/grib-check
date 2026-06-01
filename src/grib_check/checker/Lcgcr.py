@@ -10,7 +10,7 @@
 
 import logging
 
-from grib_check.Assert import Eq, IsIn, IsMultipleOf, Le, Ne
+from grib_check.Assert import Eq, IsIn, IsMultipleOf, Le, Ne, OverallDateMatches
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -20,6 +20,11 @@ class Lcgcr(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
+        self.register_checks(
+            {
+                "overall_time_lcgcr":self._overall_time_lcgcr,
+            }
+        )
 
     def _basic_checks(self, message, p):
         report = Report("LC-GCR Basic Checks")
@@ -38,11 +43,7 @@ class Lcgcr(GeneralChecks):
         # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/
         report.add(Eq(message["dataRepresentationTemplateNumber"], 42))
 
-        #       # Only 00, 06 12 and 18 Cycle OK
-        #       report.add(IsIn(message["hour"], [0, 6, 12, 18]))
-
-#       report.add(Le(message["endStep"], 10 * 36))
-        report.add(IsMultipleOf(message["step"], 6))
+        report.add(Eq(message["step"], None)) # xxx
         report.add(Eq(message["bitsPerValue"], 16))
         report.add(self._check_date(message, p))
 
@@ -83,3 +84,37 @@ class Lcgcr(GeneralChecks):
         report.add(Eq(message["jDirectionIncrement"], 1250000))
 
         return super()._latlon_grid(message).add(report)
+
+    def _overall_time_lcgcr(self, message, p):
+        report = Report("LC-GCR overall time")
+        pdtn = message.get("productDefinitionTemplateNumber", int)
+        if pdtn in [8,11]:
+            timeunit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
+            if timeunit == 1:
+                dataDate = message.get("dataDate", int)
+                dataTime = message.get("dataTime", int)
+                forecastTime = message.get("forecastTime", int)
+                # we need the most outer loop
+                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
+                yearOfEndOfOverallTimeInterval = message.get("yearOfEndOfOverallTimeInterval", int)
+                monthOfEndOfOverallTimeInterval = message.get("monthOfEndOfOverallTimeInterval", int)
+                dayOfEndOfOverallTimeInterval = message.get("dayOfEndOfOverallTimeInterval", int)
+                hourOfEndOfOverallTimeInterval = message.get("hourOfEndOfOverallTimeInterval", int)
+                minuteOfEndOfOverallTimeInterval = message.get("minuteOfEndOfOverallTimeInterval", int)
+                secondOfEndOfOverallTimeInterval= message.get("secondOfEndOfOverallTimeInterval", int)
+                report.add(OverallDateMatches(
+                              dataDate=dataDate,
+                              dataTime=dataTime,
+                              forecastTime=forecastTime,
+                              lengthOfTimeRange=lengthOfTimeRange,
+                              yearOfEndOfOverallTimeInterval=yearOfEndOfOverallTimeInterval,
+                              monthOfEndOfOverallTimeInterval=monthOfEndOfOverallTimeInterval,
+                              dayOfEndOfOverallTimeInterval=dayOfEndOfOverallTimeInterval,
+                              hourOfEndOfOverallTimeInterval=hourOfEndOfOverallTimeInterval,
+                              minuteOfEndOfOverallTimeInterval=minuteOfEndOfOverallTimeInterval,
+                              secondOfEndOfOverallTimeInterval=secondOfEndOfOverallTimeInterval))
+            else:
+                report.add(Report("Time-unit of statistical unit not hours, can't check"))
+        else:
+            report.add(Report("No time-statistical data !"))
+        return report
