@@ -18,6 +18,7 @@ local templates = import 'Parameter.libsonnet';
     checks+: [
       'point_in_time',
       'given_level',
+      'overall_time_lcgcr',
     ],
   },
   templates.Wmo {
@@ -36,6 +37,7 @@ local templates = import 'Parameter.libsonnet';
     checks+: [
       'point_in_time',
       'predefined_level',
+      'overall_time_lcgcr',
     ],
   },
   templates.Wmo {
@@ -52,8 +54,9 @@ local templates = import 'Parameter.libsonnet';
       { key: 'typeOfStatisticalProcessing', value: 0 },
     ],
     checks+: [
-      'from_start',
+      'point_in_time',
       'predefined_level',
+      'overall_time_lcgcr',
     ],
   },
   templates.Wmo {
@@ -71,6 +74,7 @@ local templates = import 'Parameter.libsonnet';
     checks+: [
       'point_in_time',
       'predefined_level',
+      'overall_time_lcgcr',
     ],
   },
   templates.Wmo {
@@ -88,6 +92,7 @@ local templates = import 'Parameter.libsonnet';
     checks+: [
       'point_in_time',
       'predefined_level',
+      'overall_time_lcgcr',
     ],
   },
 ]
