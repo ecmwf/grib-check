@@ -90,12 +90,16 @@ class Lcgcr(GeneralChecks):
         pdtn = message.get("productDefinitionTemplateNumber", int)
         if pdtn in [8,11]:
             timeunit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
-            if timeunit == 1:
+            if timeunit == 2:
+                scaleIt = 24
+            else:
+                scaleIt = 1
+            if timeunit in [1, 2]:
                 dataDate = message.get("dataDate", int)
                 dataTime = message.get("dataTime", int)
                 forecastTime = message.get("forecastTime", int)
                 # we need the most outer loop
-                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
+                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0] * scaleIt
                 yearOfEndOfOverallTimeInterval = message.get("yearOfEndOfOverallTimeInterval", int)
                 monthOfEndOfOverallTimeInterval = message.get("monthOfEndOfOverallTimeInterval", int)
                 dayOfEndOfOverallTimeInterval = message.get("dayOfEndOfOverallTimeInterval", int)
@@ -114,7 +118,7 @@ class Lcgcr(GeneralChecks):
                               minuteOfEndOfOverallTimeInterval=minuteOfEndOfOverallTimeInterval,
                               secondOfEndOfOverallTimeInterval=secondOfEndOfOverallTimeInterval))
             else:
-                report.add(Report("Time-unit of statistical unit not hours, can't check"))
+                report.add(Report("Time-unit of statistical unit not hours or days, can't check"))
         else:
             report.add(Report("No time-statistical data !"))
         return report
