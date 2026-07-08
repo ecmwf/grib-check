@@ -51,15 +51,18 @@ class Crra(Uerra):
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("CRRA Point in Time")
-
         topd = message.get("typeOfProcessedData", int)
         stream = message.get("stream", str)
+        type = message.get("type", str)
         if topd in [0, 1]:  # Analysis, Forecast
-            if stream == "dame" or stream == "moda":
-                # because mostly instant paramIds are used even for monthly/daily means..
-                report.add(Eq(message["productDefinitionTemplateNumber"], 8))
+            if type in ["em", "es"]:
+                report.add(Eq(message["productDefinitionTemplateNumber"], 2))
             else:
-                report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
+                if stream == "dame" or stream == "moda":
+                    # because mostly instant paramIds are used even for monthly/daily means..
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 8))
+                else:
+                    report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
 #       elif topd == 2:  # Analysis and forecast products
 #           pass
         elif topd == 3:  # Control forecast products
@@ -102,15 +105,17 @@ class Crra(Uerra):
 
     def _statistical_process(self, message, p) -> Report:
         report = Report("CRRA Statistical Process")
-
         topd = message.get("typeOfProcessedData", int)
         stream = message.get("stream", str)
-
+        type = message.get("type", str)
         if topd.value() in [0, 1]:  # Analysis, Forecast
-            if IsIn(stream, ["oper", "moda", "dame"]):
-                report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
-            elif Eq(stream, "enda"):
-                report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
+            if type in ["em", "es"]:
+                report.add(Eq(message["productDefinitionTemplateNumber"], 12))
+            else:
+                if IsIn(stream, ["oper", "moda", "dame"]):
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+                elif Eq(stream, "enda"):
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
