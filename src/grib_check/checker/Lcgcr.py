@@ -10,7 +10,7 @@
 
 import logging
 
-from grib_check.Assert import Eq, IsIn, IsMultipleOf, Le, Ne, OverallDateMatches
+from grib_check.Assert import Eq, IsIn, IsMultipleOf, Le, OverallDateMatches
 from grib_check.Report import Report
 
 from .GeneralChecks import GeneralChecks
@@ -22,7 +22,7 @@ class Lcgcr(GeneralChecks):
         self.logger = logging.getLogger(__class__.__name__)
         self.register_checks(
             {
-                "overall_time_lcgcr":self._overall_time_lcgcr,
+                "overall_time_lcgcr": self._overall_time_lcgcr,
             }
         )
 
@@ -43,13 +43,12 @@ class Lcgcr(GeneralChecks):
         # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/
         report.add(Eq(message["dataRepresentationTemplateNumber"], 42))
 
-        report.add(Eq(message["step"], None)) # xxx
+        report.add(Eq(message["step"], None))  # xxx
         report.add(Eq(message["bitsPerValue"], 16))
         report.add(self._check_date(message, p))
 
         return super()._basic_checks(message, p).add(report)
         # return report
-
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
@@ -88,7 +87,7 @@ class Lcgcr(GeneralChecks):
     def _overall_time_lcgcr(self, message, p):
         report = Report("LC-GCR overall time")
         pdtn = message.get("productDefinitionTemplateNumber", int)
-        if pdtn in [8,11]:
+        if pdtn in [8, 11]:
             timeunit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
             if timeunit == 2:
                 scaleIt = 24
@@ -105,7 +104,7 @@ class Lcgcr(GeneralChecks):
                 dayOfEndOfOverallTimeInterval = message.get("dayOfEndOfOverallTimeInterval", int)
                 hourOfEndOfOverallTimeInterval = message.get("hourOfEndOfOverallTimeInterval", int)
                 minuteOfEndOfOverallTimeInterval = message.get("minuteOfEndOfOverallTimeInterval", int)
-                secondOfEndOfOverallTimeInterval= message.get("secondOfEndOfOverallTimeInterval", int)
+                secondOfEndOfOverallTimeInterval = message.get("secondOfEndOfOverallTimeInterval", int)
                 report.add(OverallDateMatches(
                               dataDate=dataDate,
                               dataTime=dataTime,

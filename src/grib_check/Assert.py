@@ -13,11 +13,10 @@ import logging
 
 # from Message import Message
 import math
+from datetime import datetime, timedelta
 
 from .KeyValue import makeKV
 from .TermColor import TermColor
-
-from datetime import datetime, timedelta
 
 
 class Assert:
@@ -322,16 +321,16 @@ class OverallDateMatches(Assert):
 
         # Parse start datetime from dataDate (YYYYMMDD) and dataTime (HHMM)
         start = datetime(
-            year = dataDate // 10000,
-            month = (dataDate % 10000) // 100,
-            day = dataDate % 100,
-            hour = dataTime // 100,
-            minute = dataTime % 100,
-            second = 0
+            year=dataDate // 10000,
+            month=(dataDate % 10000) // 100,
+            day=dataDate % 100,
+            hour=dataTime // 100,
+            minute=dataTime % 100,
+            second=0
         )
 
         # Compute expected end datetime
-        expected_end = start + timedelta(hours = forecastTime + lengthOfTimeRange)
+        expected_end = start + timedelta(hours=forecastTime + lengthOfTimeRange)
 
         # Actual end datetime from passed arguments
         actual_end = datetime(year, month, day, hour, minute, second)
