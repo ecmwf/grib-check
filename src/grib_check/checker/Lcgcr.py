@@ -91,6 +91,7 @@ class Lcgcr(GeneralChecks):
         pdtn = message.get("productDefinitionTemplateNumber", int)
         if pdtn in [8, 11]:
             timeRangeUnit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
+            # TODO(maee): is this correct?
             if timeRangeUnit in [0, 1, 2, 10, 11, 12, 13]:
                 # we need the most outer loop
                 lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
@@ -98,6 +99,7 @@ class Lcgcr(GeneralChecks):
                 start = DataTime(message["dataDate"], message["dataTime"]).to_key_value()
                 forecast_td = TimeDelta(message["forecastTime"], message["indicatorOfUnitForForecastTime"]).to_key_value()
                 range_td = TimeDelta(KeyValue("lengthOfTimeRange", int(lengthOfTimeRange)), KeyValue("indicatorOfUnitForTimeRange", int(timeRangeUnit))).to_key_value()
+                # TODO(maee): Please check if this is correct
                 expected_end = start + forecast_td + range_td
 
                 actual_end = DataTime(
