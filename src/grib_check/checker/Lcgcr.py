@@ -10,8 +10,10 @@
 
 import logging
 
-from grib_check.Assert import Eq, IsIn, IsMultipleOf, Le, OverallDateMatches
+from grib_check.Assert import Eq, IsIn, IsMultipleOf, Le
+from grib_check.DateTime import DataTime, TimeDelta
 from grib_check.Report import Report
+from grib_check.KeyValue import KeyValue
 
 from .GeneralChecks import GeneralChecks
 
@@ -88,36 +90,27 @@ class Lcgcr(GeneralChecks):
         report = Report("LC-GCR overall time")
         pdtn = message.get("productDefinitionTemplateNumber", int)
         if pdtn in [8, 11]:
-            timeunit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
-            if timeunit == 2:
-                scaleIt = 24
-            else:
-                scaleIt = 1
-            if timeunit in [1, 2]:
-                dataDate = message.get("dataDate", int)
-                dataTime = message.get("dataTime", int)
-                forecastTime = message.get("forecastTime", int)
+            timeRangeUnit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
+            if timeRangeUnit in [0, 1, 2, 10, 11, 12, 13]:
                 # we need the most outer loop
-                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0] * scaleIt
-                yearOfEndOfOverallTimeInterval = message.get("yearOfEndOfOverallTimeInterval", int)
-                monthOfEndOfOverallTimeInterval = message.get("monthOfEndOfOverallTimeInterval", int)
-                dayOfEndOfOverallTimeInterval = message.get("dayOfEndOfOverallTimeInterval", int)
-                hourOfEndOfOverallTimeInterval = message.get("hourOfEndOfOverallTimeInterval", int)
-                minuteOfEndOfOverallTimeInterval = message.get("minuteOfEndOfOverallTimeInterval", int)
-                secondOfEndOfOverallTimeInterval = message.get("secondOfEndOfOverallTimeInterval", int)
-                report.add(OverallDateMatches(
-                              dataDate=dataDate,
-                              dataTime=dataTime,
-                              forecastTime=forecastTime,
-                              lengthOfTimeRange=lengthOfTimeRange,
-                              yearOfEndOfOverallTimeInterval=yearOfEndOfOverallTimeInterval,
-                              monthOfEndOfOverallTimeInterval=monthOfEndOfOverallTimeInterval,
-                              dayOfEndOfOverallTimeInterval=dayOfEndOfOverallTimeInterval,
-                              hourOfEndOfOverallTimeInterval=hourOfEndOfOverallTimeInterval,
-                              minuteOfEndOfOverallTimeInterval=minuteOfEndOfOverallTimeInterval,
-                              secondOfEndOfOverallTimeInterval=secondOfEndOfOverallTimeInterval))
+                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
+
+                start = DataTime(message["dataDate"], message["dataTime"]).to_key_value()
+                forecast_td = TimeDelta(message["forecastTime"], message["indicatorOfUnitForForecastTime"]).to_key_value()
+                range_td = TimeDelta(KeyValue("lengthOfTimeRange", int(lengthOfTimeRange)), KeyValue("indicatorOfUnitForTimeRange", int(timeRangeUnit))).to_key_value()
+                expected_end = start + forecast_td + range_td
+
+                actual_end = DataTime(
+                    year=message["yearOfEndOfOverallTimeInterval"],
+                    month=message["monthOfEndOfOverallTimeInterval"],
+                    day=message["dayOfEndOfOverallTimeInterval"],
+                    hour=message["hourOfEndOfOverallTimeInterval"],
+                    minute=message["minuteOfEndOfOverallTimeInterval"],
+                    second=message["secondOfEndOfOverallTimeInterval"],
+                ).to_key_value()
+                report.add(Eq(expected_end, actual_end, f"start + forecast + range == end\n{expected_end.value()} == {actual_end.value()}"))
             else:
-                report.add(Report("Time-unit of statistical unit not hours or days, can't check"))
+                report.add(Report("Time-unit of statistical unit not supported, can't check"))
         else:
             report.add(Report("No time-statistical data !"))
         return report

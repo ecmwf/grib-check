@@ -13,7 +13,6 @@ import logging
 
 # from Message import Message
 import math
-from datetime import datetime, timedelta
 
 from .KeyValue import makeKV
 from .TermColor import TermColor
@@ -283,63 +282,4 @@ class Pass(Assert):
         return f"{self.__msg}"
 
 
-class OverallDateMatches(Assert):
-    """
-    Assert that:
-        dataDate/dataTime + forecastTime + lengthOfTimeRange
-        equals the end of the overall time interval
-    All arguments are passed as values (int or string), not GRIB keys.
-    """
 
-    def __init__(
-        self,
-        dataDate,               # e.g., 20260105 or "20260105"
-        dataTime,               # e.g., 1200 or "1200"
-        forecastTime,           # in hours (int)
-        lengthOfTimeRange,      # in hours (int)
-        yearOfEndOfOverallTimeInterval,
-        monthOfEndOfOverallTimeInterval,
-        dayOfEndOfOverallTimeInterval,
-        hourOfEndOfOverallTimeInterval,
-        minuteOfEndOfOverallTimeInterval,
-        secondOfEndOfOverallTimeInterval,
-        comment=None
-    ):
-        self._comment = comment
-
-        # Ensure all numeric
-        dataDate = int(dataDate)
-        dataTime = int(dataTime)
-        forecastTime = int(forecastTime)
-        lengthOfTimeRange = int(lengthOfTimeRange)
-        year = int(yearOfEndOfOverallTimeInterval)
-        month = int(monthOfEndOfOverallTimeInterval)
-        day = int(dayOfEndOfOverallTimeInterval)
-        hour = int(hourOfEndOfOverallTimeInterval)
-        minute = int(minuteOfEndOfOverallTimeInterval)
-        second = int(secondOfEndOfOverallTimeInterval)
-
-        # Parse start datetime from dataDate (YYYYMMDD) and dataTime (HHMM)
-        start = datetime(
-            year=dataDate // 10000,
-            month=(dataDate % 10000) // 100,
-            day=dataDate % 100,
-            hour=dataTime // 100,
-            minute=dataTime % 100,
-            second=0
-        )
-
-        # Compute expected end datetime
-        expected_end = start + timedelta(hours=forecastTime + lengthOfTimeRange)
-
-        # Actual end datetime from passed arguments
-        actual_end = datetime(year, month, day, hour, minute, second)
-
-        # Status of the assertion
-        self._status = (expected_end == actual_end)
-        self._expected_end = expected_end
-        self._actual_end = actual_end
-
-    def _as_string(self, color=False) -> str:
-        status_str = "PASS" if self._status else "FAIL"
-        return f"[{status_str}] Overall time interval check: {self._comment} - {self._expected_end} vs {self._actual_end}"
