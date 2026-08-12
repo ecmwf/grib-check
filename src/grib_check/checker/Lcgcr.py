@@ -11,9 +11,7 @@
 import logging
 
 from grib_check.Assert import Eq, IsIn, IsMultipleOf, Le
-from grib_check.DateTime import DataTime, TimeDelta
 from grib_check.Report import Report
-from grib_check.KeyValue import KeyValue
 
 from .GeneralChecks import GeneralChecks
 
@@ -22,11 +20,6 @@ class Lcgcr(GeneralChecks):
     def __init__(self, lookup_table, check_limits=False, check_validity=True):
         super().__init__(lookup_table, check_limits=check_limits, check_validity=check_validity)
         self.logger = logging.getLogger(__class__.__name__)
-        self.register_checks(
-            {
-                "overall_time_lcgcr": self._overall_time_lcgcr,
-            }
-        )
 
     def _basic_checks(self, message, p):
         report = Report("LC-GCR Basic Checks")
@@ -85,34 +78,3 @@ class Lcgcr(GeneralChecks):
         report.add(Eq(message["jDirectionIncrement"], 1250000))
 
         return super()._latlon_grid(message).add(report)
-
-    def _overall_time_lcgcr(self, message, p):
-        report = Report("LC-GCR overall time")
-        pdtn = message.get("productDefinitionTemplateNumber", int)
-        if pdtn in [8, 11]:
-            timeRangeUnit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
-            # TODO(maee): is this correct?
-            if timeRangeUnit in [0, 1, 2, 10, 11, 12, 13]:
-                # we need the most outer loop
-                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
-
-                start = DataTime(message["dataDate"], message["dataTime"]).to_key_value()
-                forecast_td = TimeDelta(message["forecastTime"], message["indicatorOfUnitForForecastTime"]).to_key_value()
-                range_td = TimeDelta(KeyValue("lengthOfTimeRange", int(lengthOfTimeRange)), KeyValue("indicatorOfUnitForTimeRange", int(timeRangeUnit))).to_key_value()
-                # TODO(maee): Please check if this is correct
-                expected_end = start + forecast_td + range_td
-
-                actual_end = DataTime(
-                    year=message["yearOfEndOfOverallTimeInterval"],
-                    month=message["monthOfEndOfOverallTimeInterval"],
-                    day=message["dayOfEndOfOverallTimeInterval"],
-                    hour=message["hourOfEndOfOverallTimeInterval"],
-                    minute=message["minuteOfEndOfOverallTimeInterval"],
-                    second=message["secondOfEndOfOverallTimeInterval"],
-                ).to_key_value()
-                report.add(Eq(expected_end, actual_end, f"start + forecast + range == end\n{expected_end.value()} == {actual_end.value()}"))
-            else:
-                report.add(Report("Time-unit of statistical unit not supported, can't check"))
-        else:
-            report.add(Report("No time-statistical data !"))
-        return report
