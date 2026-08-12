@@ -26,9 +26,11 @@ from grib_check.Assert import (
     Ne,
     Pass,
 )
+from grib_check.DateTime import DataTime, TimeDelta
 from grib_check.CheckEngine import CheckEngine
 from grib_check.Grib import get_gaussian_latitudes
 from grib_check.Report import Report
+from grib_check.KeyValue import KeyValue
 
 
 class GeneralChecks(CheckEngine):
@@ -473,6 +475,33 @@ class GeneralChecks(CheckEngine):
 
             report.add(Eq(saved_validityDate, message["validityDate"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
             report.add(Eq(saved_validityTime, message["validityTime"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
+
+            # check *OverallTimeInterval types of keys too
+            timeRangeUnit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
+ 
+            if timeRangeUnit in [0, 1, 2, 10, 11, 12, 13]:
+                # we need the most outer loop
+                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
+
+                start = DataTime(message["dataDate"], message["dataTime"]).to_key_value()
+                forecast_td = TimeDelta(message["forecastTime"], message["indicatorOfUnitForForecastTime"]).to_key_value()
+                range_td = TimeDelta(KeyValue("lengthOfTimeRange", int(lengthOfTimeRange)), KeyValue("indicatorOfUnitForTimeRange", int(timeRangeUnit))).to_key_value()
+
+                expected_end = start + forecast_td + range_td
+
+                actual_end = DataTime(
+                    year=message["yearOfEndOfOverallTimeInterval"],
+                    month=message["monthOfEndOfOverallTimeInterval"],
+                    day=message["dayOfEndOfOverallTimeInterval"],
+                    hour=message["hourOfEndOfOverallTimeInterval"],
+                    minute=message["minuteOfEndOfOverallTimeInterval"],
+                    second=message["secondOfEndOfOverallTimeInterval"],
+                ).to_key_value()
+                report.add(Eq(expected_end, actual_end, f"start + forecast + range == end\n{expected_end.value()} == {actual_end.value()}"))
+            else:
+                report.add(Report("Time-unit of statistical unit not supported, can't check"))
+        else:
+            report.add(Report("No time-statistical data !"))
 
         return report
 
