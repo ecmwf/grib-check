@@ -280,6 +280,3 @@ class Pass(Assert):
 
     def _as_string(self, color=False) -> str:
         return f"{self.__msg}"
-
-
-

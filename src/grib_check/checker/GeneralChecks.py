@@ -26,11 +26,11 @@ from grib_check.Assert import (
     Ne,
     Pass,
 )
-from grib_check.DateTime import DataTime, TimeDelta
 from grib_check.CheckEngine import CheckEngine
+from grib_check.DateTime import DataTime, TimeDelta
 from grib_check.Grib import get_gaussian_latitudes
-from grib_check.Report import Report
 from grib_check.KeyValue import KeyValue
+from grib_check.Report import Report
 
 
 class GeneralChecks(CheckEngine):
@@ -478,7 +478,7 @@ class GeneralChecks(CheckEngine):
 
             # check *OverallTimeInterval types of keys too
             timeRangeUnit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
- 
+
             if timeRangeUnit in [0, 1, 2, 10, 11, 12, 13]:
                 # we need the most outer loop
                 lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
