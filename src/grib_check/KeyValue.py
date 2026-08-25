@@ -28,7 +28,6 @@ def makeKV(value):
     else:
         return KeyValue(None, value)
 
-
 class KeyValue:
     def __init__(self, key, value, level=0, last_op_type=OpType.NONE, key_suffix=None):
         self.logger = logging.getLogger(__class__.__name__)
@@ -165,6 +164,11 @@ class KeyValue:
 
     def __int__(self):
         return int(self.__value)
+
+    def __getitem__(self, idx):
+        k = f"{self.__key}[{idx}]"
+        v = None if self.__value is None else self.__value[idx]
+        return KeyValue(k, v)
 
     def abs(self):
         k = f"|{self}|"
