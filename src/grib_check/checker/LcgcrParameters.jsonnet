@@ -16,7 +16,7 @@ local templates = import 'Parameter.libsonnet';
       { key: 'typeOfStatisticalProcessing', value: 0 },
     ],
     checks+: [
-      'point_in_time',
+      'monthly_average',
       'given_level',
     ],
   },
@@ -34,7 +34,7 @@ local templates = import 'Parameter.libsonnet';
       { key: 'typeOfStatisticalProcessing', value: 0 },
     ],
     checks+: [
-      'point_in_time',
+      'monthly_average',
       'predefined_level',
     ],
   },
@@ -48,11 +48,11 @@ local templates = import 'Parameter.libsonnet';
       { key: 'discipline', value: 0 },
       { key: 'parameterCategory', value: 1 },
       { key: 'parameterNumber', value: 52 },
-//    { key: 'typeOfFirstFixedSurface', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
       { key: 'typeOfStatisticalProcessing', value: 0 },
     ],
     checks+: [
-      'point_in_time',
+      'monthly_average',
       'predefined_level',
     ],
   },
