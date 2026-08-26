@@ -42,6 +42,7 @@ class GeneralChecks(CheckEngine):
             {
                 "basic_checks": self._basic_checks,
                 "daily_average": self._daily_average,
+                "monthly_average": self._monthly_average,
                 "from_start": self._from_start,
                 "given_level": self._given_level,
                 "given_thickness": self._given_thickness,
@@ -609,6 +610,12 @@ class GeneralChecks(CheckEngine):
         startStep = message["startStep"]
         endStep = message["endStep"]
         report.add(Eq(startStep, endStep - 24))
+        report.add(self._statistical_process(message, p))
+        return report
+
+    def _monthly_average(self, message, p):
+        report = Report("Monthly Average")
+        report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
         return report
 
