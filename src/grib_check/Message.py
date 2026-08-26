@@ -16,6 +16,7 @@ from eccodes import (
     codes_get_double_array,
     codes_get_long_array,
     codes_get_message,
+    codes_get_native_type,
     codes_get_size,
     codes_is_missing,
     codes_keys_iterator_get_name,
@@ -24,7 +25,6 @@ from eccodes import (
     codes_new_from_message,
     codes_release,
     codes_set,
-    codes_get_native_type
 )
 
 from .Assert import Eq
