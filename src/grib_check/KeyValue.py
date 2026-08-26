@@ -28,6 +28,7 @@ def makeKV(value):
     else:
         return KeyValue(None, value)
 
+
 class KeyValue:
     def __init__(self, key, value, level=0, last_op_type=OpType.NONE, key_suffix=None):
         self.logger = logging.getLogger(__class__.__name__)

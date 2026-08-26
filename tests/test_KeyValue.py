@@ -66,3 +66,38 @@ class TestIndexedLookupTable:
         x = a + b * c
         assert x.key() == "a[0](5) + b[1](10) * c[2](15)"
         assert x.value() == 5 + 10 * 15
+
+    def test_getitem(self):
+        a = KeyValue("values", [10, 20, 30])
+
+        x = a[0]
+        assert x.key() == "values[0]"
+        assert x.value() == 10
+
+        x = a[1]
+        assert x.key() == "values[1]"
+        assert x.value() == 20
+
+        x = a[2]
+        assert x.key() == "values[2]"
+        assert x.value() == 30
+
+    def test_getitem_none_value(self):
+        a = KeyValue("values", None)
+
+        x = a[0]
+        assert x.key() == "values[0]"
+        assert x.value() is None
+
+    def test_getitem_arithmetic(self):
+        a = KeyValue("arr", [5, 10, 15])
+        b = KeyValue("b", 2)
+
+        x = a[0] + b
+        assert x.value() == 7
+
+        x = a[1] * b
+        assert x.value() == 20
+
+        x = a[2] - a[0]
+        assert x.value() == 10
