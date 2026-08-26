@@ -51,15 +51,18 @@ class Crra(Uerra):
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("CRRA Point in Time")
-
         topd = message.get("typeOfProcessedData", int)
         stream = message.get("stream", str)
+        type = message.get("type", str)
         if topd in [0, 1]:  # Analysis, Forecast
-            if stream == "dame" or stream == "moda":
-                # because mostly instant paramIds are used even for monthly/daily means..
-                report.add(Eq(message["productDefinitionTemplateNumber"], 8))
+            if type in ["em", "es"]:
+                report.add(Eq(message["productDefinitionTemplateNumber"], 2))
             else:
-                report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
+                if stream == "dame" or stream == "moda":
+                    # because mostly instant paramIds are used even for monthly/daily means..
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 8))
+                else:
+                    report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
 #       elif topd == 2:  # Analysis and forecast products
 #           pass
         elif topd == 3:  # Control forecast products
@@ -102,15 +105,17 @@ class Crra(Uerra):
 
     def _statistical_process(self, message, p) -> Report:
         report = Report("CRRA Statistical Process")
-
         topd = message.get("typeOfProcessedData", int)
         stream = message.get("stream", str)
-
+        type = message.get("type", str)
         if topd.value() in [0, 1]:  # Analysis, Forecast
-            if IsIn(stream, ["oper", "moda", "dame"]):
-                report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
-            elif Eq(stream, "enda"):
-                report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
+            if type in ["em", "es"]:
+                report.add(Eq(message["productDefinitionTemplateNumber"], 12))
+            else:
+                if IsIn(stream, ["oper", "moda", "dame"]):
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+                elif Eq(stream, "enda"):
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
@@ -166,21 +171,19 @@ class Crra(Uerra):
                 first_date_month2 = int(str(first_date_month2).replace('-', ''))
 
                 # numberOfTimeRanges = message["numberOfTimeRanges"]
-                lengthOfTimeRanges = [KeyValue("lengthOfTimeRange", v) for v in message.get_long_array("lengthOfTimeRange")]
-                typeOfStatisticalProcessings = [KeyValue("typeOfStatisticalProcessing", v) for v in message.get_long_array("typeOfStatisticalProcessing")]
-
-                typeOfTimeIncrements = [KeyValue("typeOfTimeIncrement", v) for v in message.get_long_array("typeOfTimeIncrement")]
-                indicatorOfUnitForTimeRanges = [KeyValue("indicatorOfUnitForTimeRange", v) for v in message.get_long_array("indicatorOfUnitForTimeRange")]
-                lengthOfTimeRanges = [KeyValue("lengthOfTimeRange", v) for v in message.get_long_array("lengthOfTimeRange")]
-                indicatorOfUnitForTimeIncrements = [KeyValue("indicatorOfUnitForTimeIncrement", v) for v in message.get_long_array("indicatorOfUnitForTimeIncrement")]
-                timeIncrements = [KeyValue("timeIncrement", v) for v in message.get_long_array("timeIncrement")]
+                typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+                typeOfTimeIncrements = message.get_array("typeOfTimeIncrement")
+                indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
+                lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
+                indicatorOfUnitForTimeIncrements = message.get_long_array("indicatorOfUnitForTimeIncrement")
+                timeIncrements = message.get_array("timeIncrement")
 
             # monthly/daily averages are archived under instant paramIds as param-db was not ready for all time-mean proper ones..
             # https://confluence.ecmwf.int/display/DGOV/Support+page+for+DGOV-399+CARRA+daily+and+monthly+GRIB+headers
             if Eq(stream, "dame"):
 
                 report = Report("CRRA Check Validity Datetime - daily means")
-                if typeOfStatisticalProcessings == [0]:
+                if typeOfStatisticalProcessings.value() == [0]:
                     report = Report("dame - daily_mean_an/fc")
                     dame_validityDate = same_day
                     dame_validityTime = 21
@@ -188,39 +191,39 @@ class Crra(Uerra):
                         dame_validityDate = same_day
                     elif topd == 1:
                         dame_validityDate = next_day1
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
-                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), 21))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
+                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
+                    [report.add(Eq(lengthOfTimeRanges[0], 21))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
+                    [report.add(Eq(timeIncrements[0], 3))]
                 elif typeOfStatisticalProcessings == [1, 1]:
                     report = Report("dame - daily_sum_an/fc")
                     dame_validityDate = next_day2
                     dame_validityTime = 0
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[1]), 2))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[1]), 1))]
-                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), 24))]
-                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[1]), 12))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[1]), 255))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 12))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
+                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
+                    [report.add(Eq(typeOfTimeIncrements[1], 2))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
+                    [report.add(Eq(lengthOfTimeRanges[0], 24))]
+                    [report.add(Eq(lengthOfTimeRanges[1], 12))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))]
+                    [report.add(Eq(timeIncrements[0], 12))]
+                    [report.add(Eq(timeIncrements[1], 0))]
                 elif typeOfStatisticalProcessings == [2, 2] or typeOfStatisticalProcessings == [3, 3]:
                     report = Report("dame - daily_min/max_an/fc")
                     dame_validityDate = next_day1
                     dame_validityTime = 0
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[1]), 2))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[1]), 1))]
-                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), 21))]
-                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[1]), 3))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[1]), 255))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
+                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
+                    [report.add(Eq(typeOfTimeIncrements[1], 2))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
+                    [report.add(Eq(lengthOfTimeRanges[0], 21))]
+                    [report.add(Eq(lengthOfTimeRanges[1], 3))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))]
+                    [report.add(Eq(timeIncrements[0], 3))]
+                    [report.add(Eq(timeIncrements[1], 0))]
                 else:
                     report.add(Fail(f"Unsupported parameter in stream={stream}"))
 
@@ -241,44 +244,44 @@ class Crra(Uerra):
                     elif topd == 1:
                         moda_validityDate = last_date_month1
                     moda_validityTime = 21
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
-                    [report.add(IsIn(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), moda_lotr1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
+                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
+                    [report.add(IsIn(lengthOfTimeRanges[0], moda_lotr1))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
+                    [report.add(Eq(timeIncrements[0], 3))]
                 elif typeOfStatisticalProcessings == [2, 2] or typeOfStatisticalProcessings == [3, 3]:
                     report = Report("moda - monthly_min/max_an/fc")
                     moda_validityDate = first_date_month1
                     moda_validityTime = 0
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[1]), 2))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[1]), 1))]
-                    [report.add(IsIn(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), moda_lotr1))]
-                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[1]), 3))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[1]), 255))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 3))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 0))]
+                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
+                    [report.add(Eq(typeOfTimeIncrements[1], 2))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
+                    [report.add(IsIn(lengthOfTimeRanges[0], moda_lotr1))]
+                    [report.add(Eq(lengthOfTimeRanges[1], 3))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))]
+                    [report.add(Eq(timeIncrements[0], 3))]
+                    [report.add(Eq(timeIncrements[1], 0))]
                 elif typeOfStatisticalProcessings == [0, 1, 1]:
                     report = Report("moda - monthly_daysum_an/fc")
                     moda_validityDate = first_date_month2
                     moda_validityTime = 0
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[1]), 1))]
-                    [report.add(Eq(KeyValue("typeOfTimeIncrement", typeOfTimeIncrements[2]), 2))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[1]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeRange", indicatorOfUnitForTimeRanges[2]), 1))]
-                    [report.add(IsIn(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[0]), moda_lotr2))]
-                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[1]), 24))]
-                    [report.add(Eq(KeyValue("lengthOfTimeRange", lengthOfTimeRanges[2]), 12))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[0]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[1]), 1))]
-                    [report.add(Eq(KeyValue("indicatorOfUnitForTimeIncrement", indicatorOfUnitForTimeIncrements[2]), 255))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[0]), 24))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[1]), 12))]
-                    [report.add(Eq(KeyValue("timeIncrement", timeIncrements[2]), 0))]
+                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
+                    [report.add(Eq(typeOfTimeIncrements[1], 1))]
+                    [report.add(Eq(typeOfTimeIncrements[2], 2))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeRanges[2], 1))]
+                    [report.add(IsIn(lengthOfTimeRanges[0], moda_lotr2))]
+                    [report.add(Eq(lengthOfTimeRanges[1], 24))]
+                    [report.add(Eq(lengthOfTimeRanges[2], 12))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 1))]
+                    [report.add(Eq(indicatorOfUnitForTimeIncrements[2], 255))]
+                    [report.add(Eq(timeIncrements[0], 24))]
+                    [report.add(Eq(timeIncrements[1], 12))]
+                    [report.add(Eq(timeIncrements[2], 0))]
                 else:
                     report.add(Fail(f"Unsupported parameter in stream={stream}"))
 

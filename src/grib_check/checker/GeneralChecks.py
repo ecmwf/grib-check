@@ -27,7 +27,9 @@ from grib_check.Assert import (
     Pass,
 )
 from grib_check.CheckEngine import CheckEngine
+from grib_check.DateTime import DataTime, TimeDelta
 from grib_check.Grib import get_gaussian_latitudes
+from grib_check.KeyValue import KeyValue
 from grib_check.Report import Report
 
 
@@ -40,6 +42,7 @@ class GeneralChecks(CheckEngine):
             {
                 "basic_checks": self._basic_checks,
                 "daily_average": self._daily_average,
+                "monthly_average": self._monthly_average,
                 "from_start": self._from_start,
                 "given_level": self._given_level,
                 "given_thickness": self._given_thickness,
@@ -474,6 +477,33 @@ class GeneralChecks(CheckEngine):
             report.add(Eq(saved_validityDate, message["validityDate"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
             report.add(Eq(saved_validityTime, message["validityTime"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
 
+            # check *OverallTimeInterval types of keys too
+            timeRangeUnit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
+
+            if timeRangeUnit in [0, 1, 2, 10, 11, 12, 13]:
+                # we need the most outer loop
+                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
+
+                start = DataTime(message["dataDate"], message["dataTime"]).to_key_value()
+                forecast_td = TimeDelta(message["forecastTime"], message["indicatorOfUnitForForecastTime"]).to_key_value()
+                range_td = TimeDelta(KeyValue("lengthOfTimeRange", int(lengthOfTimeRange)), KeyValue("indicatorOfUnitForTimeRange", int(timeRangeUnit))).to_key_value()
+
+                expected_end = start + forecast_td + range_td
+
+                actual_end = DataTime(
+                    year=message["yearOfEndOfOverallTimeInterval"],
+                    month=message["monthOfEndOfOverallTimeInterval"],
+                    day=message["dayOfEndOfOverallTimeInterval"],
+                    hour=message["hourOfEndOfOverallTimeInterval"],
+                    minute=message["minuteOfEndOfOverallTimeInterval"],
+                    second=message["secondOfEndOfOverallTimeInterval"],
+                ).to_key_value()
+                report.add(Eq(expected_end, actual_end, f"start + forecast + range == end\n{expected_end.value()} == {actual_end.value()}"))
+            else:
+                report.add(Report("Time-unit of statistical unit not supported, can't check"))
+        else:
+            report.add(Report("No time-statistical data !"))
+
         return report
 
     def _basic_checks(self, message, p):
@@ -580,6 +610,12 @@ class GeneralChecks(CheckEngine):
         startStep = message["startStep"]
         endStep = message["endStep"]
         report.add(Eq(startStep, endStep - 24))
+        report.add(self._statistical_process(message, p))
+        return report
+
+    def _monthly_average(self, message, p):
+        report = Report("Monthly Average")
+        report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
         return report
 
