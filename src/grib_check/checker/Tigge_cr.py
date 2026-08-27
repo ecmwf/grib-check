@@ -23,7 +23,10 @@ class Tigge_cr(Tigge):
 
     def _basic_checks(self, message, p):
         report = Report("Tigge_cr Basic :Checks")
-        report.add(Eq(message["versionNumberOfGribLocalTables"], 0))
+
+        # CCSDS compression
+        # https://codes.ecmwf.int/grib/format/grib2/ctables/5/0/
+        report.add(Eq(message["dataRepresentationTemplateNumber"], 42))
 
         return super()._basic_checks(message, p).add(report)
 
