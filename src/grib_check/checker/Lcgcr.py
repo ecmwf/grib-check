@@ -46,37 +46,46 @@ class Lcgcr(GeneralChecks):
 
         return super()._basic_checks(message, p).add(report)
 
-    def _monthly_average(self, message, p) -> Report:
-        report = Report("LC-GCR Monthly Average")
+    def _monthly_mean_of_daily_means(self, message, p) -> Report:
+        report = Report("LC-GCR Monthly mean of daily means")
 
         report.add(Eq(message["step"], None))
         report.add(Eq(message["numberOfTimeRanges"], 2))
 
-        paramId = message.get("paramId")
-        if paramId not in [228228]:
-            # The monthly means of the instantaneous variables (2t and mslp) are calculated from 6-hourly data (00, 06, 12 18),
-            # as this is the minimum temporal frequency across all datasets.
-            # For precipitation rate, which is an accumulation divided by time step, all available time steps are used.
+        # The monthly means of the instantaneous variables (2t and mslp) are calculated from 6-hourly data (00, 06, 12 18),
+        # as this is the minimum temporal frequency across all datasets.
+        # For precipitation rate, which is an accumulation divided by time step, all available time steps are used.
 
-            indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
-            lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
-            indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
-            timeIncrements = message.get_array("timeIncrement")
+        indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
+        lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
+        indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
+        timeIncrements = message.get_array("timeIncrement")
 
-            [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
-            [report.add(Eq(lengthOfTimeRanges[1], 24))]
-            [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 1))]
-            [report.add(Eq(timeIncrements[1], 6))]
+        [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
+        [report.add(Eq(lengthOfTimeRanges[1], 24))]
+        [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 1))]
+        [report.add(Eq(timeIncrements[1], 6))]
 
-            # time ranges setup (outer loop can be in hours or days)
-            # set numberOfTimeRanges=2;
-            # set typeOfTimeIncrement={1,1};  # [Successive times processed have same forecast time, start time of forecast is incremented (grib2/tables/36/4.11.table) ]
-            # set lengthOfTimeRange={31,24};  #month lenght / day in hour
-            # set indicatorOfUnitForTimeRange={2,1};          # day/hour
-            # set indicatorOfUnitForTimeIncrement ={2,1};     # day/hour
-            # set timeIncrement={1,6};        # hour/hour(6-hourly values for average computation)
+        # time ranges setup (outer loop can be in hours or days)
+        # set numberOfTimeRanges=2;
+        # set typeOfTimeIncrement={1,1};  # [Successive times processed have same forecast time, start time of forecast is incremented (grib2/tables/36/4.11.table) ]
+        # set lengthOfTimeRange={31,24};  #month lenght / day in hour
+        # set indicatorOfUnitForTimeRange={2,1};          # day/hour
+        # set indicatorOfUnitForTimeIncrement ={2,1};     # day/hour
+        # set timeIncrement={1,6};        # hour/hour(6-hourly values for average computation)
 
-        return super()._monthly_average(message, p).add(report)
+        return super()._monthly_mean_of_daily_means(message, p).add(report)
+
+    def _monthly_mean_of_daily_accums(self, message, p) -> Report:
+        report = Report("LC-GCR Monthly mean of daily accums")
+
+        indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
+        lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
+
+        [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
+        [report.add(Eq(lengthOfTimeRanges[1], 24))]
+
+        return super()._monthly_mean_of_daily_accums(message, p).add(report)
 
     def _statistical_process(self, message, p) -> Report:
         report = Report("LC-GCR Statistical Process")

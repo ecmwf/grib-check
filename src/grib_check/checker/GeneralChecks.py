@@ -42,7 +42,8 @@ class GeneralChecks(CheckEngine):
             {
                 "basic_checks": self._basic_checks,
                 "daily_average": self._daily_average,
-                "monthly_average": self._monthly_average,
+                "monthly_mean_of_daily_means": self._monthly_mean_of_daily_means,
+                "monthly_mean_of_daily_accums": self._monthly_mean_of_daily_accums,
                 "from_start": self._from_start,
                 "given_level": self._given_level,
                 "given_thickness": self._given_thickness,
@@ -613,9 +614,21 @@ class GeneralChecks(CheckEngine):
         report.add(self._statistical_process(message, p))
         return report
 
-    def _monthly_average(self, message, p):
-        report = Report("Monthly Average")
+    def _monthly_mean_of_daily_means(self, message, p):
+        report = Report("Monthly mean of daily means")
         report.add(Eq(message["startStep"], 0))
+        typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+        report.add(Eq(typeOfStatisticalProcessings[0], 0)) # mean
+        report.add(Eq(typeOfStatisticalProcessings[1], 0)) # mean
+        report.add(self._statistical_process(message, p))
+        return report
+
+    def _monthly_mean_of_daily_accums(self, message, p):
+        report = Report("Monthly mean of daily accums")
+        report.add(Eq(message["startStep"], 0))
+        typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+        report.add(Eq(typeOfStatisticalProcessings[0], 0)) # mean
+        report.add(Eq(typeOfStatisticalProcessings[1], 1)) # accum
         report.add(self._statistical_process(message, p))
         return report
 

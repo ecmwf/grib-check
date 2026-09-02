@@ -16,7 +16,7 @@ local templates = import 'Parameter.libsonnet';
       { key: 'typeOfStatisticalProcessing', value: 0 },
     ],
     checks+: [
-      'monthly_average',
+      'monthly_mean_of_daily_means',
       'given_level',
     ],
   },
@@ -34,7 +34,7 @@ local templates = import 'Parameter.libsonnet';
       { key: 'typeOfStatisticalProcessing', value: 0 },
     ],
     checks+: [
-      'monthly_average',
+      'monthly_mean_of_daily_means',
       'predefined_level',
     ],
   },
@@ -52,7 +52,25 @@ local templates = import 'Parameter.libsonnet';
       { key: 'typeOfStatisticalProcessing', value: 0 },
     ],
     checks+: [
-      'monthly_average',
+      'monthly_mean_of_daily_means',
+      'predefined_level',
+    ],
+  },
+  templates.Wmo {
+    name: 'Total_precipitation.sfc.lcgcr',
+    expected+: [
+      { key: 'values', min: [-0.05, 0.1], max: [0.0, 100.0] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 228228 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 1 },
+      { key: 'parameterNumber', value: 52 },
+      { key: 'typeOfStatisticalProcessing', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+    ],
+    checks+: [
+      'monthly_mean_of_daily_accums',
       'predefined_level',
     ],
   },
