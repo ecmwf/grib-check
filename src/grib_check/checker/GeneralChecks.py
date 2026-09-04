@@ -538,7 +538,7 @@ class GeneralChecks(CheckEngine):
         # 0 analysis, 1 = forecast, 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
         topd = message.get("typeOfProcessedData", int)
 
-        if message["typeOfStatisticalProcessing"] is not None:
+        if message["typeOfStatisticalProcessing"].value() is not None:
             # statistically processed param
             if topd.value() in [0, 1]:  # Analysis, Forecast
                 report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11, 12], f"topd={topd}"))
