@@ -347,7 +347,7 @@ class GeneralChecks(CheckEngine):
     def _latlon_grid(self, message):
         report = Report("latlon grid")
 
-        tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
+        tolerance = 1.0/1000000.0  # angular tolerance for grib2: micro degrees
         data_points = message["numberOfDataPoints"]
         meridian = message["numberOfPointsAlongAMeridian"]
         parallel = message["numberOfPointsAlongAParallel"]
@@ -538,7 +538,7 @@ class GeneralChecks(CheckEngine):
         # 0 analysis, 1 = forecast, 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
         topd = message.get("typeOfProcessedData", int)
 
-        if message["typeOfStatisticalProcessing"] != None:
+        if message["typeOfStatisticalProcessing"] is not None:
             # statistically processed param
             if topd.value() in [0, 1]:  # Analysis, Forecast
                 report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11, 12], f"topd={topd}"))
@@ -653,19 +653,19 @@ class GeneralChecks(CheckEngine):
         indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
         timeIncrements = message.get_array("timeIncrement")
 
-        report.add(Eq(typeOfStatisticalProcessings[0], 0)) # mean
-        report.add(Eq(typeOfStatisticalProcessings[1], 0)) # mean
+        report.add(Eq(typeOfStatisticalProcessings[0], 0))  # mean
+        report.add(Eq(typeOfStatisticalProcessings[1], 0))  # mean
 
-        if indicatorOfUnitForTimeRanges[0] == 1: # hours
+        if indicatorOfUnitForTimeRanges[0] == 1:  # hours
             report.add(IsIn(lengthOfTimeRanges[0], [672, 696, 720, 744]))
-        elif indicatorOfUnitForTimeRanges[0] == 2: # days
+        elif indicatorOfUnitForTimeRanges[0] == 2:  # days
             report.add(IsIn(lengthOfTimeRanges[0], [28, 29, 30, 31]))
         else:
             report.add(IsIn(indicatorOfUnitForTimeRanges[0], [1, 2]))
 
-        if indicatorOfUnitForTimeIncrements[0] == 1: # hours
+        if indicatorOfUnitForTimeIncrements[0] == 1:  # hours
             report.add(Eq(timeIncrements[0], 24))
-        elif indicatorOfUnitForTimeIncrements[0] == 2: # days
+        elif indicatorOfUnitForTimeIncrements[0] == 2:  # days
             report.add(Eq(timeIncrements[0], 1))
         else:
             report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
@@ -686,19 +686,19 @@ class GeneralChecks(CheckEngine):
         timeIncrements = message.get_array("timeIncrement")
         typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
 
-        report.add(Eq(typeOfStatisticalProcessings[0], 0)) # mean
-        report.add(Eq(typeOfStatisticalProcessings[1], 1)) # accum
+        report.add(Eq(typeOfStatisticalProcessings[0], 0))  # mean
+        report.add(Eq(typeOfStatisticalProcessings[1], 1))  # accum
 
-        if indicatorOfUnitForTimeRanges[0] == 1: # hours
+        if indicatorOfUnitForTimeRanges[0] == 1:  # hours
             report.add(IsIn(lengthOfTimeRanges[0], [672, 696, 720, 744]))
-        elif indicatorOfUnitForTimeRanges[0] == 2: # days
+        elif indicatorOfUnitForTimeRanges[0] == 2:  # days
             report.add(IsIn(lengthOfTimeRanges[0], [28, 29, 30, 31]))
         else:
             report.add(IsIn(indicatorOfUnitForTimeRanges[0], [1, 2]))
 
-        if indicatorOfUnitForTimeIncrements[0] == 1: # hours
+        if indicatorOfUnitForTimeIncrements[0] == 1:  # hours
             report.add(Eq(timeIncrements[0], 24))
-        elif indicatorOfUnitForTimeIncrements[0] == 2: # days
+        elif indicatorOfUnitForTimeIncrements[0] == 2:  # days
             report.add(Eq(timeIncrements[0], 1))
         else:
             report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))

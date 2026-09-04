@@ -12,14 +12,9 @@ import logging
 
 from grib_check.Assert import (
     Eq,
-    EqDbl,
     Fail,
-    Ge,
-    Gt,
     IsIn,
     IsMultipleOf,
-    Le,
-    Lt,
 )
 from grib_check.Report import Report
 

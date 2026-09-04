@@ -57,7 +57,7 @@ class Lcgcr(GeneralChecks):
         paramId = message["paramId"]
 
         if paramId != 235055:
-          [report.add(Eq(timeIncrements[1], 6))]
+            [report.add(Eq(timeIncrements[1], 6))]
 
         return super()._monthly_mean_of_daily_means(message, p).add(report)
 
