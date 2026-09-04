@@ -27,7 +27,9 @@ from grib_check.Assert import (
     Pass,
 )
 from grib_check.CheckEngine import CheckEngine
+from grib_check.DateTime import DataTime, TimeDelta
 from grib_check.Grib import get_gaussian_latitudes
+from grib_check.KeyValue import KeyValue
 from grib_check.Report import Report
 
 
@@ -40,6 +42,8 @@ class GeneralChecks(CheckEngine):
             {
                 "basic_checks": self._basic_checks,
                 "daily_average": self._daily_average,
+                "monthly_mean_of_daily_means": self._monthly_mean_of_daily_means,
+                "monthly_mean_of_daily_accums": self._monthly_mean_of_daily_accums,
                 "from_start": self._from_start,
                 "given_level": self._given_level,
                 "given_thickness": self._given_thickness,
@@ -79,26 +83,15 @@ class GeneralChecks(CheckEngine):
 
     # not registered in the lookup table
     def _statistical_process(self, message, p) -> Report:
+        # statistically processed param for tigge like projects(s2s, uerra...)
         report = Report("Statistical Process")
 
-        topd = message.get("typeOfProcessedData", int)
-
-        if topd.value() in [0, 1]:  # Analysis, Forecast
-            report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11], f"topd={topd}"))
-        elif topd == 2:  # Analysis and forecast products
-            report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11], f"topd={topd}"))
-        elif topd in [3, 4]:  # Control forecast products
-            pass
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
-            return report
-
         report.add(Eq(message["numberOfMissingInStatisticalProcess"], 0))
-        report.add(Eq(message["typeOfTimeIncrement"], 2))
         # report.add(Eq(message["indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed"], 255))
         report.add(Eq(message["minuteOfEndOfOverallTimeInterval"], 0))
         report.add(Eq(message["secondOfEndOfOverallTimeInterval"], 0))
 
+        report.add(Eq(message["typeOfTimeIncrement"], 2))
         report.add(Eq(message["numberOfTimeRange"], 1))
 
         if message["indicatorOfUnitForTimeRange"] == 11:
@@ -354,7 +347,7 @@ class GeneralChecks(CheckEngine):
     def _latlon_grid(self, message):
         report = Report("latlon grid")
 
-        # tolerance = 1.0/1000000.0 # angular tolerance for grib2: micro degrees
+        tolerance = 1.0/1000000.0  # angular tolerance for grib2: micro degrees
         data_points = message["numberOfDataPoints"]
         meridian = message["numberOfPointsAlongAMeridian"]
         parallel = message["numberOfPointsAlongAParallel"]
@@ -364,16 +357,16 @@ class GeneralChecks(CheckEngine):
         west = message["longitudeOfFirstGridPoint"]
         east = message["longitudeOfLastGridPoint"]
 
-        # ns= message["jDirectionIncrement"]
-        # we= message["iDirectionIncrement"]
+        ns = message["jDirectionIncrement"]
+        we = message["iDirectionIncrement"]
 
         dnorth = message.get("latitudeOfFirstGridPointInDegrees", float)
         dsouth = message.get("latitudeOfLastGridPointInDegrees", float)
         dwest = message.get("longitudeOfFirstGridPointInDegrees", float)
         deast = message.get("longitudeOfLastGridPointInDegrees", float)
 
-        # dns = message.get("jDirectionIncrementInDegrees", float)
-        # dwe = message.get("iDirectionIncrementInDegrees", float)
+        dns = message.get("jDirectionIncrementInDegrees", float)
+        dwe = message.get("iDirectionIncrementInDegrees", float)
 
         if message["basicAngleOfTheInitialProductionDomain"] == 0:
             report.add(Missing(message, "subdivisionsOfBasicAngle"))
@@ -429,10 +422,39 @@ class GeneralChecks(CheckEngine):
         report.add(Ge(east, 0, "east >= 0"))
         report.add(Ge(west, 0, "west >= 0"))
 
-        # printf("meridian=%ld north=%ld south=%ld ns=%ld ",meridian,north,south,ns)
-        # printf("meridian=%ld north=%f south=%f ns=%f ",meridian,dnorth,dsouth,dns)
-        # printf("parallel=%ld east=%ld west=%ld we=%ld ",parallel,east,west,we)
-        # printf("parallel=%ld east=%f west=%f we=%f ",parallel,deast,dwest,dwe)
+        # Check that the grid is symmetrical */
+        report.add(Eq(north, -south, "north == -south"))
+        report.add(EqDbl(dnorth, -dsouth, tolerance, "dnorth == -dsouth"))
+        report.add(
+            Eq(parallel, (east - west) / we + 1, "parallel == (east - west) / we + 1")
+        )
+        report.add(
+            Lt(
+                ((deast - dwest) / dwe + 1 - parallel).abs(),
+                1e-10,
+                "math.fabs((deast - dwest) / dwe + 1 - parallel) < 1e-10",
+            )
+        )
+        report.add(
+            Eq(
+                meridian,
+                (north - south) / ns + 1,
+                "meridian == (north - south) / ns + 1",
+            )
+        )
+        report.add(
+            Lt(
+                ((dnorth - dsouth) / dns + 1 - meridian).abs(),
+                1e-10,
+                "math.fabs((dnorth - dsouth) / dns + 1 - meridian) < 1e-10 ",
+            )
+        )
+
+        # Check that the field is global */
+        area = (dnorth - dsouth) * (deast - dwest)
+        globe = 360.0 * 180.0
+        report.add(Le(area, globe, "area <= globe"))
+        report.add(Ge(area, globe * 0.95, "area >= globe*0.95"))
 
         return report
 
@@ -474,6 +496,33 @@ class GeneralChecks(CheckEngine):
             report.add(Eq(saved_validityDate, message["validityDate"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
             report.add(Eq(saved_validityTime, message["validityTime"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
 
+            # check *OverallTimeInterval types of keys too
+            timeRangeUnit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
+
+            if timeRangeUnit in [0, 1, 2, 10, 11, 12, 13]:
+                # we need the most outer loop
+                lengthOfTimeRange = message.get_long_array("lengthOfTimeRange")[0]
+
+                start = DataTime(message["dataDate"], message["dataTime"]).to_key_value()
+                forecast_td = TimeDelta(message["forecastTime"], message["indicatorOfUnitForForecastTime"]).to_key_value()
+                range_td = TimeDelta(KeyValue("lengthOfTimeRange", int(lengthOfTimeRange)), KeyValue("indicatorOfUnitForTimeRange", int(timeRangeUnit))).to_key_value()
+
+                expected_end = start + forecast_td + range_td
+
+                actual_end = DataTime(
+                    year=message["yearOfEndOfOverallTimeInterval"],
+                    month=message["monthOfEndOfOverallTimeInterval"],
+                    day=message["dayOfEndOfOverallTimeInterval"],
+                    hour=message["hourOfEndOfOverallTimeInterval"],
+                    minute=message["minuteOfEndOfOverallTimeInterval"],
+                    second=message["secondOfEndOfOverallTimeInterval"],
+                ).to_key_value()
+                report.add(Eq(expected_end, actual_end, f"start + forecast + range == end\n{expected_end.value()} == {actual_end.value()}"))
+            else:
+                report.add(Report("Time-unit of statistical unit not supported, can't check"))
+        else:
+            report.add(Report("No time-statistical data !"))
+
         return report
 
     def _basic_checks(self, message, p):
@@ -483,37 +532,52 @@ class GeneralChecks(CheckEngine):
         if self.check_validity:
             report.add(Eq(message["isMessageValid"], 1, "Use: grib_get -p isMessageValid file.grib to see the output if you get a failure here."))
 
+        # check min/max value ranges
         report.add(self._check_range(message, p))
+
         # 0 analysis, 1 = forecast, 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
         topd = message.get("typeOfProcessedData", int)
 
-        if topd in [0, 1, 2]:  # Analysis, Forecast
-            if message["productDefinitionTemplateNumber"] == 1:
-                report.add(
-                    Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}")
-                )
+        if message["typeOfStatisticalProcessing"].value() is not None:
+            # statistically processed param
+            if topd.value() in [0, 1]:  # Analysis, Forecast
+                report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11, 12], f"topd={topd}"))
+            elif topd == 2:  # Analysis and forecast products
+                report.add(IsIn(message["productDefinitionTemplateNumber"], [8, 11, 12], f"topd={topd}"))
+            elif topd in [3, 4]:  # Control forecast products
+                pass
+            else:
+                report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
+                return report
+        else:
+            # statistically not processed param
+            if topd in [0, 1, 2]:  # Analysis, Forecast
+                if message["productDefinitionTemplateNumber"] == 1:
+                    report.add(
+                        Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}")
+                    )
+                    report.add(
+                        Le(
+                            message["perturbationNumber"],
+                            message["numberOfForecastsInEnsemble"],
+                            f"topd={topd}",
+                        )
+                    )
+            elif topd == 3:  # Control forecast products
+                report.add(Eq(message["perturbationNumber"], 0, f"topd={topd}"))
+                report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
+            elif topd == 4:  # Perturbed forecast products
+                report.add(Ne(message["perturbationNumber"], 0, f"topd={topd}"))
+                report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
                 report.add(
                     Le(
                         message["perturbationNumber"],
-                        message["numberOfForecastsInEnsemble"],
+                        message["numberOfForecastsInEnsemble"] - 1,
                         f"topd={topd}",
                     )
                 )
-        elif topd == 3:  # Control forecast products
-            report.add(Eq(message["perturbationNumber"], 0, f"topd={topd}"))
-            report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
-        elif topd == 4:  # Perturbed forecast products
-            report.add(Ne(message["perturbationNumber"], 0, f"topd={topd}"))
-            report.add(Ne(message["numberOfForecastsInEnsemble"], 0, f"topd={topd}"))
-            report.add(
-                Le(
-                    message["perturbationNumber"],
-                    message["numberOfForecastsInEnsemble"] - 1,
-                    f"topd={topd}",
-                )
-            )
-        else:
-            report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
+            else:
+                report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
 
         # reports += self._check_packing(message)
 
@@ -563,15 +627,8 @@ class GeneralChecks(CheckEngine):
         else:
             report.add(Le(message["numberOfValues"], message["numberOfDataPoints"]))
 
-        # Check values
         report.add(Eq(message["typeOfOriginalFieldValues"], 0))  # Floating point
-
         report.add(self._check_validity_datetime(message))
-
-        # do not store empty values e.g. fluxes at step 0
-        #    todo ?? now it's allowed in the code here!
-        #    if not missing(h,"typeOfStatisticalProcessing"):
-        #      CHECK('ne(h,"stepRange",0)', ne(h,"stepRange",0))
 
         return report
 
@@ -581,6 +638,71 @@ class GeneralChecks(CheckEngine):
         endStep = message["endStep"]
         report.add(Eq(startStep, endStep - 24))
         report.add(self._statistical_process(message, p))
+        return report
+
+    def _monthly_mean_of_daily_means(self, message, p):
+        report = Report("Monthly mean of daily means")
+
+        report.add(Eq(message["step"], None))
+        report.add(Eq(message["numberOfTimeRanges"], 2))
+        report.add(Eq(message["startStep"], 0))
+
+        typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+        indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
+        lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
+        indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
+        timeIncrements = message.get_array("timeIncrement")
+
+        report.add(Eq(typeOfStatisticalProcessings[0], 0))  # mean
+        report.add(Eq(typeOfStatisticalProcessings[1], 0))  # mean
+
+        if indicatorOfUnitForTimeRanges[0] == 1:  # hours
+            report.add(IsIn(lengthOfTimeRanges[0], [672, 696, 720, 744]))
+        elif indicatorOfUnitForTimeRanges[0] == 2:  # days
+            report.add(IsIn(lengthOfTimeRanges[0], [28, 29, 30, 31]))
+        else:
+            report.add(IsIn(indicatorOfUnitForTimeRanges[0], [1, 2]))
+
+        if indicatorOfUnitForTimeIncrements[0] == 1:  # hours
+            report.add(Eq(timeIncrements[0], 24))
+        elif indicatorOfUnitForTimeIncrements[0] == 2:  # days
+            report.add(Eq(timeIncrements[0], 1))
+        else:
+            report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
+
+        return report
+
+    def _monthly_mean_of_daily_accums(self, message, p):
+        report = Report("Monthly mean of daily accums")
+
+        report.add(Eq(message["step"], None))
+        report.add(Eq(message["numberOfTimeRanges"], 2))
+        report.add(Eq(message["startStep"], 0))
+
+        typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+        indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
+        lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
+        indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
+        timeIncrements = message.get_array("timeIncrement")
+        typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+
+        report.add(Eq(typeOfStatisticalProcessings[0], 0))  # mean
+        report.add(Eq(typeOfStatisticalProcessings[1], 1))  # accum
+
+        if indicatorOfUnitForTimeRanges[0] == 1:  # hours
+            report.add(IsIn(lengthOfTimeRanges[0], [672, 696, 720, 744]))
+        elif indicatorOfUnitForTimeRanges[0] == 2:  # days
+            report.add(IsIn(lengthOfTimeRanges[0], [28, 29, 30, 31]))
+        else:
+            report.add(IsIn(indicatorOfUnitForTimeRanges[0], [1, 2]))
+
+        if indicatorOfUnitForTimeIncrements[0] == 1:  # hours
+            report.add(Eq(timeIncrements[0], 24))
+        elif indicatorOfUnitForTimeIncrements[0] == 2:  # days
+            report.add(Eq(timeIncrements[0], 1))
+        else:
+            report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
+
         return report
 
     def _from_start(self, message, p):

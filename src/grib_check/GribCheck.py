@@ -19,9 +19,11 @@ import sys
 
 from .checker.Crra import Crra
 from .checker.Lam import Lam
+from .checker.Lcgcr import Lcgcr
 from .checker.S2S import S2S
 from .checker.S2SRefcst import S2SRefcst
 from .checker.Tigge import Tigge
+from .checker.Tigge_cr import Tigge_cr
 from .checker.Uerra import Uerra
 from .checker.Wpmip import Wpmip
 from .FileScanner import FileScanner
@@ -81,6 +83,11 @@ class GribCheck:
             if self.args.parameters is not None
             else f"{script_path}/checker/WpmipParameters.jsonnet"
         )
+        lcgcr_params = (
+            self.args.parameters
+            if self.args.parameters is not None
+            else f"{script_path}/checker/LcgcrParameters.jsonnet"
+        )
         crra_params = (
             self.args.parameters
             if self.args.parameters is not None
@@ -91,10 +98,14 @@ class GribCheck:
             checker = Tigge(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "wpmip":
             checker = Wpmip(SimpleLookupTable(wpmip_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
+        elif self.args.convention == "lcgcr":
+            checker = Lcgcr(SimpleLookupTable(lcgcr_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "s2s":
             checker = S2S(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "s2s_refcst":
             checker = S2SRefcst(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
+        elif self.args.convention == "tigge_cr":
+            checker = Tigge_cr(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "uerra":
             checker = Uerra(SimpleLookupTable(tigge_params, ignore_keys=["model"]),
                             check_limits=self.args.check_limits, check_validity=self.args.validity_check,)
@@ -152,12 +163,14 @@ It performs a set of checks on GRIB messages to ensure they comply with the proj
         help="data convention. The following conventions are experimental: wpmip.",
         choices=[
             "tigge",
+            "tigge_cr",
             "s2s",
             "s2s_refcst",
             "uerra",
             "crra",
             "lam",
             "wpmip",
+            "lcgcr",
         ],
         required=True,
         type=str,
@@ -169,7 +182,7 @@ It performs a set of checks on GRIB messages to ensure they comply with the proj
     parser.add_argument("-j", "--num-jobs", help="number of jobs", type=int, default=1)
     parser.add_argument("-f", "--failed-only", help="show only failed checks", action="store_true")
     parser.add_argument("-o", "--output-type", help="output format", choices=["short", "tree"], default="tree")
-    parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.8")
+    parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.0.9")
     parser.add_argument("-t", "--show-type", help="show value type", action="store_true")
     parser.add_argument(
         "--validity-check",
