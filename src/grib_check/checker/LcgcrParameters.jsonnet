@@ -17,6 +17,7 @@ local templates = import 'Parameter.libsonnet';
     ],
     checks+: [
       'monthly_mean_of_daily_means',
+      'monthly_average',
       'given_level',
     ],
   },
@@ -35,6 +36,7 @@ local templates = import 'Parameter.libsonnet';
     ],
     checks+: [
       'monthly_mean_of_daily_means',
+      'monthly_average',
       'predefined_level',
     ],
   },
@@ -71,6 +73,7 @@ local templates = import 'Parameter.libsonnet';
     ],
     checks+: [
       'monthly_mean_of_daily_accums',
+      'monthly_average',
       'predefined_level',
     ],
   },

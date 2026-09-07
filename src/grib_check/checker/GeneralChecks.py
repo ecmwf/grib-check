@@ -44,6 +44,7 @@ class GeneralChecks(CheckEngine):
                 "daily_average": self._daily_average,
                 "monthly_mean_of_daily_means": self._monthly_mean_of_daily_means,
                 "monthly_mean_of_daily_accums": self._monthly_mean_of_daily_accums,
+                "monthly_average": self._monthly_average,
                 "from_start": self._from_start,
                 "given_level": self._given_level,
                 "given_thickness": self._given_thickness,
@@ -703,6 +704,10 @@ class GeneralChecks(CheckEngine):
         else:
             report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
 
+    def _monthly_average(self, message, p):
+        report = Report("Monthly Average")
+        report.add(Eq(message["startStep"], 0))
+        report.add(self._statistical_process(message, p))
         return report
 
     def _from_start(self, message, p):
