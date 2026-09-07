@@ -51,15 +51,18 @@ class Crra(Uerra):
 
     def _point_in_time(self, message, p) -> Report:
         report = Report("CRRA Point in Time")
-
         topd = message.get("typeOfProcessedData", int)
         stream = message.get("stream", str)
+        type = message.get("type", str)
         if topd in [0, 1]:  # Analysis, Forecast
-            if stream == "dame" or stream == "moda":
-                # because mostly instant paramIds are used even for monthly/daily means..
-                report.add(Eq(message["productDefinitionTemplateNumber"], 8))
+            if type in ["em", "es"]:
+                report.add(Eq(message["productDefinitionTemplateNumber"], 2))
             else:
-                report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
+                if stream == "dame" or stream == "moda":
+                    # because mostly instant paramIds are used even for monthly/daily means..
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 8))
+                else:
+                    report.add(IsIn(message["productDefinitionTemplateNumber"], [0, 1]))
 #       elif topd == 2:  # Analysis and forecast products
 #           pass
         elif topd == 3:  # Control forecast products
@@ -86,7 +89,7 @@ class Crra(Uerra):
     def _from_start(self, message, p):
         report = Report("CRRA From Start")
         stream = message.get("stream", str)
-        if stream != "moda" and stream != "dame":
+        if stream not in ["moda", "dame"]:
             report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
 
@@ -102,15 +105,17 @@ class Crra(Uerra):
 
     def _statistical_process(self, message, p) -> Report:
         report = Report("CRRA Statistical Process")
-
         topd = message.get("typeOfProcessedData", int)
         stream = message.get("stream", str)
-
+        type = message.get("type", str)
         if topd.value() in [0, 1]:  # Analysis, Forecast
-            if IsIn(stream, ["oper", "moda", "dame"]):
-                report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
-            elif Eq(stream, "enda"):
-                report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
+            if type in ["em", "es"]:
+                report.add(Eq(message["productDefinitionTemplateNumber"], 12))
+            else:
+                if IsIn(stream, ["oper", "moda", "dame"]):
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 8, f"topd={topd}"))
+                elif Eq(stream, "enda"):
+                    report.add(Eq(message["productDefinitionTemplateNumber"], 11, f"topd={topd}"))
         else:
             report.add(Fail(f"Unsupported typeOfProcessedData {topd}"))
             return report
@@ -173,129 +178,134 @@ class Crra(Uerra):
                 indicatorOfUnitForTimeIncrements = message.get_long_array("indicatorOfUnitForTimeIncrement")
                 timeIncrements = message.get_array("timeIncrement")
 
-            # monthly/daily averages are archived under instant paramIds as param-db was not ready for all time-mean proper ones..
-            # https://confluence.ecmwf.int/display/DGOV/Support+page+for+DGOV-399+CARRA+daily+and+monthly+GRIB+headers
-            if Eq(stream, "dame"):
+                # monthly/daily averages are archived under instant paramIds as param-db was not ready for all time-mean proper ones..
+                # https://confluence.ecmwf.int/display/DGOV/Support+page+for+DGOV-399+CARRA+daily+and+monthly+GRIB+headers
 
-                report = Report("CRRA Check Validity Datetime - daily means")
-                if typeOfStatisticalProcessings.value() == [0]:
-                    report = Report("dame - daily_mean_an/fc")
-                    dame_validityDate = same_day
-                    dame_validityTime = 21
-                    if topd == 0:
+                if Eq(stream, "dame"):
+                    dame_validityTime = None
+                    dame_validityDate = None
+
+                    report = Report("CRRA Check Validity Datetime - daily means")
+                    if typeOfStatisticalProcessings == [0]:
+                        report = Report("dame - daily_mean_an/fc")
                         dame_validityDate = same_day
-                    elif topd == 1:
+                        dame_validityTime = 21
+                        if topd == 0:
+                            dame_validityDate = same_day
+                        elif topd == 1:
+                            dame_validityDate = next_day1
+                        report.add(Eq(typeOfTimeIncrements[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))
+                        report.add(Eq(lengthOfTimeRanges[0], 21))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))
+                        report.add(Eq(timeIncrements[0], 3))
+                    elif typeOfStatisticalProcessings == [1, 1]:
+                        report = Report("dame - daily_sum_an/fc")
+                        dame_validityDate = next_day2
+                        dame_validityTime = 0
+                        report.add(Eq(typeOfTimeIncrements[0], 1))
+                        report.add(Eq(typeOfTimeIncrements[1], 2))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))
+                        report.add(Eq(lengthOfTimeRanges[0], 24))
+                        report.add(Eq(lengthOfTimeRanges[1], 12))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))
+                        report.add(Eq(timeIncrements[0], 12))
+                        report.add(Eq(timeIncrements[1], 0))
+                    elif typeOfStatisticalProcessings == [2, 2] or typeOfStatisticalProcessings == [3, 3]:
+                        report = Report("dame - daily_min/max_an/fc")
                         dame_validityDate = next_day1
-                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
-                    [report.add(Eq(lengthOfTimeRanges[0], 21))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
-                    [report.add(Eq(timeIncrements[0], 3))]
-                elif typeOfStatisticalProcessings == [1, 1]:
-                    report = Report("dame - daily_sum_an/fc")
-                    dame_validityDate = next_day2
-                    dame_validityTime = 0
-                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
-                    [report.add(Eq(typeOfTimeIncrements[1], 2))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
-                    [report.add(Eq(lengthOfTimeRanges[0], 24))]
-                    [report.add(Eq(lengthOfTimeRanges[1], 12))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))]
-                    [report.add(Eq(timeIncrements[0], 12))]
-                    [report.add(Eq(timeIncrements[1], 0))]
-                elif typeOfStatisticalProcessings == [2, 2] or typeOfStatisticalProcessings == [3, 3]:
-                    report = Report("dame - daily_min/max_an/fc")
-                    dame_validityDate = next_day1
-                    dame_validityTime = 0
-                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
-                    [report.add(Eq(typeOfTimeIncrements[1], 2))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
-                    [report.add(Eq(lengthOfTimeRanges[0], 21))]
-                    [report.add(Eq(lengthOfTimeRanges[1], 3))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))]
-                    [report.add(Eq(timeIncrements[0], 3))]
-                    [report.add(Eq(timeIncrements[1], 0))]
+                        dame_validityTime = 0
+                        report.add(Eq(typeOfTimeIncrements[0], 1))
+                        report.add(Eq(typeOfTimeIncrements[1], 2))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))
+                        report.add(Eq(lengthOfTimeRanges[0], 21))
+                        report.add(Eq(lengthOfTimeRanges[1], 3))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))
+                        report.add(Eq(timeIncrements[0], 3))
+                        report.add(Eq(timeIncrements[1], 0))
+                    else:
+                        report.add(Fail(f"Unsupported parameter in stream={stream}"))
+
+                    report.add(Eq(validityTimeBefore/100, dame_validityTime))
+                    report.add(Eq(validityDateBefore, dame_validityDate))
+
+                elif Eq(stream, "moda"):
+                    moda_validityTime = None
+                    moda_validityDate = None
+
+                    report = Report("CRRA Check Validity Datetime - monthly means")
+
+                    moda_lotr1 = [669, 693, 717, 741]
+                    moda_lotr2 = [672, 696, 720, 744]
+
+                    if typeOfStatisticalProcessings == [0]:
+                        report = Report("moda - monthly_mean_an/fc")
+                        if topd == 0:
+                            moda_validityDate = last_date_month0
+                        elif topd == 1:
+                            moda_validityDate = last_date_month1
+                        moda_validityTime = 21
+                        report.add(Eq(typeOfTimeIncrements[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))
+                        report.add(IsIn(lengthOfTimeRanges[0], moda_lotr1))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))
+                        report.add(Eq(timeIncrements[0], 3))
+                    elif typeOfStatisticalProcessings == [2, 2] or typeOfStatisticalProcessings == [3, 3]:
+                        report = Report("moda - monthly_min/max_an/fc")
+                        moda_validityDate = first_date_month1
+                        moda_validityTime = 0
+                        report.add(Eq(typeOfTimeIncrements[0], 1))
+                        report.add(Eq(typeOfTimeIncrements[1], 2))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))
+                        report.add(IsIn(lengthOfTimeRanges[0], moda_lotr1))
+                        report.add(Eq(lengthOfTimeRanges[1], 3))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))
+                        report.add(Eq(timeIncrements[0], 3))
+                        report.add(Eq(timeIncrements[1], 0))
+                    elif typeOfStatisticalProcessings == [0, 1, 1]:
+                        report = Report("moda - monthly_daysum_an/fc")
+                        moda_validityDate = first_date_month2
+                        moda_validityTime = 0
+                        report.add(Eq(typeOfTimeIncrements[0], 1))
+                        report.add(Eq(typeOfTimeIncrements[1], 1))
+                        report.add(Eq(typeOfTimeIncrements[2], 2))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))
+                        report.add(Eq(indicatorOfUnitForTimeRanges[2], 1))
+                        report.add(IsIn(lengthOfTimeRanges[0], moda_lotr2))
+                        report.add(Eq(lengthOfTimeRanges[1], 24))
+                        report.add(Eq(lengthOfTimeRanges[2], 12))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[1], 1))
+                        report.add(Eq(indicatorOfUnitForTimeIncrements[2], 255))
+                        report.add(Eq(timeIncrements[0], 24))
+                        report.add(Eq(timeIncrements[1], 12))
+                        report.add(Eq(timeIncrements[2], 0))
+                    else:
+                        report.add(Fail(f"Unsupported parameter in stream={stream}"))
+
+                    report.add(Eq(validityTimeBefore/100, moda_validityTime))
+                    report.add(Eq(validityDateBefore, moda_validityDate))
+
                 else:
-                    report.add(Fail(f"Unsupported parameter in stream={stream}"))
 
-                report.add(Eq(validityTimeBefore/100, dame_validityTime))
-                report.add(Eq(validityDateBefore, dame_validityDate))
+                    # If we just set the stepRange (for non-instantaneous fields) to its
+                    # current value, then this causes the validity date and validity time
+                    # keys to be correctly computed.
+                    # Then we can compare the previous (possibly wrongly coded) value with
+                    # the newly computed one
 
-            elif Eq(stream, "moda"):
-
-                report = Report("CRRA Check Validity Datetime - monthly means")
-
-                moda_lotr1 = [669, 693, 717, 741]
-                moda_lotr2 = [672, 696, 720, 744]
-
-                if typeOfStatisticalProcessings == [0]:
-                    report = Report("moda - monthly_mean_an/fc")
-                    if topd == 0:
-                        moda_validityDate = last_date_month0
-                    elif topd == 1:
-                        moda_validityDate = last_date_month1
-                    moda_validityTime = 21
-                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
-                    [report.add(IsIn(lengthOfTimeRanges[0], moda_lotr1))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
-                    [report.add(Eq(timeIncrements[0], 3))]
-                elif typeOfStatisticalProcessings == [2, 2] or typeOfStatisticalProcessings == [3, 3]:
-                    report = Report("moda - monthly_min/max_an/fc")
-                    moda_validityDate = first_date_month1
-                    moda_validityTime = 0
-                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
-                    [report.add(Eq(typeOfTimeIncrements[1], 2))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
-                    [report.add(IsIn(lengthOfTimeRanges[0], moda_lotr1))]
-                    [report.add(Eq(lengthOfTimeRanges[1], 3))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 255))]
-                    [report.add(Eq(timeIncrements[0], 3))]
-                    [report.add(Eq(timeIncrements[1], 0))]
-                elif typeOfStatisticalProcessings == [0, 1, 1]:
-                    report = Report("moda - monthly_daysum_an/fc")
-                    moda_validityDate = first_date_month2
-                    moda_validityTime = 0
-                    [report.add(Eq(typeOfTimeIncrements[0], 1))]
-                    [report.add(Eq(typeOfTimeIncrements[1], 1))]
-                    [report.add(Eq(typeOfTimeIncrements[2], 2))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeRanges[2], 1))]
-                    [report.add(IsIn(lengthOfTimeRanges[0], moda_lotr2))]
-                    [report.add(Eq(lengthOfTimeRanges[1], 24))]
-                    [report.add(Eq(lengthOfTimeRanges[2], 12))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[0], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[1], 1))]
-                    [report.add(Eq(indicatorOfUnitForTimeIncrements[2], 255))]
-                    [report.add(Eq(timeIncrements[0], 24))]
-                    [report.add(Eq(timeIncrements[1], 12))]
-                    [report.add(Eq(timeIncrements[2], 0))]
-                else:
-                    report.add(Fail(f"Unsupported parameter in stream={stream}"))
-
-                report.add(Eq(validityTimeBefore/100, moda_validityTime))
-                report.add(Eq(validityDateBefore, moda_validityDate))
-
-            else:
-
-                # If we just set the stepRange (for non-instantaneous fields) to its
-                # current value, then this causes the validity date and validity time
-                # keys to be correctly computed.
-                # Then we can compare the previous (possibly wrongly coded) value with
-                # the newly computed one
-
-                message.set("stepRange", stepRange)
-                validityDate = message["validityDate"]
-                validityTime = message["validityTime"]
-                report.add(Eq(validityDate, validityDateBefore, f'Set stepRange={stepRange} has no effect on validityDate'))
-                report.add(Eq(validityTime, validityTimeBefore, f'Set stepRange={stepRange} has no effect on validityTime'))
+                    message.set("stepRange", stepRange)
+                    validityDate = message["validityDate"]
+                    validityTime = message["validityTime"]
+                    report.add(Eq(validityDate, validityDateBefore, f'Set stepRange={stepRange} has no effect on validityDate'))
+                    report.add(Eq(validityTime, validityTimeBefore, f'Set stepRange={stepRange} has no effect on validityTime'))
 
         return report
 
