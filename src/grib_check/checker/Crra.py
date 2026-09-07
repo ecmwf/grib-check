@@ -89,7 +89,7 @@ class Crra(Uerra):
     def _from_start(self, message, p):
         report = Report("CRRA From Start")
         stream = message.get("stream", str)
-        if not stream in ["moda", "dame"]:
+        if stream not in ["moda", "dame"]:
             report.add(Eq(message["startStep"], 0))
         report.add(self._statistical_process(message, p))
 
@@ -170,7 +170,6 @@ class Crra(Uerra):
                 first_date_month2 = datetime.date(year2, month2, 1)
                 first_date_month2 = int(str(first_date_month2).replace('-', ''))
 
-
                 # numberOfTimeRanges = message["numberOfTimeRanges"]
                 typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
                 typeOfTimeIncrements = message.get_array("typeOfTimeIncrement")
@@ -181,7 +180,6 @@ class Crra(Uerra):
 
                 # monthly/daily averages are archived under instant paramIds as param-db was not ready for all time-mean proper ones..
                 # https://confluence.ecmwf.int/display/DGOV/Support+page+for+DGOV-399+CARRA+daily+and+monthly+GRIB+headers
-
 
                 if Eq(stream, "dame"):
                     dame_validityTime = None
