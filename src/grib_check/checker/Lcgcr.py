@@ -46,6 +46,21 @@ class Lcgcr(GeneralChecks):
 
         return super()._basic_checks(message, p).add(report)
 
+    def _monthly_mean_of_daily_means(self, message, p) -> Report:
+        report = Report("LC-GCR Monthly mean of daily means")
+
+        # The monthly means of the instantaneous variables (2t and mslp) are calculated from 6-hourly data (00, 06, 12 18),
+        # as this is the minimum temporal frequency across all datasets.
+        # For precipitation rate, which is an accumulation divided by time step, all available time steps are used.
+
+        timeIncrements = message.get_array("timeIncrement")
+        paramId = message["paramId"]
+
+        if paramId != 235055:
+            report.add(Eq(timeIncrements[1], 6))
+
+        return super()._monthly_mean_of_daily_means(message, p).add(report)
+
     def _monthly_average(self, message, p) -> Report:
         report = Report("LC-GCR Monthly Average")
 

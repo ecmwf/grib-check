@@ -23,6 +23,7 @@ from .checker.Lcgcr import Lcgcr
 from .checker.S2S import S2S
 from .checker.S2SRefcst import S2SRefcst
 from .checker.Tigge import Tigge
+from .checker.Tigge_cr import Tigge_cr
 from .checker.Uerra import Uerra
 from .checker.Wpmip import Wpmip
 from .FileScanner import FileScanner
@@ -103,6 +104,8 @@ class GribCheck:
             checker = S2S(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "s2s_refcst":
             checker = S2SRefcst(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
+        elif self.args.convention == "tigge_cr":
+            checker = Tigge_cr(SimpleLookupTable(tigge_params), check_limits=self.args.check_limits, check_validity=self.args.validity_check)
         elif self.args.convention == "uerra":
             checker = Uerra(SimpleLookupTable(tigge_params, ignore_keys=["model"]),
                             check_limits=self.args.check_limits, check_validity=self.args.validity_check,)
@@ -160,6 +163,7 @@ It performs a set of checks on GRIB messages to ensure they comply with the proj
         help="data convention. The following conventions are experimental: wpmip.",
         choices=[
             "tigge",
+            "tigge_cr",
             "s2s",
             "s2s_refcst",
             "uerra",
