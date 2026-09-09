@@ -537,10 +537,12 @@ class GeneralChecks(CheckEngine):
         report.add(self._check_range(message, p))
 
         marsType = message.get("marsType", str)
+        origin = message.get("origin", str)
+        if origin != "wpmip":
+            # for wmpip class, type, stream is not defined as we do not archive that data yet..
+            report.add(Ne(message["marsType"], None))
 
-        if marsType.value() is None:
-            report.add(Fail(f"Not recognised marsType {marsType}"))
-        elif marsType == "an":  # 0 - Analysis
+        if marsType == "an":  # 0 - Analysis
             report.add(IsIn(message["significanceOfReferenceTime"], [0]))
         elif marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
             # 6 - Start of data assimilation
