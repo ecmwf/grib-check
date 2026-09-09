@@ -540,12 +540,12 @@ class GeneralChecks(CheckEngine):
 
         if marsType.value() is None:
             report.add(Fail(f"Not recognised marsType {marsType}"))
-        elif marsType == "an": # 0 - Analysis
+        elif marsType == "an":  # 0 - Analysis
             report.add(IsIn(message["significanceOfReferenceTime"], [0]))
         elif marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
             # 6 - Start of data assimilation
             report.add(IsIn(message["significanceOfReferenceTime"], [6]))
-        else: # 1 - Start of forecast
+        else:  # 1 - Start of forecast
             report.add(IsIn(message["significanceOfReferenceTime"], [1]))
 
         # 0 analysis, 1 = forecast, 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
