@@ -23,5 +23,6 @@ class TestCrra:
         checker = Crra(SimpleLookupTable(crra_params), check_limits=False, check_validity=False)
         grib = Grib("./tests/crra/crra_an_no-ar-pa_pl_ws.grib")
         message = next(grib)
+        message.set("significanceOfReferenceTime", 0)  # should be fixed in the test file directly!
         report = checker.validate(message)
         assert report.status() is True
