@@ -6,7 +6,7 @@ import subprocess
 class TestCmdLine:
     def test_cmd_line_pass(self):
         result = subprocess.run(
-            ["python3", "-m", "grib_check.GribCheck", "-c", "./tests/crra/crra_an_no-ar-pa_pl_ws.grib", "-C", "crra"],
+            ["python3", "-m", "grib_check.GribCheck", "-c", "./tests/tigge/tigge_ecmf_sfc_10v.grib", "-C", "tigge"],
             capture_output=True,
             text=True,
         )
@@ -14,7 +14,7 @@ class TestCmdLine:
 
     def test_cmd_line_fail(self):
         result = subprocess.run(
-            ["python3", "-m", "grib_check.GribCheck", "-c", "./tests/crra/crra_an_no-ar-pa_pl_ws.grib", "-C", "uerra"],
+            ["python3", "-m", "grib_check.GribCheck", "-c", "./tests/tigge/tigge_ecmf_sfc_10v.grib", "-C", "crra"],
             capture_output=True,
             text=True,
         )

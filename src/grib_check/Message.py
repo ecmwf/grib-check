@@ -16,6 +16,7 @@ from eccodes import (
     codes_get_double_array,
     codes_get_long_array,
     codes_get_message,
+    codes_get_native_type,
     codes_get_size,
     codes_is_missing,
     codes_keys_iterator_get_name,
@@ -104,6 +105,22 @@ class Message:
 
     def get_size(self, key) -> int:
         return codes_get_size(self.__h, key)
+
+    def get_array(self, key, datatype=None) -> list[KeyValue]:
+        if datatype is None:
+            datatype = codes_get_native_type(self.__h, key)
+
+        if datatype not in [float, int, "double", "long"]:
+            raise Exception(f"Unsupported datatype {datatype} for key {key}")
+        else:
+            if datatype == float or datatype == "double":
+                values = self.get_double_array(key)
+            elif datatype == int or datatype == "long":
+                values = self.get_long_array(key)
+            else:
+                raise Exception(f"Unsupported datatype {datatype} for key {key}")
+
+        return KeyValue(key, values)
 
     def get_double_array(self, key) -> np.ndarray:
         return codes_get_double_array(self.__h, key)

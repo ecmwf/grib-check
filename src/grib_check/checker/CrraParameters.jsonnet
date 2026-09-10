@@ -210,4 +210,23 @@ wmo_params +
       'has_soil_layer',
     ],
   },
+  templates.Wmo {
+    name: 'snow_melt_sfc.rr',
+    expected+: [
+      { key: 'values', min: [-100000000.0, 100000000.0], max: [-100000000.0, 100000000.0] },
+    ],
+    pairs+: [
+      { key: 'paramId', value: 3099 },
+      { key: 'discipline', value: 0 },
+      { key: 'parameterCategory', value: 1 },
+      { key: 'parameterNumber', value: 16 },
+      { key: 'typeOfStatisticalProcessing', value: 1 },
+      { key: 'typeOfFirstFixedSurface', value: 1 },
+    ],
+    checks+: [
+      'from_start',
+      'predefined_level',
+      'has_bitmap',
+    ],
+  },
 ]

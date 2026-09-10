@@ -30,10 +30,17 @@ def makeKV(value):
 
 
 class KeyValue:
-    def __init__(self, key, value, level=0, last_op_type=OpType.NONE, key_suffix=None):
+    _MISSING = object()
+
+    def __init__(self, key_or_value, value=_MISSING, level=0, last_op_type=OpType.NONE, key_suffix=None):
         self.logger = logging.getLogger(__class__.__name__)
-        self.__key = key
-        self.__value = value
+        if value is KeyValue._MISSING:
+            # Single-arg form: KeyValue(value) → key=None
+            self.__key = None
+            self.__value = key_or_value
+        else:
+            self.__key = key_or_value
+            self.__value = value
         self.__level = level
         self.__last_op_type = last_op_type
         self.__key_suffix = key_suffix  # e.g. "[0]" in key[0](value)
@@ -165,6 +172,11 @@ class KeyValue:
 
     def __int__(self):
         return int(self.__value)
+
+    def __getitem__(self, idx):
+        k = f"{self.__key}[{idx}]"
+        v = None if self.__value is None else self.__value[idx]
+        return KeyValue(k, v)
 
     def abs(self):
         k = f"|{self}|"

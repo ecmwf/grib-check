@@ -8,12 +8,17 @@
 # nor does it submit to any jurisdiction.
 #
 
+from datetime import datetime, timedelta
+
+
 class ValueFormat:
     def __init__(self, fmt: str = "{}", show_type: bool = False):
         self.__type_map = {
             int: "i",
             float: "d",
             str: "s",
+            datetime: "dt",
+            timedelta: "td",
         }
         self.__fmt = fmt
         self.__show_type = show_type
@@ -22,7 +27,7 @@ class ValueFormat:
         self.__show_type = show_type
         self.__fmt = fmt
 
-    def format(self, value=5):
+    def format(self, value):
         if type(value) is list:
             types = set(self.__type_map[type(v)] for v in value)
             if len(types) == 1:
