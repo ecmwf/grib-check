@@ -31,8 +31,8 @@
 # same command. If the configuration of eckit or ecCodes changes (ref,
 # compiler, eckit), its build and install directories are cleaned first.
 #
-# Possible preparation (missing tools are also loaded automatically as
-# modules, see TOOL_MODULES below):
+# Possible preparation (missing tools and a missing AEC library are also
+# loaded automatically as modules, see TOOL_MODULES and AEC_MODULES below):
 #   module load gcc/15.2.0 aec/1.1.4 netcdf4/4.9.3 cdo
 #   eval `ssh-agent -s`      # only for --git-protocol ssh
 
@@ -65,6 +65,10 @@ GIT_PROTOCOL="https"     # --git-protocol: https or ssh
 JOBS=$(nproc 2>/dev/null || echo 4)   # --jobs: parallel build jobs (available cores)
 PYTHON="python3"         # --python: Python used to create the venv
 
+# Minimum Python version (grib-check: requires-python >= 3.8; the findlibs
+# package used by eccodes-python does not run on older versions)
+PYTHON_MIN_VERSION="3.8"
+
 # Modules tried with 'module load' (in this order) if a required tool is not
 # found. Tools without an entry are tried as a module of the same name.
 declare -A TOOL_MODULES=(
@@ -78,6 +82,11 @@ declare -A TOOL_MODULES=(
     [clang++]="clang llvm"
     [python3]="python3 python"
 )
+
+# Modules tried with 'module load' (in this order) if ecCodes cannot find the
+# AEC library (libaec) it requires, e.g. because only an older system version
+# is installed. Their default versions are used.
+AEC_MODULES=(aec libaec)
 
 # Scripts that define the 'module' command (Environment Modules, Lmod), used
 # if it is not already defined ($MODULESHOME/init/bash is tried first)
@@ -108,6 +117,7 @@ STEP_CMDS=()
 # Progress
 RESTART=0
 COMPLETED=0
+AEC_CHECKED=0            # 1: check_aec succeeded (see check_aec_once)
 CURRENT_STEP=""
 FAILED_CMD=""
 FAILED_LINE=""
@@ -344,14 +354,42 @@ function required_tools() {
     echo "${PYTHON}"
 }
 
-# tool_available <tool>: true if the program exists (for Python: including
-# the venv module)
+# python_version <python>: major.minor version of a Python, e.g. "3.12"
+function python_version() {
+    "$1" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null
+}
+
+# python_problem <python>: why a Python cannot be used (too old, no venv or
+# ensurepip module); empty if it is suitable
+function python_problem() {
+    local version
+    if ! version=$(python_version "$1") || [ -z "${version}" ]; then
+        echo "does not run"
+    elif [ "$(printf '%s\n' "${PYTHON_MIN_VERSION}" "${version}" | sort -V | head -n 1)" != "${PYTHON_MIN_VERSION}" ]; then
+        echo "version ${version} is too old, ${PYTHON_MIN_VERSION} or newer is required"
+    elif ! "$1" -c "import venv, ensurepip" > /dev/null 2>&1; then
+        echo "version ${version}, without the Python modules venv/ensurepip"
+    fi
+}
+
+# tool_available <tool>: true if the program exists (for Python: in a
+# suitable version, see python_problem)
 function tool_available() {
     if ! command -v "$1" > /dev/null 2>&1; then
         return 1
     fi
     if [ "$1" = "${PYTHON}" ]; then
-        "$1" -c "import venv, ensurepip" > /dev/null 2>&1
+        [ -z "$(python_problem "$1")" ]
+    fi
+}
+
+# tool_problem <tool>: why an existing tool is not used ("version 3.6 is too
+# old, ..."); "not found" if it does not exist
+function tool_problem() {
+    if ! command -v "$1" > /dev/null 2>&1; then
+        echo "not found"
+    elif [ "$1" = "${PYTHON}" ]; then
+        python_problem "$1"
     fi
 }
 
@@ -384,7 +422,7 @@ function check_tools() {
         if [ ${have_modules} = 0 ] && init_modules; then have_modules=1; fi
         if [ ${have_modules} = 1 ]; then
             for module in ${TOOL_MODULES[${tool}]:-${tool}}; do
-                echo "Required tool '${tool}' not found: trying 'module load ${module}'"
+                echo "Required tool '${tool}' $(tool_problem "${tool}"): trying 'module load ${module}'"
                 module load "${module}" > /dev/null 2>&1 || true
                 if tool_available "${tool}"; then
                     echo "Loaded module '${module}' for '${tool}'"
@@ -396,8 +434,8 @@ function check_tools() {
 
         if ! tool_available "${tool}"; then
             entry=${tool}
-            if [ "${tool}" = "${PYTHON}" ] && command -v "${tool}" > /dev/null 2>&1; then
-                entry="${tool} (without the Python modules venv/ensurepip)"
+            if command -v "${tool}" > /dev/null 2>&1; then
+                entry="${tool} ($(command -v "${tool}"): $(tool_problem "${tool}"))"
             fi
             if [ ${#tool_tried[@]} -gt 0 ]; then
                 entry="${entry}  [tried: module load ${tool_tried[*]}]"
@@ -416,6 +454,120 @@ function check_tools() {
             echo "Install them or load them (e.g. 'module load ...') before running $(basename "$0")."
         } >&2
         die "Missing required tools: $(printf '%s\n' "${missing[@]}" | sed 's/ *[[(].*//' | paste -sd ' ')"
+    fi
+}
+
+
+###############################################################################
+# AEC library (libaec)
+#
+# ecCodes requires libaec (CCSDS compression) and stops in its configuration
+# if the library is not found, or if it is too old (ecCodes >= 2.49 requires
+# libaec >= 1.1.4). The requirement depends on the ecCodes version, so the
+# check runs the same find_package() call as the ecCodes sources in a small
+# CMake project. If it fails, the modules in AEC_MODULES are loaded one after
+# the other until the library is found.
+###############################################################################
+
+# aec_find_package: the find_package() call for libaec in the ecCodes sources,
+# e.g. "libaec 1.1.4" or "AEC"; empty if there is none
+function aec_find_package() {
+    local cmakelists="$(src_dir eccodes)/CMakeLists.txt"
+    if [ -f "${cmakelists}" ]; then
+        sed -nE 's/^[[:space:]]*find_package[[:space:]]*\([[:space:]]*((lib)?aec\b[^)]*)\).*/\1/Ip' "${cmakelists}" \
+            | head -n 1 | sed 's/[[:space:]]*$//'
+    fi
+}
+
+# aec_probe <find_package arguments>: true if CMake finds libaec the same
+# way the ecCodes build does (same compiler, ecCodes' Find modules)
+function aec_probe() {
+    local args=$1
+    local name=${args%% *}
+    local dir="$(build_dir aec-check)" cc cxx rc=0
+    read -r cc cxx <<< "$(compilers)"
+
+    rm -rf "${dir}"
+    mkdir -p "${dir}"
+    cat > "${dir}/CMakeLists.txt" <<END_OF_PROBE
+cmake_minimum_required(VERSION 3.12)
+project(aec_check C)
+list(APPEND CMAKE_MODULE_PATH "$(src_dir eccodes)/cmake")
+set(libaec_USE_STATIC_LIBS OFF)
+find_package(${args})
+if(NOT ${name}_FOUND)
+  message(FATAL_ERROR "find_package(${args}) failed")
+endif()
+message(STATUS "AEC library found: \${${name}_DIR}\${AEC_LIBRARIES}")
+END_OF_PROBE
+
+    cmake -S "${dir}" -B "${dir}/build" -DCMAKE_C_COMPILER="${cc}" \
+        > "${dir}/cmake.log" 2>&1 || rc=$?
+    if [ ${rc} = 0 ]; then
+        sed -n 's/^-- AEC library found: /    /p' "${dir}/cmake.log"
+        rm -rf "${dir}"
+    fi
+    return ${rc}
+}
+
+# check_aec: make sure ecCodes will find libaec; tries 'module load' for the
+# modules in AEC_MODULES. Fails with an error message if the library cannot
+# be found. Needs the ecCodes sources (to know the requirement); without them
+# the check is skipped.
+function check_aec() {
+    local args module tried=() have_modules=0
+
+    args=$(aec_find_package)
+    if [ -z "${args}" ]; then
+        if [ -f "$(src_dir eccodes)/CMakeLists.txt" ]; then
+            echo "ecCodes ($(ref_of eccodes)) does not look for libaec: AEC check skipped"
+        fi
+        return 0
+    fi
+
+    echo "Checking the AEC library required by ecCodes: find_package(${args})"
+    if aec_probe "${args}"; then return 0; fi
+
+    if init_modules; then have_modules=1; fi
+    if [ ${have_modules} = 1 ]; then
+        for module in "${AEC_MODULES[@]}"; do
+            echo "AEC library not found: trying 'module load ${module}'"
+            if ! module load "${module}" > /dev/null 2>&1; then
+                tried+=("${module} (not available)")
+                continue
+            fi
+            if aec_probe "${args}"; then
+                echo "Loaded module '${module}' for the AEC library"
+                return 0
+            fi
+            # Loaded, but not suitable (e.g. too old): do not keep it
+            module unload "${module}" > /dev/null 2>&1 || true
+            tried+=("${module} (not suitable)")
+        done
+    fi
+
+    {
+        echo "The AEC library (libaec) required by ecCodes ($(ref_of eccodes)) was not found:"
+        echo "    find_package(${args}) failed"
+        if [ ${have_modules} = 1 ]; then
+            echo "    tried: module load ${tried[*]}"
+        else
+            echo "    No 'module' command is available to load it."
+        fi
+        echo "Load a suitable version (e.g. 'module load aec/<version>', see 'module avail aec')"
+        echo "or install it and add its prefix to CMAKE_PREFIX_PATH, then re-run $(basename "$0")."
+        echo "CMake output of the last check:"
+        sed 's/^/    /' "$(build_dir aec-check)/cmake.log" | grep -v '^    --' || true
+    } >&2
+    rm -rf "$(build_dir aec-check)"
+    die "AEC library not found: find_package(${args}) failed"
+}
+
+# check_aec_once: check_aec, unless it already succeeded in this run
+function check_aec_once() {
+    if [ ${AEC_CHECKED} = 0 ]; then
+        check_aec
+        AEC_CHECKED=1
     fi
 }
 
@@ -613,9 +765,57 @@ function cmake_install() {
     cmake --install "$(build_dir "${pkg}")"
 }
 
-# venv_ok: true if the Python venv exists and works
+# compiler_runtime_libdirs: colon separated directories of the runtime
+# libraries (libstdc++, libgcc_s, libgfortran) of the selected compilers, if
+# they are not in a system directory. libeccodes finds them via its RPATH, but
+# that is not enough in Python: numpy (or another module) may load the older
+# system libstdc++ first, and as a library of the same name is loaded only
+# once, libeccodes then fails with "GLIBCXX_3.4.xx not found". These
+# directories are therefore put into LD_LIBRARY_PATH (venv, load_env).
+function compiler_runtime_libdirs() {
+    local cc cxx compiler lib file dir
+    local dirs=""
+    read -r cc cxx <<< "$(compilers)"
+
+    for compiler in "${cxx}" gfortran; do
+        for lib in libstdc++ libgcc_s libgfortran; do
+            file=$(cd / && "${compiler}" -print-file-name="${lib}.so" 2>/dev/null) || continue
+            # Not found: the compiler prints the bare name
+            if [[ "${file}" != /* ]]; then continue; fi
+            dir=$(cd "$(dirname "${file}")" 2>/dev/null && pwd -P) || continue
+            case "${dir}" in
+                /lib|/lib64|/usr/lib|/usr/lib64) continue ;;
+            esac
+            # Only directories with the shared library itself (not just a
+            # linker script pointing to the system library)
+            if ! compgen -G "${dir}/${lib}.so.[0-9]*" > /dev/null; then continue; fi
+            case ":${dirs}:" in
+                *":${dir}:"*) ;;
+                *) dirs="${dirs:+${dirs}:}${dir}" ;;
+            esac
+        done
+    done
+    echo "${dirs}"
+}
+
+# with_runtime_libs <command...>: run a command with the compiler runtime
+# libraries (see compiler_runtime_libdirs) in LD_LIBRARY_PATH
+function with_runtime_libs() {
+    local rt
+    rt=$(compiler_runtime_libdirs)
+    if [ -n "${rt}" ]; then
+        LD_LIBRARY_PATH="${rt}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" "$@"
+    else
+        "$@"
+    fi
+}
+
+# venv_ok: true if the Python venv exists, works and uses the version of the
+# selected Python (a venv of another Python version, e.g. the old system
+# Python, is treated as broken and recreated by step_eccodes_python)
 function venv_ok() {
-    [ -f "$(venv_dir)/bin/activate" ] && "$(venv_dir)/bin/python" -c "import sys" > /dev/null 2>&1
+    [ -f "$(venv_dir)/bin/activate" ] \
+        && [ "$(python_version "$(venv_dir)/bin/python")" = "$(python_version "${PYTHON}")" ]
 }
 
 # in_venv <command...>: run a command in the Python venv, with ECCODES_DIR
@@ -630,7 +830,7 @@ function in_venv() {
     (
         source_quietly "$(venv_dir)/bin/activate" || exit 99
         export ECCODES_DIR="$(prefix_dir eccodes)"
-        "$@"
+        with_runtime_libs "$@"
     ) || rc=$?
 
     if [ ${rc} = 99 ]; then
@@ -660,6 +860,8 @@ function step_eccodes_source() {
 
 function step_eccodes_build() {
     local options=(-DENABLE_FORTRAN=ON -DENABLE_EXTRA_TESTS=1 -DENABLE_MEMFS=OFF)
+
+    check_aec_once
 
     if is_enabled eckit; then
         options+=(-DENABLE_ECKIT_GEO=ON -Deckit_ROOT="$(prefix_dir eckit)")
@@ -693,7 +895,7 @@ function step_eccodes_python() {
         if [ ! -f "${venv}/pyvenv.cfg" ] && [ -n "$(ls -A "${venv}")" ]; then
             die "${venv} exists but is not a Python venv: remove or rename it"
         fi
-        echo "The Python venv ${venv} is broken: recreating it"
+        echo "The Python venv ${venv} is broken or uses another Python version (not $(python_version "${PYTHON}")): recreating it"
         "${PYTHON}" -m venv --clear "${venv}"
     fi
 
@@ -714,7 +916,7 @@ function step_grib_check() {
     # eccodes-python must be installed in the venv, otherwise pip would pull
     # 'eccodes' from PyPI as a dependency of grib-check. If the venv was
     # removed or broken after step_eccodes_python, install it again.
-    if ! venv_ok || ! ECCODES_DIR="$(prefix_dir eccodes)" \
+    if ! venv_ok || ! ECCODES_DIR="$(prefix_dir eccodes)" with_runtime_libs \
             "$(venv_dir)/bin/python" -c "import eccodes" > /dev/null 2>&1; then
         echo "eccodes-python is missing in the Python venv: installing it again"
         step_eccodes_python
@@ -776,10 +978,14 @@ function step_env_files() {
 # write_load_env: print the load_env file
 function write_load_env() {
     local prefix=$(prefix_dir eccodes)
-    local libdirs=$(libdir_of "${prefix}")
+    local libdirs=$(libdir_of "${prefix}") rt=$(compiler_runtime_libdirs)
 
     if is_enabled eckit; then
         libdirs="${libdirs}:$(libdir_of "$(prefix_dir eckit)")"
+    fi
+    # Runtime libraries of the compiler (see compiler_runtime_libdirs)
+    if [ -n "${rt}" ]; then
+        libdirs="${libdirs}:${rt}"
     fi
 
     echo "# Generated by $(basename "$0")"
@@ -807,7 +1013,7 @@ if ! (return 0 2>/dev/null); then
 fi
 
 _ecc_load() {
-    local init m before
+    local init m before missing
 
     if [ -n "${ECCODES_INSTALL_ROOT:-}" ]; then
         echo "The ecCodes environment of ${ECCODES_INSTALL_ROOT} is already loaded." >&2
@@ -824,8 +1030,17 @@ _ecc_load() {
             done
         fi
         before=":${LOADEDMODULES:-}:"
-        if ! module load ${_ecc_modules}; then
-            echo "Warning: could not load the modules: ${_ecc_modules}" >&2
+        # Load only the modules that are not loaded yet: loading an already
+        # loaded module again makes Lmod reload it, which reorders PATH & co.
+        missing=""
+        for m in ${_ecc_modules}; do
+            case "${before}" in
+                *":${m}:"*) ;;
+                *) missing="${missing:+${missing} }${m}" ;;
+            esac
+        done
+        if [ -n "${missing}" ] && ! module load ${missing}; then
+            echo "Warning: could not load the modules: ${missing}" >&2
         fi
         for m in ${LOADEDMODULES//:/ }; do
             case "${before}" in
@@ -957,6 +1172,15 @@ END_OF_UNLOAD_ENV
 function add_step() {
     STEP_NAMES+=("$1")
     STEP_CMDS+=("$2")
+}
+
+# step_index <command>: number of the step (1-based) that runs <command>
+function step_index() {
+    local i
+    for ((i = 0; i < ${#STEP_CMDS[@]}; i++)); do
+        if [ "${STEP_CMDS[i]}" = "$1" ]; then echo $((i + 1)); return 0; fi
+    done
+    die "Unknown step: $1"
 }
 
 # define_steps: the installation steps in the order they are run
@@ -1136,6 +1360,12 @@ function main() {
     trap on_exit EXIT
 
     validate_refs
+    # When resuming with the ecCodes sources already checked out, check the
+    # AEC library right away: this fails early and (re)loads its module for
+    # the remaining steps. Otherwise it is checked before building ecCodes.
+    if [ ${COMPLETED} -ge $(step_index step_eccodes_source) ]; then
+        check_aec_once
+    fi
     run_steps
     print_summary
 }
