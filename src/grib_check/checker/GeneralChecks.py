@@ -657,7 +657,8 @@ class GeneralChecks(CheckEngine):
     def _monthly_mean_of_daily_means(self, message, p):
         report = Report("Monthly mean of daily means")
 
-        report.add(Eq(message["step"], None))
+        endStep = message["endStep"]
+        report.add(Eq(message["step"], endStep))
         report.add(Eq(message["numberOfTimeRanges"], 2))
         report.add(Eq(message["startStep"], 0))
 
