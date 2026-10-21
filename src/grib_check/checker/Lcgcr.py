@@ -60,13 +60,12 @@ class Lcgcr(GeneralChecks):
             indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
             timeIncrements = message.get_array("timeIncrement")
 
-#           report = Report(lengthOfTimeRanges) # xxx
-#           report.add(Eq(lengthOfTimeRanges[1], 24))
+            report.add(Eq(lengthOfTimeRanges[1], 24))
             report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))
             report.add(Eq(indicatorOfUnitForTimeIncrements[1], 1))
             report.add(Eq(timeIncrements[1], 6))
 
-            # time ranges setup (outer loop can be in hours or days)
+            # time ranges setup in the related grib_filter (outer loop can be in hours or days)
             # set numberOfTimeRanges=2;
             # set typeOfTimeIncrement={1,1};  # [Successive times processed have same forecast time, start time of forecast is incremented (grib2/tables/36/4.11.table) ]
             # set lengthOfTimeRange={31,24};  #month lenght / day in hour

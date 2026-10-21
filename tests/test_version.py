@@ -22,7 +22,6 @@ from typing import Tuple
 
 import pytest
 
-
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 GRIBCHECK_PY = REPO_ROOT / "src" / "grib_check" / "GribCheck.py"

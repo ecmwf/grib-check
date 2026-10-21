@@ -479,23 +479,26 @@ class GeneralChecks(CheckEngine):
 
         if stepType != "instant":  # not instantaneous
 
-            saved_validityDate = message["validityDate"]
-            saved_validityTime = message["validityTime"]
+            if message["numberOfTimeRanges"] == 1:
+                # for multiple time ranges, message set is not well defined yet (eccodes v<=2.50.0)
 
-            # Check only applies to accumulated, max etc.
-            stepRange = message.get("stepRange", int)
-            saved_lengthOfTimeRange = message["lengthOfTimeRange"]
-            saved_startStep = message["startStep"]
-            saved_endStep = message["endStep"]
+                saved_validityDate = message["validityDate"]
+                saved_validityTime = message["validityTime"]
 
-            # by setting stepRange, eccodes recomputes related metada and save them
-            message.set("stepRange", stepRange.value())
-            message.set("lengthOfTimeRange", saved_lengthOfTimeRange.value())
-            message.set("startStep", saved_startStep.value())
-            message.set("endStep", saved_endStep.value())
+                # Check only applies to accumulated, max etc.
+                stepRange = message.get("stepRange", int)
+                saved_lengthOfTimeRange = message["lengthOfTimeRange"]
+                saved_startStep = message["startStep"]
+                saved_endStep = message["endStep"]
 
-            report.add(Eq(saved_validityDate, message["validityDate"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
-            report.add(Eq(saved_validityTime, message["validityTime"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
+                # by setting stepRange, eccodes recomputes related metada and save them
+                message.set("stepRange", stepRange.value())
+                message.set("lengthOfTimeRange", saved_lengthOfTimeRange.value())
+                message.set("startStep", saved_startStep.value())
+                message.set("endStep", saved_endStep.value())
+
+                report.add(Eq(saved_validityDate, message["validityDate"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
+                report.add(Eq(saved_validityTime, message["validityTime"].value(), f"On failure: Wrong {message['dataDate']}, {message['dataTime']}, {saved_startStep}, and {saved_endStep}"))
 
             # check *OverallTimeInterval types of keys too
             timeRangeUnit = message.get_long_array("indicatorOfUnitForTimeRange")[0]
@@ -690,7 +693,6 @@ class GeneralChecks(CheckEngine):
     def _monthly_mean_of_daily_accums(self, message, p):
         report = Report("Monthly mean of daily accums")
 
-        report.add(Eq(message["step"], None))
         report.add(Eq(message["numberOfTimeRanges"], 2))
         report.add(Eq(message["startStep"], 0))
 
@@ -717,6 +719,8 @@ class GeneralChecks(CheckEngine):
             report.add(Eq(timeIncrements[0], 1))
         else:
             report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
+
+        return report
 
     def _monthly_average(self, message, p):
         report = Report("Monthly Average")
