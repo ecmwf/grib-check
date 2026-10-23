@@ -660,65 +660,80 @@ class GeneralChecks(CheckEngine):
     def _monthly_mean_of_daily_means(self, message, p):
         report = Report("Monthly mean of daily means")
 
+        report.add(Eq(message["startStep"], 0))
         endStep = message["endStep"]
         report.add(Eq(message["step"], endStep))
-        report.add(Eq(message["numberOfTimeRanges"], 2))
-        report.add(Eq(message["startStep"], 0))
 
-        typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
-        indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
-        lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
-        indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
-        timeIncrements = message.get_array("timeIncrement")
+        numberOfTimeRanges = message["numberOfTimeRanges"]
 
-        report.add(Eq(typeOfStatisticalProcessings[0], 0))  # mean
-        report.add(Eq(typeOfStatisticalProcessings[1], 0))  # mean
+        if numberOfTimeRanges == 2:
 
-        if indicatorOfUnitForTimeRanges[0] == 1:  # hours
-            report.add(IsIn(lengthOfTimeRanges[0], [672, 696, 720, 744]))
-        elif indicatorOfUnitForTimeRanges[0] == 2:  # days
-            report.add(IsIn(lengthOfTimeRanges[0], [28, 29, 30, 31]))
+            typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+            indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
+            lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
+            indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
+            timeIncrements = message.get_array("timeIncrement")
+
+            report.add(Eq(typeOfStatisticalProcessings[0], 0))  # mean
+            report.add(Eq(typeOfStatisticalProcessings[1], 0))  # mean
+
+            if indicatorOfUnitForTimeRanges[0] == 1:  # hours
+                report.add(IsIn(lengthOfTimeRanges[0], [672, 696, 720, 744]))
+            elif indicatorOfUnitForTimeRanges[0] == 2:  # days
+                report.add(IsIn(lengthOfTimeRanges[0], [28, 29, 30, 31]))
+            else:
+                report.add(IsIn(indicatorOfUnitForTimeRanges[0], [1, 2]))
+
+            if indicatorOfUnitForTimeIncrements[0] == 1:  # hours
+                report.add(Eq(timeIncrements[0], 24))
+            elif indicatorOfUnitForTimeIncrements[0] == 2:  # days
+                report.add(Eq(timeIncrements[0], 1))
+            else:
+                report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
+
         else:
-            report.add(IsIn(indicatorOfUnitForTimeRanges[0], [1, 2]))
 
-        if indicatorOfUnitForTimeIncrements[0] == 1:  # hours
-            report.add(Eq(timeIncrements[0], 24))
-        elif indicatorOfUnitForTimeIncrements[0] == 2:  # days
-            report.add(Eq(timeIncrements[0], 1))
-        else:
-            report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
+            report.add(Eq(message["numberOfTimeRanges"], 2))
 
         return report
 
     def _monthly_mean_of_daily_accums(self, message, p):
         report = Report("Monthly mean of daily accums")
 
-        report.add(Eq(message["numberOfTimeRanges"], 2))
         report.add(Eq(message["startStep"], 0))
+        endStep = message["endStep"]
+        report.add(Eq(message["step"], endStep))
+        numberOfTimeRanges = message["numberOfTimeRanges"]
 
-        typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
-        indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
-        lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
-        indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
-        timeIncrements = message.get_array("timeIncrement")
-        typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+        if numberOfTimeRanges == 2:
 
-        report.add(Eq(typeOfStatisticalProcessings[0], 0))  # mean
-        report.add(Eq(typeOfStatisticalProcessings[1], 1))  # accum
+            typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
+            indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
+            lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
+            indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
+            timeIncrements = message.get_array("timeIncrement")
+            typeOfStatisticalProcessings = message.get_array("typeOfStatisticalProcessing")
 
-        if indicatorOfUnitForTimeRanges[0] == 1:  # hours
-            report.add(IsIn(lengthOfTimeRanges[0], [672, 696, 720, 744]))
-        elif indicatorOfUnitForTimeRanges[0] == 2:  # days
-            report.add(IsIn(lengthOfTimeRanges[0], [28, 29, 30, 31]))
+            report.add(Eq(typeOfStatisticalProcessings[0], 0))  # mean
+            report.add(Eq(typeOfStatisticalProcessings[1], 1))  # accum
+
+            if indicatorOfUnitForTimeRanges[0] == 1:  # hours
+                report.add(IsIn(lengthOfTimeRanges[0], [672, 696, 720, 744]))
+            elif indicatorOfUnitForTimeRanges[0] == 2:  # days
+                report.add(IsIn(lengthOfTimeRanges[0], [28, 29, 30, 31]))
+            else:
+                report.add(IsIn(indicatorOfUnitForTimeRanges[0], [1, 2]))
+
+            if indicatorOfUnitForTimeIncrements[0] == 1:  # hours
+                report.add(Eq(timeIncrements[0], 24))
+            elif indicatorOfUnitForTimeIncrements[0] == 2:  # days
+                report.add(Eq(timeIncrements[0], 1))
+            else:
+                report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
+
         else:
-            report.add(IsIn(indicatorOfUnitForTimeRanges[0], [1, 2]))
 
-        if indicatorOfUnitForTimeIncrements[0] == 1:  # hours
-            report.add(Eq(timeIncrements[0], 24))
-        elif indicatorOfUnitForTimeIncrements[0] == 2:  # days
-            report.add(Eq(timeIncrements[0], 1))
-        else:
-            report.add(IsIn(indicatorOfUnitForTimeIncrements[0], [1, 2]))
+            report.add(Eq(message["numberOfTimeRanges"], 2))
 
         return report
 
