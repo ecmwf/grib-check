@@ -49,29 +49,37 @@ class Lcgcr(GeneralChecks):
     def _monthly_mean_of_daily_means(self, message, p) -> Report:
         report = Report("LC-GCR Monthly mean of daily means")
 
-        paramId = message.get("paramId")
-        if paramId not in [235055]:
-            # The monthly means of the instantaneous variables (2t and mslp) are calculated from 6-hourly data (00, 06, 12 18),
-            # as this is the minimum temporal frequency across all datasets.
-            # For precipitation rate, which is an accumulation divided by time step, all available time steps are used.
+        numberOfTimeRanges = message["numberOfTimeRanges"]
 
-            indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
-            lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
-            indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
-            timeIncrements = message.get_array("timeIncrement")
+        if numberOfTimeRanges == 2:
 
-            report.add(Eq(lengthOfTimeRanges[1], 24))
-            report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))
-            report.add(Eq(indicatorOfUnitForTimeIncrements[1], 1))
-            report.add(Eq(timeIncrements[1], 6))
+            paramId = message.get("paramId")
+            if paramId not in [235055]:
+                # The monthly means of the instantaneous variables (2t and mslp) are calculated from 6-hourly data (00, 06, 12 18),
+                # as this is the minimum temporal frequency across all datasets.
+                # For precipitation rate, which is an accumulation divided by time step, all available time steps are used.
 
-            # time ranges setup in the related grib_filter (outer loop can be in hours or days)
-            # set numberOfTimeRanges=2;
-            # set typeOfTimeIncrement={1,1};  # [Successive times processed have same forecast time, start time of forecast is incremented (grib2/tables/36/4.11.table) ]
-            # set lengthOfTimeRange={31,24};  #month lenght / day in hour
-            # set indicatorOfUnitForTimeRange={2,1};          # day/hour
-            # set indicatorOfUnitForTimeIncrement ={2,1};     # day/hour
-            # set timeIncrement={1,6};        # hour/hour(6-hourly values for average computation)
+                indicatorOfUnitForTimeRanges = message.get_array("indicatorOfUnitForTimeRange")
+                lengthOfTimeRanges = message.get_array("lengthOfTimeRange")
+                indicatorOfUnitForTimeIncrements = message.get_array("indicatorOfUnitForTimeIncrement")
+                timeIncrements = message.get_array("timeIncrement")
+
+                report.add(Eq(lengthOfTimeRanges[1], 24))
+                report.add(Eq(indicatorOfUnitForTimeRanges[1], 1))
+                report.add(Eq(indicatorOfUnitForTimeIncrements[1], 1))
+                report.add(Eq(timeIncrements[1], 6))
+
+                # time ranges setup in the related grib_filter (outer loop can be in hours or days)
+                # set numberOfTimeRanges=2;
+                # set typeOfTimeIncrement={1,1};  # [Successive times processed have same forecast time, start time of forecast is incremented (grib2/tables/36/4.11.table) ]
+                # set lengthOfTimeRange={31,24};  #month lenght / day in hour
+                # set indicatorOfUnitForTimeRange={2,1};          # day/hour
+                # set indicatorOfUnitForTimeIncrement ={2,1};     # day/hour
+                # set timeIncrement={1,6};        # hour/hour(6-hourly values for average computation)
+
+        else:
+
+            report.add(Eq(message["numberOfTimeRanges"], 2))
 
         return super()._monthly_mean_of_daily_means(message, p).add(report)
 
