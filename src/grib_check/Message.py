@@ -106,7 +106,7 @@ class Message:
     def get_size(self, key) -> int:
         return codes_get_size(self.__h, key)
 
-    def get_array(self, key, datatype=None) -> list[KeyValue]:
+    def get_array(self, key, datatype=None) -> KeyValue:
         if datatype is None:
             datatype = codes_get_native_type(self.__h, key)
 
@@ -138,33 +138,35 @@ class Message:
     def position(self):
         return self.__position
 
-    def minmax(self):
+    def minmax(self, values=None):
+        """Return (min, max) of the values, ignoring missing values.
+
+        ``values`` can be passed to reuse an already decoded "values" array.
+        """
         if self.min is not None and self.max is not None:
             return self.min, self.max
 
-        try:
-            values = self.get_double_array("values")
-        except Exception:
-            return
+        if values is None:
+            try:
+                values = self.get_double_array("values")
+            except Exception:
+                return
 
         bitmap = not Eq(self, "bitMapIndicator", 255)
 
         if bitmap:
+            # Vectorised filtering: comparing numpy scalars against a KeyValue per element is very slow.
             missing = self.get("missingValue")
-            it = (v for v in values if v != missing)
-            try:
-                m = M = next(it)
-            except StopIteration:
+            if missing.value() is not None:
+                values = values[values != missing.value()]
+            if values.size == 0:
                 m = M = missing
             else:
-                for v in it:
-                    if v < m:
-                        m = v
-                    elif v > M:
-                        M = v
+                m = np.nanmin(values)
+                M = np.nanmax(values)
         else:
-            m = min(values)
-            M = max(values)
+            m = np.nanmin(values)
+            M = np.nanmax(values)
 
         self.min, self.max = m, M
         return m, M

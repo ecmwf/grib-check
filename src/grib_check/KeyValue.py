@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
+from typing import Any
 
 from .ValueFormat import formatter
 
@@ -30,9 +31,9 @@ def makeKV(value):
 
 
 class KeyValue:
-    _MISSING = object()
+    _MISSING: Any = object()
 
-    def __init__(self, key_or_value, value=_MISSING, level=0, last_op_type=OpType.NONE, key_suffix=None):
+    def __init__(self, key_or_value: Any, value: Any = _MISSING, level=0, last_op_type=OpType.NONE, key_suffix=None):
         self.logger = logging.getLogger(__class__.__name__)
         if value is KeyValue._MISSING:
             # Single-arg form: KeyValue(value) → key=None
@@ -70,11 +71,11 @@ class KeyValue:
         else:
             return f"{self.__key}"
 
-    def __eq__(self, other: KeyValue) -> bool:
+    def __eq__(self, other: object) -> bool:
         otherKV = makeKV(other)
         return bool(self.__value == otherKV.__value)
 
-    def __ne__(self, other: KeyValue) -> bool:
+    def __ne__(self, other: object) -> bool:
         otherKV = makeKV(other)
         return bool(self.__value != otherKV.__value)
 

@@ -153,7 +153,7 @@ class GeneralChecks(CheckEngine):
             missing = message.get("missingValue", float)
 
             is_accumulated = message.get("typeOfStatisticalProcessing", int) == 1
-            min_value, max_value = message.minmax()
+            min_value, max_value = message.minmax(values)
 
             if is_accumulated:
                 if endStep != 0:
