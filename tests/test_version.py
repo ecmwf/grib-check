@@ -10,10 +10,15 @@ They verify that:
     2. The version declared in ``pyproject.toml`` is strictly greater than the
        latest release tag in the git repository (i.e. the version has been
        bumped since the last release).
+
+Both checks only run on release and hotfix branches (``release/*`` and
+``hotfix/*``), where the version is expected to be bumped. On all other
+branches they are skipped, so they never fail there.
 """
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -25,6 +30,12 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 GRIBCHECK_PY = REPO_ROOT / "src" / "grib_check" / "GribCheck.py"
+RELEASE_BRANCH_PREFIXES = ("release/", "hotfix/")
+
+
+def _is_release_branch(branch: str | None) -> bool:
+    """Branches on which the version must have been bumped: ``release/*`` and ``hotfix/*``."""
+    return branch is not None and branch.startswith(RELEASE_BRANCH_PREFIXES)
 
 
 # Match a PEP 440-ish release version: N(.N)*, optionally followed by
@@ -101,6 +112,47 @@ def _latest_release_tag() -> str | None:
     return None
 
 
+def _current_branch() -> str | None:
+    """Return the name of the branch being tested, or ``None`` if unknown.
+
+    On GitHub Actions the checkout is often a detached HEAD, so the branch is
+    taken from the CI environment: ``GITHUB_HEAD_REF`` is the source branch of
+    a pull request, ``GITHUB_REF_NAME`` the branch of a push. Otherwise the
+    current branch of the local git checkout is used.
+    """
+    for var in ("GITHUB_HEAD_REF", "GITHUB_REF_NAME"):
+        branch = os.environ.get(var, "").strip()
+        if branch:
+            return branch
+
+    if shutil.which("git") is None:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+    branch = result.stdout.strip()
+    return None if branch in ("", "HEAD") else branch
+
+
+_BRANCH = _current_branch()
+
+# Version checks are only enforced on release and hotfix branches; skip them everywhere else.
+pytestmark = pytest.mark.skipif(
+    not _is_release_branch(_BRANCH),
+    reason=(
+        f"not on a release or hotfix branch ({_BRANCH!r}); version checks only run on "
+        f"{' and '.join(p + '*' for p in RELEASE_BRANCH_PREFIXES)}"
+    ),
+)
+
+
 class TestVersion:
     def test_pyproject_and_cli_versions_match(self):
         pyproject_version = _read_pyproject_version()
@@ -118,13 +170,13 @@ class TestVersion:
                 "no git tags available (not a git checkout, git missing, or "
                 "tags not fetched); skipping release-monotonicity check"
             )
+        else:
+            current_version = _read_pyproject_version()
+            current = _version_tuple(current_version)
+            latest = _version_tuple(latest_tag)
 
-        current_version = _read_pyproject_version()
-        current = _version_tuple(current_version)
-        latest = _version_tuple(latest_tag)
-
-        assert current > latest, (
-            f"version in pyproject.toml ({current_version!r}) is not greater "
-            f"than the latest release tag ({latest_tag!r}). Bump the version "
-            "in pyproject.toml (and GribCheck.py) before merging."
-        )
+            assert current > latest, (
+                f"version in pyproject.toml ({current_version!r}) is not greater "
+                f"than the latest release tag ({latest_tag!r}). Bump the version "
+                "in pyproject.toml (and GribCheck.py) before merging."
+            )
