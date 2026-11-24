@@ -547,11 +547,14 @@ class GeneralChecks(CheckEngine):
 
         if marsType == "an":  # 0 - Analysis
             report.add(IsIn(message["significanceOfReferenceTime"], [0]))
+        elif marsType == "fc":  # 1 - Forecast
+            report.add(IsIn(message["significanceOfReferenceTime"], [1]))
         elif marsType == "4i" or marsType == "4v" or marsType == "me" or marsType == "eme":
             # 6 - Start of data assimilation
             report.add(IsIn(message["significanceOfReferenceTime"], [6]))
-        else:  # 1 - Start of forecast
-            report.add(IsIn(message["significanceOfReferenceTime"], [1]))
+#       else:  # 1 - Start of forecast
+#           # does not work generally as e.g. type=em/es, class=rr can come from both forecasts or analyses!
+#           report.add(IsIn(message["significanceOfReferenceTime"], [1]))
 
         # 0 analysis, 1 = forecast, 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast
         topd = message.get("typeOfProcessedData", int)
