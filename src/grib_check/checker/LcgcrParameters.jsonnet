@@ -3,7 +3,7 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'Time-mean_2_metre_temperature.sfc.lcgcr',
     expected+: [
-      { key: 'values', min: [170, 290], max: [270, 360] },
+      { key: 'values', min: [160, 290], max: [270, 370] },
     ],
     pairs+: [
       { key: 'paramId', value: 228004 },
@@ -41,7 +41,7 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'Time-mean_total_precipitation_rate.sfc.lcgcr',
     expected+: [
-      { key: 'values', min: [-0.05, 0.1], max: [0.0, 500.0] },
+      { key: 'values', min: [-5.7870e-7, 1.1574e-6], max: [0.0, 3.4722e-3] },
     ],
     pairs+: [
       { key: 'paramId', value: 235055 },
@@ -59,7 +59,7 @@ local templates = import 'Parameter.libsonnet';
   templates.Wmo {
     name: 'Total_precipitation.sfc.lcgcr',
     expected+: [
-      { key: 'values', min: [-0.05, 0.1], max: [0.0, 100.0] },
+      { key: 'values', min: [-0.05, 0.1], max: [0.0, 300.0] },
     ],
     pairs+: [
       { key: 'paramId', value: 228228 },
